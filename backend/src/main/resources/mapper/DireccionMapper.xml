@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.direccion.mapper.DireccionMapper">
+    <sql id="baseColumns">
+        d.id, d.calle, d.numero, d.piso, d.apartamento, d.referencia, d.latitud, d.longitud,
+        d.ciudad_id, d.estado_id,
+        d.created_at, d.updated_at, d.deleted, d.version
+    </sql>
+    <sql id="table">petcare.direccion d</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.direccion.entity.Direccion">
+        INSERT INTO petcare.direccion (calle, numero, piso, apartamento, referencia, latitud, longitud, ciudad_id, estado_id)
+        VALUES (#{calle}, #{numero}, #{piso}, #{apartamento}, #{referencia}, #{latitud}, #{longitud}, #{ciudadId}, #{estadoId})
+    </insert>
+
+    <resultMap id="direccionCiudadResultMap" type="bo.capital.tec.pet.direccion.entity.Direccion">
+        <id property="id" column="id"/>
+        <result property="calle" column="calle"/>
+        <result property="numero" column="numero"/>
+        <result property="piso" column="piso"/>
+        <result property="apartamento" column="apartamento"/>
+        <result property="referencia" column="referencia"/>
+        <result property="latitud" column="latitud"/>
+        <result property="longitud" column="longitud"/>
+        <result property="ciudadId" column="ciudad_id"/>
+        <result property="estadoId" column="estado_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+        <association property="ciudad" javaType="bo.capital.tec.pet.direccion.entity.Ciudad">
+            <id property="id" column="ciudad_id"/>
+            <result property="nombre" column="ciudad_nombre"/>
+            <result property="codigo" column="ciudad_codigo"/>
+        </association>
+        <association property="estado" javaType="bo.capital.tec.pet.direccion.entity.Estado">
+            <id property="id" column="estado_id"/>
+            <result property="nombre" column="estado_nombre"/>
+            <result property="codigo" column="estado_codigo"/>
+        </association>
+    </resultMap>
+
+    <select id="selectById" resultMap="direccionCiudadResultMap">
+        SELECT d.id, d.calle, d.numero, d.piso, d.apartamento, d.referencia, d.latitud, d.longitud,
+               d.ciudad_id, d.estado_id, d.created_at, d.updated_at, d.deleted, d.version,
+               ci.id AS ciudad_id, ci.nombre AS ciudad_nombre, ci.codigo AS ciudad_codigo,
+               es.id AS estado_id, es.nombre AS estado_nombre, es.codigo AS estado_codigo
+        FROM petcare.direccion d
+        LEFT JOIN petcare.ciudad ci ON ci.id = d.ciudad_id
+        LEFT JOIN petcare.estado es ON es.id = d.estado_id
+        WHERE d.id = #{id} AND d.deleted = FALSE
+    </select>
+
+    <select id="selectByCiudadId" resultType="bo.capital.tec.pet.direccion.entity.Direccion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE ciudad_id = #{ciudadId} AND deleted = FALSE
+        ORDER BY calle ASC
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.direccion.entity.Direccion">
+        UPDATE petcare.direccion
+        SET calle = #{calle}, numero = #{numero}, piso = #{piso}, apartamento = #{apartamento},
+            referencia = #{referencia}, latitud = #{latitud}, longitud = #{longitud},
+            ciudad_id = #{ciudadId}, estado_id = #{estadoId},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE petcare.direccion SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+</mapper>

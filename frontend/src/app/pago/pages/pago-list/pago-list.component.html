@@ -1,0 +1,56 @@
+
+    <div class="space-y-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold dark:text-white">Pagos</h1>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+               placeholder="Buscar por codigo, cliente o referencia..."
+               class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Codigo</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Reserva</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Cliente</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Monto</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Descuento</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Total</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Metodo</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Estado</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track item.id) {
+              <tr class="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750">
+                <td class="px-6 py-4 dark:text-gray-300 font-mono text-sm">{{ item.codigo }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">{{ item.reservaCodigo }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">{{ item.clienteNombre }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">\${{ item.monto }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">-\${{ item.montoDescuento }}</td>
+                <td class="px-6 py-4 dark:text-gray-300 font-semibold">\${{ item.montoTotal }}</td>
+                <td class="px-6 py-4">
+                  <span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full dark:bg-gray-600 dark:text-gray-300">{{ item.metodoPago }}</span>
+                </td>
+                <td class="px-6 py-4">
+                  <span [class]="item.estadoPago === 'COMPLETADO' ? 'bg-green-100 text-green-700' : item.estadoPago === 'PENDIENTE' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'"
+                        class="text-xs px-2 py-1 rounded-full">
+                    {{ item.estadoPago }}
+                  </span>
+                </td>
+                <td class="px-6 py-4 dark:text-gray-300">{{ item.fechaPago }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="9" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay pagos registrados</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>

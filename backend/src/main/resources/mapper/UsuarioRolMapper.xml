@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.usuario.mapper.UsuarioRolMapper">
+    <sql id="baseColumns">
+        id, usuario_id, rol_id, created_at, updated_at, deleted, version
+    </sql>
+    <sql id="table">petcare.usuario_rol</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.usuario.entity.UsuarioRol">
+        INSERT INTO <include refid="table"/> (usuario_id, rol_id)
+        VALUES (#{usuarioId}, #{rolId})
+    </insert>
+
+    <select id="selectByUsuarioId" resultType="bo.capital.tec.pet.usuario.entity.UsuarioRol">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE usuario_id = #{usuarioId} AND deleted = FALSE
+    </select>
+
+    <update id="deleteByUsuarioId">
+        UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE usuario_id = #{usuarioId} AND deleted = FALSE
+    </update>
+
+    <update id="deleteByRolId">
+        UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE rol_id = #{rolId} AND deleted = FALSE
+    </update>
+</mapper>

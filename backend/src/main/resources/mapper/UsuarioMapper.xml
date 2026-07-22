@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.usuario.mapper.UsuarioMapper">
+    <sql id="baseColumns">
+        u.id, u.username, u.password, u.token_refresh, u.intentos_fallidos,
+        u.bloqueado, u.activo, u.ultimo_acceso, u.persona_id, u.created_at, u.updated_at, u.deleted, u.version
+    </sql>
+    <sql id="personaColumns">
+        p.nombre, p.primer_apellido, p.segundo_apellido, p.ci, p.telefono, p.email,
+        p.fecha_nacimiento, p.genero, p.direccion_id
+    </sql>
+    <sql id="table">petcare.usuario u</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.usuario.entity.Usuario">
+        INSERT INTO petcare.usuario (username, password, persona_id)
+        VALUES (#{username}, #{password}, #{personaId})
+    </insert>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.usuario.entity.Usuario">
+        SELECT u.id, u.username, u.password, u.token_refresh, u.intentos_fallidos,
+               u.bloqueado, u.activo, u.ultimo_acceso, u.persona_id, u.created_at, u.updated_at, u.deleted, u.version
+        FROM petcare.usuario u
+        WHERE u.id = #{id} AND u.deleted = FALSE
+    </select>
+
+    <resultMap id="usuarioWithPersonaResultMap" type="bo.capital.tec.pet.usuario.entity.Usuario">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="tokenRefresh" column="token_refresh"/>
+        <result property="intentosFallidos" column="intentos_fallidos"/>
+        <result property="bloqueado" column="bloqueado"/>
+        <result property="activo" column="activo"/>
+        <result property="ultimoAcceso" column="ultimo_acceso"/>
+        <result property="personaId" column="persona_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+        <association property="persona" javaType="bo.capital.tec.pet.persona.entity.Persona">
+            <result property="id" column="persona_id"/>
+            <result property="nombre" column="p_nombre"/>
+            <result property="primerApellido" column="p_primer_apellido"/>
+            <result property="segundoApellido" column="p_segundo_apellido"/>
+            <result property="ci" column="p_ci"/>
+            <result property="telefono" column="p_telefono"/>
+            <result property="email" column="p_email"/>
+            <result property="fechaNacimiento" column="p_fecha_nacimiento"/>
+            <result property="genero" column="p_genero"/>
+            <result property="direccionId" column="p_direccion_id"/>
+        </association>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="usuarioWithPersonaResultMap">
+        SELECT u.id, u.username, u.password, u.token_refresh, u.intentos_fallidos,
+               u.bloqueado, u.activo, u.ultimo_acceso, u.persona_id, u.created_at, u.updated_at, u.deleted, u.version,
+               p.id AS persona_id, p.nombre AS p_nombre, p.primer_apellido AS p_primer_apellido,
+               p.segundo_apellido AS p_segundo_apellido, p.ci AS p_ci, p.telefono AS p_telefono,
+               p.email AS p_email, p.fecha_nacimiento AS p_fecha_nacimiento, p.genero AS p_genero,
+               p.direccion_id AS p_direccion_id
+        FROM petcare.usuario u
+        LEFT JOIN petcare.persona p ON p.id = u.persona_id AND p.deleted = FALSE
+        WHERE u.username = #{username} AND u.deleted = FALSE
+    </select>
+
+    <select id="findRolesByUsuarioId" resultType="java.lang.String">
+        SELECT r.nombre
+        FROM petcare.rol r
+        INNER JOIN petcare.usuario_rol ur ON ur.rol_id = r.id AND r.deleted = FALSE
+        WHERE ur.usuario_id = #{usuarioId} AND ur.deleted = FALSE
+    </select>
+
+    <select id="findPermissionsByUsuarioId" resultType="java.lang.String">
+        SELECT DISTINCT pe.nombre
+        FROM petcare.permiso pe
+        INNER JOIN petcare.usuario_rol ur ON ur.rol_id = pe.rol_id AND ur.deleted = FALSE
+        WHERE ur.usuario_id = #{usuarioId} AND pe.deleted = FALSE
+    </select>
+
+    <resultMap id="usuarioPersonaResultMap" type="bo.capital.tec.pet.usuario.entity.Usuario">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="personaId" column="persona_id"/>
+        <result property="bloqueado" column="bloqueado"/>
+        <result property="activo" column="activo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+        <association property="persona" javaType="bo.capital.tec.pet.persona.entity.Persona">
+            <result property="nombre" column="p_nombre"/>
+            <result property="primerApellido" column="p_primer_apellido"/>
+            <result property="segundoApellido" column="p_segundo_apellido"/>
+            <result property="ci" column="p_ci"/>
+            <result property="email" column="p_email"/>
+        </association>
+    </resultMap>
+
+    <select id="selectAll" resultMap="usuarioPersonaResultMap">
+        SELECT u.id, u.username, u.persona_id, u.bloqueado, u.activo, u.created_at, u.updated_at, u.deleted, u.version,
+               p.nombre AS p_nombre, p.primer_apellido AS p_primer_apellido,
+               p.segundo_apellido AS p_segundo_apellido, p.ci AS p_ci, p.email AS p_email
+        FROM petcare.usuario u
+        LEFT JOIN petcare.persona p ON p.id = u.persona_id AND p.deleted = FALSE
+        <where>
+            u.deleted = FALSE
+            <if test="username != null and username != ''">AND u.username ILIKE '%' || #{username} '%'</if>
+            <if test="personaNombre != null and personaNombre != ''">AND (p.nombre ILIKE '%' || #{personaNombre} '%' OR p.primer_apellido ILIKE '%' || #{personaNombre} '%')</if>
+        </where>
+        ORDER BY u.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM petcare.usuario u
+        LEFT JOIN petcare.persona p ON p.id = u.persona_id AND p.deleted = FALSE
+        <where>
+            u.deleted = FALSE
+            <if test="username != null and username != ''">AND u.username ILIKE '%' || #{username} '%'</if>
+            <if test="personaNombre != null and personaNombre != ''">AND (p.nombre ILIKE '%' || #{personaNombre} '%' OR p.primer_apellido ILIKE '%' || #{personaNombre} '%')</if>
+        </where>
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.usuario.entity.Usuario">
+        UPDATE petcare.usuario
+        SET username = #{username}, password = #{password}, persona_id = #{personaId},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE petcare.usuario SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+
+    <update id="updateTokenRefresh">
+        UPDATE petcare.usuario
+        SET token_refresh = #{tokenRefresh}, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="updateLastAccess">
+        UPDATE petcare.usuario
+        SET ultimo_acceso = NOW(), updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="incrementFailedAttempts">
+        UPDATE petcare.usuario
+        SET intentos_fallidos = intentos_fallidos + 1,
+            bloqueado = CASE WHEN intentos_fallidos + 1 >= 5 THEN TRUE ELSE bloqueado END,
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="resetFailedAttempts">
+        UPDATE petcare.usuario
+        SET intentos_fallidos = 0, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="blockUser">
+        UPDATE petcare.usuario
+        SET bloqueado = TRUE, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <select id="selectByPersonaId" resultMap="usuarioWithPersonaResultMap">
+        SELECT u.id, u.username, u.password, u.token_refresh, u.intentos_fallidos,
+               u.bloqueado, u.activo, u.ultimo_acceso, u.persona_id, u.created_at, u.updated_at, u.deleted, u.version,
+               p.id AS persona_id, p.nombre AS p_nombre, p.primer_apellido AS p_primer_apellido,
+               p.segundo_apellido AS p_segundo_apellido, p.ci AS p_ci, p.telefono AS p_telefono,
+               p.email AS p_email, p.fecha_nacimiento AS p_fecha_nacimiento, p.genero AS p_genero,
+               p.direccion_id AS p_direccion_id
+        FROM petcare.usuario u
+        LEFT JOIN petcare.persona p ON p.id = u.persona_id AND p.deleted = FALSE
+        WHERE u.persona_id = #{personaId} AND u.deleted = FALSE
+        LIMIT 1
+    </select>
+</mapper>

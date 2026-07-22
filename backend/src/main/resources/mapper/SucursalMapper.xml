@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.sucursal.mapper.SucursalMapper">
+    <sql id="baseColumns">
+        s.id, s.nombre, s.direccion_id, s.telefono, s.email,
+        s.horario_apertura, s.horario_cierre,
+        s.latitud, s.longitud, s.activa,
+        s.created_at, s.updated_at, s.deleted, s.version
+    </sql>
+    <sql id="table">petcare.sucursal s</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.sucursal.entity.Sucursal">
+        INSERT INTO petcare.sucursal (nombre, direccion_id, telefono, email, horario_apertura, horario_cierre, latitud, longitud, activa)
+        VALUES (#{nombre}, #{direccionId}, #{telefono}, #{email}, #{horarioApertura}, #{horarioCierre}, #{latitud}, #{longitud}, #{activa})
+    </insert>
+
+    <resultMap id="sucursalDireccionResultMap" type="bo.capital.tec.pet.sucursal.entity.Sucursal">
+        <id property="id" column="id"/>
+        <result property="nombre" column="nombre"/>
+        <result property="direccionId" column="direccion_id"/>
+        <result property="telefono" column="telefono"/>
+        <result property="email" column="email"/>
+        <result property="horarioApertura" column="horario_apertura"/>
+        <result property="horarioCierre" column="horario_cierre"/>
+        <result property="latitud" column="latitud"/>
+        <result property="longitud" column="longitud"/>
+        <result property="activa" column="activa"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="sucursalDireccionResultMap">
+        SELECT s.id, s.nombre, s.direccion_id, s.telefono, s.email,
+               s.horario_apertura, s.horario_cierre, s.latitud, s.longitud, s.activa,
+               s.created_at, s.updated_at, s.deleted, s.version
+        FROM petcare.sucursal s
+        WHERE s.id = #{id} AND s.deleted = FALSE
+    </select>
+
+    <select id="selectAll" resultMap="sucursalDireccionResultMap">
+        SELECT s.id, s.nombre, s.direccion_id, s.telefono, s.email,
+               s.horario_apertura, s.horario_cierre, s.latitud, s.longitud, s.activa,
+               s.created_at, s.updated_at, s.deleted, s.version
+        FROM petcare.sucursal s
+        <where>
+            s.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND s.nombre ILIKE '%' || #{nombre} '%'</if>
+        </where>
+        ORDER BY s.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM petcare.sucursal s
+        <where>
+            s.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND s.nombre ILIKE '%' || #{nombre} '%'</if>
+        </where>
+    </select>
+
+    <select id="selectActive" resultMap="sucursalDireccionResultMap">
+        SELECT s.id, s.nombre, s.direccion_id, s.telefono, s.email,
+               s.horario_apertura, s.horario_cierre, s.latitud, s.longitud, s.activa,
+               s.created_at, s.updated_at, s.deleted, s.version
+        FROM petcare.sucursal s
+        WHERE s.activa = TRUE AND s.deleted = FALSE
+        ORDER BY s.nombre ASC
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.sucursal.entity.Sucursal">
+        UPDATE petcare.sucursal
+        SET nombre = #{nombre}, direccion_id = #{direccionId}, telefono = #{telefono}, email = #{email},
+            horario_apertura = #{horarioApertura}, horario_cierre = #{horarioCierre},
+            latitud = #{latitud}, longitud = #{longitud}, activa = #{activa},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE petcare.sucursal SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+</mapper>

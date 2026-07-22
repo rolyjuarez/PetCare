@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+jwt:
+  secret: TestSecretKeyForJWTTokenGeneration2024VeryLongAndSecureKeyMustBe256Bits!!
+  expiration: 3600000
+  refresh-expiration: 604800000
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: bo.capital.tec.pet.*.entity
+  configuration:
+    map-underscore-to-camel-case: true
+logging:
+  level:
+    bo.capital.tec.pet: DEBUG

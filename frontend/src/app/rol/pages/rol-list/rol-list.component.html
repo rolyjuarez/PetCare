@@ -1,0 +1,41 @@
+
+    <div class="space-y-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold dark:text-white">Roles</h1>
+        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+          <span class="material-icons text-sm">add</span> Nuevo Rol
+        </button>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+               placeholder="Buscar rol..."
+               class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (item of items(); track item.id) {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-semibold text-lg dark:text-white">{{ item.nombre }}</h3>
+              <span [class]="item.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                    class="text-xs px-2 py-1 rounded-full">
+                {{ item.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ item.descripcion }}</p>
+            <div class="flex flex-wrap gap-1 mb-4">
+              @for (perm of item.permisos; track perm) {
+                <span class="bg-accent-100 text-accent-700 text-xs px-2 py-1 rounded-full dark:bg-accent-900 dark:text-accent-300">{{ perm }}</span>
+              }
+            </div>
+            <div class="flex gap-2">
+              <button class="text-primary-500 hover:underline text-sm">Editar</button>
+              <button class="text-red-500 hover:underline text-sm">Eliminar</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">No hay roles registrados</div>
+        }
+      </div>
+    </div>

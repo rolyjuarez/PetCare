@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.direccion.mapper.EstadoMapper">
+    <sql id="baseColumns">
+        id, nombre, codigo, ciudad_id, created_at, updated_at, deleted, version
+    </sql>
+    <sql id="table">petcare.estado</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.direccion.entity.Estado">
+        INSERT INTO <include refid="table"/> (nombre, codigo, ciudad_id)
+        VALUES (#{nombre}, #{codigo}, #{ciudadId})
+    </insert>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.direccion.entity.Estado">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE id = #{id} AND deleted = FALSE
+    </select>
+
+    <select id="selectAll" resultType="bo.capital.tec.pet.direccion.entity.Estado">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE deleted = FALSE
+        ORDER BY nombre ASC
+    </select>
+
+    <select id="selectByCiudadId" resultType="bo.capital.tec.pet.direccion.entity.Estado">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE ciudad_id = #{ciudadId} AND deleted = FALSE
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.direccion.entity.Estado">
+        UPDATE <include refid="table"/>
+        SET nombre = #{nombre}, codigo = #{codigo}, ciudad_id = #{ciudadId},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+</mapper>

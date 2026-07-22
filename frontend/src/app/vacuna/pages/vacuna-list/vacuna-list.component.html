@@ -1,0 +1,54 @@
+
+    <div class="space-y-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold dark:text-white">Vacunas</h1>
+        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+          <span class="material-icons text-sm">add</span> Nueva Vacuna
+        </button>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+               placeholder="Buscar vacuna..."
+               class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Nombre</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Fabricante</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Dosis</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Intervalo</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Estado</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track item.id) {
+              <tr class="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750">
+                <td class="px-6 py-4 dark:text-gray-300 font-medium">{{ item.nombre }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">{{ item.fabricante }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">{{ item.dosisRequeridas }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">{{ item.intervaloDias }} dias</td>
+                <td class="px-6 py-4">
+                  <span [class]="item.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                        class="text-xs px-2 py-1 rounded-full">
+                    {{ item.activo ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="px-6 py-4">
+                  <button class="text-primary-500 hover:underline mr-3">Editar</button>
+                  <button class="text-red-500 hover:underline">Eliminar</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay vacunas registradas</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>

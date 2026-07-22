@@ -1,0 +1,252 @@
+<div class="register-container">
+  <div class="register-card">
+    <div class="register-header">
+      <div class="paw-circle">🐾</div>
+      <h2>Crear Cuenta</h2>
+      <p>Registrate como cliente en PETCare</p>
+    </div>
+
+    <div class="stepper">
+      <div
+        class="step"
+        [class.active]="currentStep() === 1"
+        [class.completed]="currentStep() === 2"
+      >
+        <div class="step-number">{{ currentStep() > 1 ? "✓" : "1" }}</div>
+        <span>Datos Personales</span>
+      </div>
+      <div class="step-line" [class.active]="currentStep() === 2"></div>
+      <div class="step" [class.active]="currentStep() === 2">
+        <div class="step-number">2</div>
+        <span>Ubicacion</span>
+      </div>
+    </div>
+
+    <!-- PASO 1: Datos Personales -->
+    @if (currentStep() === 1) {
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Nombre <span class="required">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="form.nombre"
+              placeholder="Su nombre"
+            />
+          </div>
+          <div class="form-group">
+            <label>Primer Apellido <span class="required">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="form.primerApellido"
+              placeholder="Apellido paterno"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Segundo Apellido</label>
+            <input
+              type="text"
+              [(ngModel)]="form.segundoApellido"
+              placeholder="Apellido materno"
+            />
+          </div>
+          <div class="form-group">
+            <label>CI <span class="required">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="form.ci"
+              placeholder="Carnet de identidad"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Telefono <span class="required">*</span></label>
+            <input
+              type="tel"
+              [(ngModel)]="form.telefono"
+              placeholder="Celular"
+            />
+          </div>
+          <div class="form-group">
+            <label>Email <span class="required">*</span></label>
+            <input
+              type="email"
+              [(ngModel)]="form.email"
+              placeholder="correo@ejemplo.com"
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha de Nacimiento <span class="required">*</span></label>
+            <input type="date" [(ngModel)]="form.fechaNacimiento" />
+          </div>
+          <div class="form-group">
+            <label>Genero <span class="required">*</span></label>
+            <select [(ngModel)]="form.genero">
+              <option value="">Seleccione...</option>
+              <option value="M">Masculino</option>
+              <option value="F">Femenino</option>
+              <option value="O">Otro</option>
+            </select>
+          </div>
+        </div>
+        <hr
+          style="border: none; border-top: 1px solid #e2e8f0; margin: 1rem 0"
+        />
+        <div class="form-group">
+          <label>Usuario <span class="required">*</span></label>
+          <input
+            type="text"
+            [(ngModel)]="form.username"
+            placeholder="Minimo 4 caracteres"
+          />
+        </div>
+        <div class="form-group">
+          <label>Contrasena <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">lock</span>
+            <input
+              [type]="showPassword() ? 'text' : 'password'"
+              [(ngModel)]="form.password"
+              placeholder="Minimo 6 caracteres"
+            />
+            <button type="button" class="toggle-pw" (click)="showPassword.set(!showPassword())">
+              <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Confirmar Contrasena <span class="required">*</span></label>
+          <div class="input-wrapper">
+            <span class="material-icons input-icon">lock</span>
+            <input
+              [type]="showConfirmPassword() ? 'text' : 'password'"
+              [(ngModel)]="confirmarPassword"
+              placeholder="Repita su contrasena"
+            />
+            <button type="button" class="toggle-pw" (click)="showConfirmPassword.set(!showConfirmPassword())">
+              <span class="material-icons">{{ showConfirmPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- PASO 2: Ubicacion -->
+    @if (currentStep() === 2) {
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Calle <span class="required">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="form.calle"
+              placeholder="Nombre de la calle"
+            />
+          </div>
+          <div class="form-group">
+            <label>Numero</label>
+            <input
+              type="text"
+              [(ngModel)]="form.numero"
+              placeholder="Nro. de puerta"
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Ciudad <span class="required">*</span></label>
+          <select
+            [(ngModel)]="form.ciudadId"
+            (ngModelChange)="onCiudadChange()"
+          >
+            <option [ngValue]="0">Seleccione una ciudad...</option>
+            @for (c of ciudades(); track c.id) {
+              <option [ngValue]="c.id">{{ c.nombre }}</option>
+            }
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Referencia</label>
+          <textarea
+            [(ngModel)]="form.referencia"
+            rows="2"
+            placeholder="Ej: Frente al parque, casa color azul..."
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label>Ubicacion en el Mapa <span class="required">*</span></label>
+          <p class="map-hint">
+            Haga clic en el mapa para marcar su ubicacion exacta
+          </p>
+          <div id="register-map" class="map-container"></div>
+          <div class="map-coords">
+            <div class="form-group">
+              <label>Latitud</label>
+              <input
+                type="text"
+                [value]="form.latitud ? form.latitud.toFixed(6) : ''"
+                readonly
+                placeholder="Click en el mapa"
+              />
+            </div>
+            <div class="form-group">
+              <label>Longitud</label>
+              <input
+                type="text"
+                [value]="form.longitud ? form.longitud.toFixed(6) : ''"
+                readonly
+                placeholder="Click en el mapa"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="form-actions">
+      @if (currentStep() === 2) {
+        <button type="button" class="btn btn-secondary" (click)="prevStep()">
+          <span class="material-icons" style="font-size: 1.1rem"
+            >arrow_back</span
+          >
+          Atras
+        </button>
+      }
+      @if (currentStep() === 1) {
+        <button type="button" class="btn btn-primary" (click)="nextStep()">
+          Siguiente
+          <span class="material-icons" style="font-size: 1.1rem"
+            >arrow_forward</span
+          >
+        </button>
+      } @else {
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onSubmit()"
+          [disabled]="loading()"
+        >
+          @if (loading()) {
+            <div class="spinner"></div>
+            Registrando...
+          } @else {
+            <span class="material-icons" style="font-size: 1.1rem"
+              >person_add</span
+            >
+            Registrarse
+          }
+        </button>
+      }
+    </div>
+
+    <div class="login-link">
+      <a href="javascript:void(0)" (click)="goToLogin()"
+        >Ya tengo cuenta - Iniciar sesion</a
+      >
+    </div>
+  </div>
+</div>

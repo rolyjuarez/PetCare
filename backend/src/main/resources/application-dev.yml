@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/petcaredb
+    username: postgres
+    password: 123qwe
+logging:
+  level:
+    bo.capital.tec.pet: DEBUG

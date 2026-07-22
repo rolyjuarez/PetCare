@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Bienvenido a PETCare</title></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background-color:#ffffff;padding:40px;">
+    <div style="text-align:center;padding-bottom:20px;border-bottom:2px solid #22c55e;">
+      <h1 style="color:#166534;font-size:28px;margin:0;">🐾 PETCare</h1>
+      <p style="color:#6b7280;margin:5px 0 0;">Home Services</p>
+    </div>
+    <div style="padding:30px 0;">
+      <h2 style="color:#1f2937;">¡Bienvenido, <span th:text="${nombre}">Usuario</span>!</h2>
+      <p style="color:#4b5563;line-height:1.6;">Su cuenta ha sido creada exitosamente. Ya puede acceder a PETCare y disfrutar de nuestros servicios de cuidado de mascotas a domicilio.</p>
+
+      <div style="background-color:#f0fdf4;border-radius:8px;padding:20px;margin:20px 0;">
+        <h3 style="color:#166534;margin:0 0 10px;">Datos de acceso:</h3>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:8px 0;color:#6b7280;font-weight:bold;">Usuario:</td>
+            <td style="padding:8px 0;color:#1f2937;" th:text="${username}">usuario123</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 0;color:#6b7280;font-weight:bold;">Email:</td>
+            <td style="padding:8px 0;color:#1f2937;" th:text="${email}">correo@ejemplo.com</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="color:#4b5563;line-height:1.6;">Su cuenta ha sido configurada con el rol de <strong>Cliente</strong>. Podrá reservar servicios, gestionar sus mascotas y mucho más.</p>
+
+      <div style="text-align:center;margin:30px 0;">
+        <a href="http://localhost:4200" style="background-color:#22c55e;color:#ffffff;padding:12px 30px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Iniciar Sesión</a>
+      </div>
+    </div>
+    <div style="text-align:center;padding-top:20px;border-top:1px solid #e5e7eb;">
+      <p style="color:#9ca3af;font-size:12px;">PETCare Home Services - Servicios para mascotas a domicilio</p>
+    </div>
+  </div>
+</body>
+</html>

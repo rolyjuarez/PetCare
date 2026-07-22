@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.reserva.mapper.EstadoReservaMapper">
+    <sql id="baseColumns">
+        id, nombre, descripcion, color, icono, orden, created_at, updated_at, deleted, version
+    </sql>
+    <sql id="table">petcare.estado_reserva</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.reserva.entity.EstadoReserva">
+        INSERT INTO <include refid="table"/> (nombre, descripcion, color, icono, orden)
+        VALUES (#{nombre}, #{descripcion}, #{color}, #{icono}, #{orden})
+    </insert>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.reserva.entity.EstadoReserva">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE id = #{id} AND deleted = FALSE
+    </select>
+
+    <select id="selectAll" resultType="bo.capital.tec.pet.reserva.entity.EstadoReserva">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE deleted = FALSE
+        ORDER BY orden ASC, nombre ASC
+    </select>
+
+    <select id="selectByNombre" resultType="bo.capital.tec.pet.reserva.entity.EstadoReserva">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE nombre = #{nombre} AND deleted = FALSE
+    </select>
+</mapper>

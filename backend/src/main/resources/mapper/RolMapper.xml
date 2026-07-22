@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.rol.mapper.RolMapper">
+    <sql id="baseColumns">
+        id, nombre, descripcion, activo, created_at, updated_at, deleted, version
+    </sql>
+    <sql id="table">petcare.rol</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.rol.entity.Rol">
+        INSERT INTO <include refid="table"/> (nombre, descripcion, activo)
+        VALUES (#{nombre}, #{descripcion}, #{activo})
+    </insert>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.rol.entity.Rol">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE id = #{id} AND deleted = FALSE
+    </select>
+
+    <select id="selectAll" resultType="bo.capital.tec.pet.rol.entity.Rol">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE deleted = FALSE
+        ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM <include refid="table"/>
+        WHERE deleted = FALSE
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.rol.entity.Rol">
+        UPDATE <include refid="table"/>
+        SET nombre = #{nombre}, descripcion = #{descripcion}, activo = #{activo},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+
+    <select id="selectByNombre" resultType="bo.capital.tec.pet.rol.entity.Rol">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE nombre = #{nombre} AND deleted = FALSE
+    </select>
+
+    <select id="findByUsuarioId" resultType="bo.capital.tec.pet.rol.entity.Rol">
+        SELECT r.id, r.nombre, r.descripcion, r.activo, r.created_at, r.updated_at, r.deleted, r.version
+        FROM petcare.rol r
+        INNER JOIN petcare.usuario_rol ur ON ur.rol_id = r.id AND ur.deleted = FALSE
+        WHERE ur.usuario_id = #{usuarioId} AND r.deleted = FALSE
+    </select>
+</mapper>

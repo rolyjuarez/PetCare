@@ -1,0 +1,41 @@
+
+    <div class="flex h-screen overflow-hidden">
+      <!-- Sidebar -->
+      <aside [class]="sidebarOpen() ? 'w-64' : 'w-16'" class="bg-gray-900 text-white transition-all duration-300 flex flex-col">
+        <div class="p-4 flex items-center gap-3">
+          <span class="text-2xl">🐾</span>
+          @if (sidebarOpen()) { <span class="font-bold text-lg">PETCare</span> }
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+          @for (item of menuItems; track item.route) {
+            <a [routerLink]="item.route" routerLinkActive="bg-primary-600"
+               class="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors">
+              <span class="material-icons text-xl">{{ item.icon }}</span>
+              @if (sidebarOpen()) { <span>{{ item.label }}</span> }
+            </a>
+          }
+        </nav>
+        <button (click)="toggleSidebar()" class="p-4 hover:bg-gray-800">
+          <span class="material-icons">{{ sidebarOpen() ? 'chevron_left' : 'chevron_right' }}</span>
+        </button>
+      </aside>
+
+      <!-- Main -->
+      <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm h-16 flex items-center justify-between px-6">
+          <h1 class="text-xl font-semibold dark:text-white">PETCare Home Services</h1>
+          <div class="flex items-center gap-4">
+            <button (click)="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+              <span class="material-icons">{{ darkMode() ? 'light_mode' : 'dark_mode' }}</span>
+            </button>
+            <span class="text-sm dark:text-gray-300">{{ auth.currentUser()?.username }}</span>
+            <button (click)="auth.logout()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm">Salir</button>
+          </div>
+        </header>
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
+          <router-outlet />
+        </main>
+      </div>
+    </div>

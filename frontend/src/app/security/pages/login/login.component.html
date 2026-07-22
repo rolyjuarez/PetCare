@@ -1,0 +1,43 @@
+
+    <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-500 to-primary-700">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8 w-full max-w-md">
+        <div class="text-center mb-8">
+          <span class="text-5xl">🐾</span>
+          <h1 class="text-2xl font-bold mt-4 dark:text-white">PETCare Home Services</h1>
+          <p class="text-gray-500 dark:text-gray-400 mt-2">Inicia sesion en tu cuenta</p>
+        </div>
+
+        @if (error()) {
+          <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {{ error() }}
+          </div>
+        }
+
+        <form (ngSubmit)="onLogin()" class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuario</label>
+            <input type="text" [(ngModel)]="username" name="username"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                   placeholder="Ingrese su usuario" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contrasena</label>
+            <input [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="password" name="password"
+                   class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                   placeholder="Ingrese su contrasena" required />
+            <button type="button" (click)="showPassword.set(!showPassword())"
+                    class="absolute right-3 top-10 text-gray-400 hover:text-gray-600">
+              <span class="material-icons">{{ showPassword() ? 'visibility_off' : 'visibility' }}</span>
+            </button>
+          </div>
+          <button type="submit" [disabled]="loading()"
+                  class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-colors disabled:opacity-50">
+            @if (loading()) {
+              <span class="material-icons animate-spin mr-2">refresh</span> Ingresando...
+            } @else {
+              Ingresar
+            }
+          </button>
+        </form>
+      </div>
+    </div>

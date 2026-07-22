@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><title>Reserva Creada - PETCare</title></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;background-color:#ffffff;padding:40px;">
+    <div style="text-align:center;padding-bottom:20px;border-bottom:2px solid #22c55e;">
+      <h1 style="color:#166534;font-size:28px;margin:0;">🐾 PETCare</h1>
+      <p style="color:#6b7280;margin:5px 0 0;">Home Services</p>
+    </div>
+    <div style="padding:30px 0;">
+      <h2 style="color:#1f2937;">Reserva Creada Exitosamente</h2>
+      <p style="color:#4b5563;line-height:1.6;">Su reserva ha sido registrada correctamente. A continuacion los detalles:</p>
+      <div style="background-color:#f0fdf4;border-radius:8px;padding:20px;margin:20px 0;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:bold;">Codigo:</td><td style="padding:8px 0;color:#1f2937;" th:text="${codigo}">RES-001</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:bold;">Servicio:</td><td style="padding:8px 0;color:#1f2937;" th:text="${servicio}">Peluqueria</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:bold;">Proveedor:</td><td style="padding:8px 0;color:#1f2937;" th:text="${proveedor}">Juan Perez</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:bold;">Mascota:</td><td style="padding:8px 0;color:#1f2937;" th:text="${mascota}">Max</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:bold;">Fecha:</td><td style="padding:8px 0;color:#1f2937;" th:text="${fecha}">2024-01-15</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:bold;">Hora:</td><td style="padding:8px 0;color:#1f2937;" th:text="${hora}">10:00</td></tr>
+          <tr><td style="padding:8px 0;color:#6b7280;font-weight:bold;">Precio Total:</td><td style="padding:8px 0;color:#166534;font-weight:bold;font-size:18px;" th:text="${precio}">Bs. 150.00</td></tr>
+        </table>
+      </div>
+      <p style="color:#6b7280;">El proveedor recibira su solicitud y podra confirmarla. Recibira una notificacion cuando sea confirmada.</p>
+    </div>
+    <div style="text-align:center;padding-top:20px;border-top:1px solid #e5e7eb;">
+      <p style="color:#9ca3af;font-size:12px;">PETCare Home Services - Servicios para mascotas a domicilio</p>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,52 @@
+
+    <div class="space-y-6">
+      <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold dark:text-white">Proveedores</h1>
+        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+          <span class="material-icons text-sm">add</span> Nuevo Proveedor
+        </button>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+               placeholder="Buscar proveedor..."
+               class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (item of items(); track item.id) {
+          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="font-semibold text-lg dark:text-white">{{ item.personaNombre }}</h3>
+              <div class="flex items-center gap-1">
+                @if (item.verificado) {
+                  <span class="material-icons text-primary-500 text-sm">verified</span>
+                  <span class="text-xs text-primary-500">Verificado</span>
+                } @else {
+                  <span class="material-icons text-yellow-500 text-sm">pending</span>
+                  <span class="text-xs text-yellow-500">Pendiente</span>
+                }
+              </div>
+            </div>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.personaTelefono }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ item.descripcion }}</p>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="material-icons text-yellow-500 text-sm">star</span>
+              <span class="text-sm dark:text-gray-300">{{ item.calificacion }}</span>
+              <span class="text-xs text-gray-400 ml-2">Radio: {{ item.radioCoberturaKm }}km</span>
+            </div>
+            <div class="flex flex-wrap gap-1 mb-4">
+              @for (esp of item.especialidades; track esp) {
+                <span class="bg-accent-100 text-accent-700 text-xs px-2 py-1 rounded-full dark:bg-accent-900 dark:text-accent-300">{{ esp }}</span>
+              }
+            </div>
+            <div class="flex gap-2">
+              <button class="text-primary-500 hover:underline text-sm">Editar</button>
+              <button class="text-red-500 hover:underline text-sm">Eliminar</button>
+            </div>
+          </div>
+        } @empty {
+          <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">No hay proveedores registrados</div>
+        }
+      </div>
+    </div>

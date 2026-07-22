@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.proveedor.mapper.ProveedorMapper">
+    <sql id="baseColumns">
+        pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
+        pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
+        pr.created_at, pr.updated_at, pr.deleted, pr.version
+    </sql>
+    <sql id="table">petcare.proveedor pr</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.proveedor.entity.Proveedor">
+        INSERT INTO petcare.proveedor (persona_id, usuario_id, latitud, longitud, radio_cobertura_km, descripcion, verificado, calificacion)
+        VALUES (#{personaId}, #{usuarioId}, #{latitud}, #{longitud}, #{radioCoberturaKm}, #{descripcion}, #{verificado}, #{calificacion})
+    </insert>
+
+    <resultMap id="proveedorPersonaResultMap" type="bo.capital.tec.pet.proveedor.entity.Proveedor">
+        <id property="id" column="id"/>
+        <result property="personaId" column="persona_id"/>
+        <result property="usuarioId" column="usuario_id"/>
+        <result property="latitud" column="latitud"/>
+        <result property="longitud" column="longitud"/>
+        <result property="radioCoberturaKm" column="radio_cobertura_km"/>
+        <result property="descripcion" column="descripcion"/>
+        <result property="verificado" column="verificado"/>
+        <result property="calificacion" column="calificacion"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="proveedorPersonaResultMap">
+        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
+               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
+               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        FROM petcare.proveedor pr
+        WHERE pr.id = #{id} AND pr.deleted = FALSE
+    </select>
+
+    <select id="selectAll" resultMap="proveedorPersonaResultMap">
+        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
+               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
+               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        FROM petcare.proveedor pr
+        LEFT JOIN petcare.persona p ON p.id = pr.persona_id AND p.deleted = FALSE
+        <where>
+            pr.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
+        </where>
+        ORDER BY pr.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM petcare.proveedor pr
+        LEFT JOIN petcare.persona p ON p.id = pr.persona_id AND p.deleted = FALSE
+        <where>
+            pr.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
+        </where>
+    </select>
+
+    <resultMap id="proveedorServicioResultMap" type="bo.capital.tec.pet.proveedor.entity.Proveedor">
+        <id property="id" column="id"/>
+        <result property="personaId" column="persona_id"/>
+        <result property="usuarioId" column="usuario_id"/>
+        <result property="latitud" column="latitud"/>
+        <result property="longitud" column="longitud"/>
+        <result property="radioCoberturaKm" column="radio_cobertura_km"/>
+        <result property="descripcion" column="descripcion"/>
+        <result property="verificado" column="verificado"/>
+        <result property="calificacion" column="calificacion"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <select id="findByServicioId" resultMap="proveedorServicioResultMap">
+        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
+               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
+               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        FROM petcare.proveedor pr
+        INNER JOIN petcare.proveedor_especialidad pe ON pe.proveedor_id = pr.id AND pe.deleted = FALSE
+        INNER JOIN petcare.servicio s ON s.id = pe.servicio_id AND s.deleted = FALSE
+        WHERE pe.servicio_id = #{servicioId} AND pr.deleted = FALSE
+        ORDER BY pr.created_at ASC
+    </select>
+
+    <select id="searchNearby" resultMap="proveedorPersonaResultMap">
+        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
+               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
+               pr.created_at, pr.updated_at, pr.deleted, pr.version,
+               (6371 * acos(
+                   cos(radians(#{latitud})) * cos(radians(pr.latitud)) *
+                   cos(radians(pr.longitud) - radians(#{longitud})) +
+                   sin(radians(#{latitud})) * sin(radians(pr.latitud))
+               )) AS distancia
+        FROM petcare.proveedor pr
+        WHERE pr.deleted = FALSE
+          AND pr.latitud IS NOT NULL AND pr.longitud IS NOT NULL
+          AND (6371 * acos(
+              cos(radians(#{latitud})) * cos(radians(pr.latitud)) *
+              cos(radians(pr.longitud) - radians(#{longitud})) +
+              sin(radians(#{latitud})) * sin(radians(pr.latitud))
+          )) &lt;= #{radioKm}
+        ORDER BY distancia ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByUsuarioId" resultMap="proveedorPersonaResultMap">
+        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
+               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
+               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        FROM petcare.proveedor pr
+        WHERE pr.usuario_id = #{usuarioId} AND pr.deleted = FALSE
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.proveedor.entity.Proveedor">
+        UPDATE petcare.proveedor
+        SET persona_id = #{personaId}, usuario_id = #{usuarioId}, latitud = #{latitud}, longitud = #{longitud},
+            radio_cobertura_km = #{radioCoberturaKm}, descripcion = #{descripcion},
+            verificado = #{verificado}, calificacion = #{calificacion},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE petcare.proveedor SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+</mapper>

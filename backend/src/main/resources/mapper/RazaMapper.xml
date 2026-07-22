@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.mascota.mapper.RazaMapper">
+    <sql id="baseColumns">
+        id, nombre, especie_id, descripcion, created_at, updated_at, deleted, version
+    </sql>
+    <sql id="table">petcare.raza</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.mascota.entity.Raza">
+        INSERT INTO <include refid="table"/> (nombre, especie_id)
+        VALUES (#{nombre}, #{especieId})
+    </insert>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.mascota.entity.Raza">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE id = #{id} AND deleted = FALSE
+    </select>
+
+    <select id="selectByEspecieId" resultType="bo.capital.tec.pet.mascota.entity.Raza">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE especie_id = #{especieId} AND deleted = FALSE
+        ORDER BY nombre ASC
+    </select>
+
+    <select id="selectAll" resultType="bo.capital.tec.pet.mascota.entity.Raza">
+        SELECT r.id, r.nombre, r.especie_id, r.descripcion, r.created_at, r.updated_at, r.deleted, r.version,
+               e.nombre AS especie_nombre
+        FROM petcare.raza r
+        LEFT JOIN petcare.especie e ON e.id = r.especie_id AND e.deleted = FALSE
+        WHERE r.deleted = FALSE
+        ORDER BY r.nombre ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM <include refid="table"/>
+        WHERE deleted = FALSE
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.mascota.entity.Raza">
+        UPDATE <include refid="table"/>
+        SET nombre = #{nombre}, especie_id = #{especieId}, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+</mapper>

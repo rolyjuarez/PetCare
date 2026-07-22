@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.cliente.mapper.ClienteMapper">
+    <sql id="baseColumns">
+        c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
+    </sql>
+    <sql id="table">petcare.cliente c</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.cliente.entity.Cliente">
+        INSERT INTO petcare.cliente (persona_id, usuario_id, notas)
+        VALUES (#{personaId}, #{usuarioId}, #{notas})
+    </insert>
+
+    <resultMap id="clienteResultMap" type="bo.capital.tec.pet.cliente.entity.Cliente">
+        <id property="id" column="id"/>
+        <result property="personaId" column="persona_id"/>
+        <result property="usuarioId" column="usuario_id"/>
+        <result property="notas" column="notas"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="clienteResultMap">
+        SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
+        FROM petcare.cliente c
+        WHERE c.id = #{id} AND c.deleted = FALSE
+    </select>
+
+    <select id="selectAll" resultMap="clienteResultMap">
+        SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
+        FROM petcare.cliente c
+        LEFT JOIN petcare.persona p ON p.id = c.persona_id AND p.deleted = FALSE
+        <where>
+            c.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
+            <if test="ci != null and ci != ''">AND p.ci ILIKE '%' || #{ci} '%'</if>
+        </where>
+        ORDER BY c.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM petcare.cliente c
+        LEFT JOIN petcare.persona p ON p.id = c.persona_id AND p.deleted = FALSE
+        <where>
+            c.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
+            <if test="ci != null and ci != ''">AND p.ci ILIKE '%' || #{ci} '%'</if>
+        </where>
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.cliente.entity.Cliente">
+        UPDATE petcare.cliente
+        SET persona_id = #{personaId}, usuario_id = #{usuarioId}, notas = #{notas},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE petcare.cliente SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+
+    <select id="findByPersonaId" resultMap="clienteResultMap">
+        SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
+        FROM petcare.cliente c
+        WHERE c.persona_id = #{personaId} AND c.deleted = FALSE
+    </select>
+
+    <select id="findByUsuarioId" resultMap="clienteResultMap">
+        SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
+        FROM petcare.cliente c
+        WHERE c.usuario_id = #{usuarioId} AND c.deleted = FALSE
+    </select>
+</mapper>

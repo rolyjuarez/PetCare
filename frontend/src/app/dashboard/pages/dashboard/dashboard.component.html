@@ -1,0 +1,54 @@
+
+    <div class="space-y-6">
+      <h1 class="text-2xl font-bold dark:text-white">Dashboard</h1>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        @for (stat of stats(); track stat.label) {
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border-l-4"
+               [style.border-color]="stat.color">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ stat.label }}</p>
+                <p class="text-3xl font-bold mt-1 dark:text-white">{{ stat.value }}</p>
+              </div>
+              <span class="material-icons text-4xl opacity-20" [style.color]="stat.color">{{ stat.icon }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Recent Reservations -->
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
+        <h2 class="text-lg font-semibold mb-4 dark:text-white">Reservas Recientes</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th class="px-4 py-3 text-left text-sm font-medium dark:text-gray-300">Codigo</th>
+                <th class="px-4 py-3 text-left text-sm font-medium dark:text-gray-300">Cliente</th>
+                <th class="px-4 py-3 text-left text-sm font-medium dark:text-gray-300">Servicio</th>
+                <th class="px-4 py-3 text-left text-sm font-medium dark:text-gray-300">Fecha</th>
+                <th class="px-4 py-3 text-left text-sm font-medium dark:text-gray-300">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of recentReservas(); track r.id) {
+                <tr class="border-t dark:border-gray-700">
+                  <td class="px-4 py-3 text-sm dark:text-gray-300">{{ r.codigo }}</td>
+                  <td class="px-4 py-3 text-sm dark:text-gray-300">{{ r.clienteNombre }}</td>
+                  <td class="px-4 py-3 text-sm dark:text-gray-300">{{ r.servicioNombre }}</td>
+                  <td class="px-4 py-3 text-sm dark:text-gray-300">{{ r.fechaReserva }}</td>
+                  <td class="px-4 py-3">
+                    <span class="px-2 py-1 text-xs rounded-full text-white"
+                          [style.background-color]="r.estadoReservaColor">
+                      {{ r.estadoReservaNombre }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>

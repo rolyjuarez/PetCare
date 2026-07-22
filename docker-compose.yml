@@ -1,0 +1,74 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:18
+    container_name: petcare-postgres
+    environment:
+      POSTGRES_DB: petcaredb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123qwe
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./basededatos:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d petcaredb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - petcare-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: petcare-backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/petcaredb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 123qwe
+      JWT_SECRET: ${JWT_SECRET}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - petcare-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: petcare-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    networks:
+      - petcare-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: petcare-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@petcare.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    networks:
+      - petcare-network
+
+volumes:
+  postgres_data:
+
+networks:
+  petcare-network:
+    driver: bridge

@@ -1,0 +1,18 @@
+package bo.capital.tec.pet.mascota.mapper;
+
+import bo.capital.tec.pet.mascota.entity.Mascota;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import java.util.List;
+
+@Mapper
+public interface MascotaMapper {
+    Long insert(Mascota mascota);
+    Mascota selectById(@Param("id") Long id);
+    List<Mascota> selectAll(@Param("nombre") String nombre, @Param("especieId") Long especieId, @Param("offset") int offset, @Param("limit") int limit);
+    long countAll(@Param("nombre") String nombre, @Param("especieId") Long especieId);
+    List<Mascota> selectByClienteId(@Param("clienteId") Long clienteId, @Param("offset") int offset, @Param("limit") int limit);
+    long countByClienteId(@Param("clienteId") Long clienteId);
+    void update(Mascota mascota);
+    void softDelete(@Param("id") Long id);
+}
