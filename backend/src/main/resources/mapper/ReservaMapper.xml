@@ -8,7 +8,7 @@
         r.direccion_referencia, r.notas, r.precio_total,
         r.created_at, r.updated_at, r.deleted, r.version
     </sql>
-    <sql id="table">petcare.reserva r</sql>
+    <sql id="table">reserva r</sql>
 
     <resultMap id="reservaCompletoResultMap" type="bo.capital.tec.pet.reserva.entity.Reserva">
         <id property="id" column="id"/>
@@ -35,7 +35,7 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.reserva.entity.Reserva">
-        INSERT INTO petcare.reserva (codigo, cliente_id, proveedor_id, servicio_id, mascota_id,
+        INSERT INTO reserva (codigo, cliente_id, proveedor_id, servicio_id, mascota_id,
             estado_reserva_id, fecha_reserva, fecha_inicio, fecha_fin, hora_inicio, hora_fin,
             latitud, longitud, direccion_referencia, notas, precio_total)
         VALUES (#{codigo}, #{clienteId}, #{proveedorId}, #{servicioId}, #{mascotaId},
@@ -44,7 +44,7 @@
     </insert>
 
     <sql id="selectComplejoJoins">
-        LEFT JOIN petcare.estado_reserva er ON er.id = r.estado_reserva_id AND er.deleted = FALSE
+        LEFT JOIN estado_reserva er ON er.id = r.estado_reserva_id AND er.deleted = FALSE
     </sql>
 
     <select id="selectById" resultMap="reservaCompletoResultMap">
@@ -54,7 +54,7 @@
                r.direccion_referencia, r.notas, r.precio_total,
                r.created_at, r.updated_at, r.deleted, r.version,
                er.id AS er_id, er.nombre AS er_nombre, er.color AS er_color
-        FROM petcare.reserva r
+        FROM reserva r
         <include refid="selectComplejoJoins"/>
         WHERE r.id = #{id} AND r.deleted = FALSE
     </select>
@@ -66,7 +66,7 @@
                r.direccion_referencia, r.notas, r.precio_total,
                r.created_at, r.updated_at, r.deleted, r.version,
                er.id AS er_id, er.nombre AS er_nombre, er.color AS er_color
-        FROM petcare.reserva r
+        FROM reserva r
         <include refid="selectComplejoJoins"/>
         WHERE r.codigo = #{codigo} AND r.deleted = FALSE
     </select>
@@ -78,14 +78,14 @@
                r.direccion_referencia, r.notas, r.precio_total,
                r.created_at, r.updated_at, r.deleted, r.version,
                er.id AS er_id, er.nombre AS er_nombre, er.color AS er_color
-        FROM petcare.reserva r
+        FROM reserva r
         <include refid="selectComplejoJoins"/>
         WHERE r.deleted = FALSE
         ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM petcare.reserva r
+        SELECT COUNT(*) FROM reserva r
         WHERE r.deleted = FALSE
     </select>
 
@@ -96,7 +96,7 @@
                r.direccion_referencia, r.notas, r.precio_total,
                r.created_at, r.updated_at, r.deleted, r.version,
                er.id AS er_id, er.nombre AS er_nombre, er.color AS er_color
-        FROM petcare.reserva r
+        FROM reserva r
         <include refid="selectComplejoJoins"/>
         WHERE r.cliente_id = #{clienteId} AND r.deleted = FALSE
         ORDER BY r.created_at DESC
@@ -104,7 +104,7 @@
     </select>
 
     <select id="countByClienteId" resultType="long">
-        SELECT COUNT(*) FROM petcare.reserva r
+        SELECT COUNT(*) FROM reserva r
         WHERE r.cliente_id = #{clienteId} AND r.deleted = FALSE
     </select>
 
@@ -115,7 +115,7 @@
                r.direccion_referencia, r.notas, r.precio_total,
                r.created_at, r.updated_at, r.deleted, r.version,
                er.id AS er_id, er.nombre AS er_nombre, er.color AS er_color
-        FROM petcare.reserva r
+        FROM reserva r
         <include refid="selectComplejoJoins"/>
         WHERE r.proveedor_id = #{proveedorId} AND r.deleted = FALSE
         ORDER BY r.created_at DESC
@@ -123,7 +123,7 @@
     </select>
 
     <select id="countByProveedorId" resultType="long">
-        SELECT COUNT(*) FROM petcare.reserva r
+        SELECT COUNT(*) FROM reserva r
         WHERE r.proveedor_id = #{proveedorId} AND r.deleted = FALSE
     </select>
 
@@ -134,7 +134,7 @@
                r.direccion_referencia, r.notas, r.precio_total,
                r.created_at, r.updated_at, r.deleted, r.version,
                er.id AS er_id, er.nombre AS er_nombre, er.color AS er_color
-        FROM petcare.reserva r
+        FROM reserva r
         <include refid="selectComplejoJoins"/>
         WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
         ORDER BY r.created_at DESC
@@ -142,12 +142,12 @@
     </select>
 
     <select id="countByEstado" resultType="long">
-        SELECT COUNT(*) FROM petcare.reserva r
+        SELECT COUNT(*) FROM reserva r
         WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.reserva.entity.Reserva">
-        UPDATE petcare.reserva
+        UPDATE reserva
         SET codigo = #{codigo}, cliente_id = #{clienteId}, proveedor_id = #{proveedorId},
             servicio_id = #{servicioId}, mascota_id = #{mascotaId}, estado_reserva_id = #{estadoReservaId},
             fecha_reserva = #{fechaReserva}, fecha_inicio = #{fechaInicio}, fecha_fin = #{fechaFin},
@@ -159,12 +159,12 @@
     </update>
 
     <update id="updateEstado">
-        UPDATE petcare.reserva
+        UPDATE reserva
         SET estado_reserva_id = #{estadoReservaId}, updated_at = NOW(), version = version + 1
         WHERE id = #{id} AND deleted = FALSE
     </update>
 
     <update id="softDelete">
-        UPDATE petcare.reserva SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE reserva SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 </mapper>

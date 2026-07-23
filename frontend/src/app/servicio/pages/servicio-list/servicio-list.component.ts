@@ -2,8 +2,7 @@ import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ServicioService } from '../../../core/services/servicio.service';
-import { Servicio } from '../../../core/models/servicio.model';
+import { ServicioService, Servicio } from '../../../core/services/servicio.service';
 
 @Component({
   selector: 'app-servicio-list',

@@ -119,6 +119,18 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<MenuResponseDTO> getMenusByUsername(String username) {
+        List<Menu> menus = menuMapper.findByUsername(username);
+        return menus.stream()
+                .map(m -> {
+                    List<Submenu> submenus = submenuMapper.selectByMenuIdAndUsername(m.getId(), username);
+                    return toResponseDTO(m, submenus);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<MenuResponseDTO> getMenuTree() {
         List<Menu> menus = menuMapper.selectAll(0, 1000);
         return menus.stream()

@@ -27,7 +27,11 @@ export class LoginComponent {
       next: (res) => {
         this.loading.set(false);
         if (res.success) {
-          this.router.navigate(['/app/dashboard']);
+          const roles = res.data.userInfo?.roles ?? [];
+          console.log('LOGIN DEBUG - roles:', roles, 'includes CLIENTE:', roles.includes('CLIENTE'));
+          const target = roles.includes('CLIENTE') ? '/app/client-dashboard' : '/app/dashboard';
+          console.log('LOGIN DEBUG - navigating to:', target);
+          this.router.navigate([target]);
         } else {
           this.error.set(res.message || 'Credenciales incorrectas');
         }

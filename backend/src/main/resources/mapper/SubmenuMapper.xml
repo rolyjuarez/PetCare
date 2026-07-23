@@ -5,7 +5,7 @@
         id, nombre, descripcion, icono, url, orden, menu_id, activo,
         created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.submenu</sql>
+    <sql id="table">submenu</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.menu.entity.Submenu">
         INSERT INTO <include refid="table"/> (nombre, descripcion, icono, url, orden, menu_id, activo)
@@ -21,6 +21,18 @@
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE menu_id = #{menuId} AND deleted = FALSE
         ORDER BY orden ASC
+    </select>
+
+    <select id="selectByMenuIdAndUsername" resultType="bo.capital.tec.pet.menu.entity.Submenu">
+        SELECT DISTINCT sm.id, sm.nombre, sm.descripcion, sm.icono, sm.url, sm.orden, sm.menu_id, sm.activo,
+               sm.created_at, sm.updated_at, sm.deleted, sm.version
+        FROM submenu sm
+        INNER JOIN permiso p ON p.submenu_id = sm.id AND p.deleted = FALSE AND p.leer = TRUE
+        INNER JOIN usuario_rol ur ON ur.rol_id = p.rol_id AND ur.deleted = FALSE
+        INNER JOIN usuario u ON u.id = ur.usuario_id AND u.deleted = FALSE
+        WHERE sm.menu_id = #{menuId} AND sm.deleted = FALSE AND sm.activo = TRUE
+          AND u.username = #{username}
+        ORDER BY sm.orden ASC
     </select>
 
     <select id="selectAll" resultType="bo.capital.tec.pet.menu.entity.Submenu">

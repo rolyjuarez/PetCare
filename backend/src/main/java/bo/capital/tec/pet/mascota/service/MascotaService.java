@@ -12,6 +12,7 @@ public interface MascotaService {
     MascotaResponseDTO getById(Long id);
     PagedResponse<MascotaSummaryDTO> getAll(String nombre, Long clienteId, Long especieId, int page, int size);
     List<MascotaSummaryDTO> getByClienteId(Long clienteId);
+    List<MascotaSummaryDTO> getByUsuarioId(Long usuarioId);
     MascotaResponseDTO update(Long id, MascotaRequestDTO dto);
     void delete(Long id);
 }

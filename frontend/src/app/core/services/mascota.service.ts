@@ -12,12 +12,16 @@ export class MascotaService {
     return this.api.getPaged('/mascotas', params?.page, params?.size, params);
   }
 
+  getMy(): Observable<ApiResponse<Mascota[]>> {
+    return this.api.get('/mascotas/my');
+  }
+
   getById(id: number): Observable<ApiResponse<Mascota>> {
     return this.api.get(`/mascotas/${id}`);
   }
 
   getByCliente(clienteId: number): Observable<ApiResponse<Mascota[]>> {
-    return this.api.get(`/mascotas/cliente/${clienteId}`);
+    return this.api.get(`/mascotas/by-cliente/${clienteId}`);
   }
 
   create(data: MascotaRequest): Observable<ApiResponse<Mascota>> {

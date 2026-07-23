@@ -4,7 +4,7 @@
     <sql id="baseColumns">
         id, usuario_id, rol_id, created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.usuario_rol</sql>
+    <sql id="table">usuario_rol</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.usuario.entity.UsuarioRol">
         INSERT INTO <include refid="table"/> (usuario_id, rol_id)

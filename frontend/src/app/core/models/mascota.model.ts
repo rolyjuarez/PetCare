@@ -1,7 +1,7 @@
 export interface Mascota {
   id: number;
   nombre: string;
-  fechaNacimiento: string;
+  fechaNacimiento: any;
   genero: string;
   peso: number;
   color: string;
@@ -21,6 +21,7 @@ export interface MascotaRequest {
   genero: string;
   peso: number;
   color: string;
+  imagenUrl?: string;
   especieId: number;
   razaId: number;
   clienteId: number;

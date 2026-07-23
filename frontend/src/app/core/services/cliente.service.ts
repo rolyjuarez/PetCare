@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse, PagedResponse } from '../models/api-response.model';
-import { Cliente } from '../models/cliente.model';
+import { Cliente, ClienteSummary } from '../models/cliente.model';
 
 @Injectable({ providedIn: 'root' })
 export class ClienteService {
   constructor(private api: ApiService) {}
 
-  getAll(params?: any): Observable<ApiResponse<PagedResponse<Cliente>>> {
+  getAll(params?: any): Observable<ApiResponse<PagedResponse<ClienteSummary>>> {
     return this.api.getPaged('/clientes', params?.page, params?.size, params);
   }
 

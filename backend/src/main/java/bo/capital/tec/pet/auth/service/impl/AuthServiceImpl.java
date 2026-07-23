@@ -220,7 +220,7 @@ public class AuthServiceImpl implements AuthService {
             variables.put("nombre", dto.getNombre() + " " + dto.getPrimerApellido());
             variables.put("username", dto.getUsername());
             variables.put("email", dto.getEmail());
-            emailService.sendEmail(dto.getEmail(), "Bienvenido a PETCare", "bienvenida", variables);
+            emailService.sendEmail(dto.getEmail(), "Bienvenido a PETCare", "email/bienvenida", variables);
         } catch (Exception e) {
             log.warn("Error enviando email de bienvenida: {}", e.getMessage());
         }
@@ -259,14 +259,10 @@ public class AuthServiceImpl implements AuthService {
         String resetToken = jwtTokenProvider.generateResetToken(email);
         String resetLink = "http://localhost:4200/reset-password?token=" + resetToken;
 
-        try {
-            Map<String, Object> variables = new HashMap<>();
-            variables.put("nombre", persona.getNombre() + " " + persona.getPrimerApellido());
-            variables.put("resetLink", resetLink);
-            emailService.sendEmail(email, "Recuperar contrasena - PETCare", "recuperar-password", variables);
-        } catch (Exception e) {
-            log.warn("Error enviando email de recuperacion: {}", e.getMessage());
-        }
+        Map<String, Object> variables = new HashMap<>();
+        variables.put("nombre", persona.getNombre() + " " + persona.getPrimerApellido());
+        variables.put("resetLink", resetLink);
+        emailService.sendEmailSync(email, "Recuperar contrasena - PETCare", "email/recuperar-password", variables);
 
         log.info("Email de recuperacion enviado a: {}", email);
     }

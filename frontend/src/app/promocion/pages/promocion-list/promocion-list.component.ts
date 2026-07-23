@@ -2,8 +2,7 @@ import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { PromocionService } from '../../../core/services/promocion.service';
-import { Promocion } from '../../../core/models/promocion.model';
+import { PromocionService, Promocion } from '../../../core/services/promocion.service';
 
 @Component({
   selector: 'app-promocion-list',
@@ -41,8 +40,9 @@ export class PromocionListComponent implements OnInit {
     }
     this.items.set(
       this.allItems.filter(p =>
+        p.nombre.toLowerCase().includes(term) ||
         p.codigo.toLowerCase().includes(term) ||
-        p.descripcion.toLowerCase().includes(term)
+        (p.descripcion && p.descripcion.toLowerCase().includes(term))
       )
     );
   }

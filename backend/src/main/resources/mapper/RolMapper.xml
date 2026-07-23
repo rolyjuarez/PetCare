@@ -4,7 +4,7 @@
     <sql id="baseColumns">
         id, nombre, descripcion, activo, created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.rol</sql>
+    <sql id="table">rol</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.rol.entity.Rol">
         INSERT INTO <include refid="table"/> (nombre, descripcion, activo)
@@ -45,8 +45,8 @@
 
     <select id="findByUsuarioId" resultType="bo.capital.tec.pet.rol.entity.Rol">
         SELECT r.id, r.nombre, r.descripcion, r.activo, r.created_at, r.updated_at, r.deleted, r.version
-        FROM petcare.rol r
-        INNER JOIN petcare.usuario_rol ur ON ur.rol_id = r.id AND ur.deleted = FALSE
+        FROM rol r
+        INNER JOIN usuario_rol ur ON ur.rol_id = r.id AND ur.deleted = FALSE
         WHERE ur.usuario_id = #{usuarioId} AND r.deleted = FALSE
     </select>
 </mapper>

@@ -2,8 +2,7 @@ import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ReservaService } from '../../../core/services/reserva.service';
-import { Reserva } from '../../../core/models/reserva.model';
+import { ReservaService, Reserva } from '../../../core/services/reserva.service';
 
 @Component({
   selector: 'app-reserva-list',

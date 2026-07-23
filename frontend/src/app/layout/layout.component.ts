@@ -1,7 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../core/services/auth.service';
+import { MenuService } from '../core/services/menu.service';
+import { MenuItem } from '../core/models/menu.model';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-layout',
@@ -9,30 +12,33 @@ import { AuthService } from '../core/services/auth.service';
   imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
   templateUrl: './layout.component.html'
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit, OnDestroy {
   sidebarOpen = signal(true);
   darkMode = signal(false);
+  menuItems = signal<MenuItem[]>([]);
+  expandedMenus = signal<Set<number>>(new Set());
 
   auth: AuthService;
+  private sub?: Subscription;
 
-  menuItems = [
-    { route: '/app/dashboard', icon: 'dashboard', label: 'Dashboard' },
-    { route: '/app/personas', icon: 'people', label: 'Personas' },
-    { route: '/app/usuarios', icon: 'person', label: 'Usuarios' },
-    { route: '/app/roles', icon: 'admin_panel_settings', label: 'Roles' },
-    { route: '/app/mascotas', icon: 'pets', label: 'Mascotas' },
-    { route: '/app/clientes', icon: 'contact_phone', label: 'Clientes' },
-    { route: '/app/proveedores', icon: 'local_shipping', label: 'Proveedores' },
-    { route: '/app/servicios', icon: 'design_services', label: 'Servicios' },
-    { route: '/app/reservas', icon: 'event', label: 'Reservas' },
-    { route: '/app/vacunas', icon: 'vaccines', label: 'Vacunas' },
-    { route: '/app/promociones', icon: 'local_offer', label: 'Promociones' },
-    { route: '/app/pagos', icon: 'payment', label: 'Pagos' },
-    { route: '/app/reportes', icon: 'assessment', label: 'Reportes' }
-  ];
-
-  constructor(auth: AuthService) {
+  constructor(auth: AuthService, private menuService: MenuService) {
     this.auth = auth;
+  }
+
+  ngOnInit(): void {
+    this.loadMenus();
+  }
+
+  ngOnDestroy(): void {
+    this.sub?.unsubscribe();
+  }
+
+  loadMenus(): void {
+    if (!this.auth.isAuthenticated()) return;
+    this.sub = this.menuService.getMyMenus().subscribe({
+      next: menus => this.menuItems.set(menus),
+      error: () => this.menuItems.set([])
+    });
   }
 
   toggleSidebar(): void {
@@ -42,5 +48,37 @@ export class LayoutComponent {
   toggleDarkMode(): void {
     this.darkMode.update(v => !v);
     document.documentElement.classList.toggle('dark');
+  }
+
+  toggleMenu(menuId: number): void {
+    this.expandedMenus.update(set => {
+      const newSet = new Set(set);
+      if (newSet.has(menuId)) {
+        newSet.delete(menuId);
+      } else {
+        newSet.add(menuId);
+      }
+      return newSet;
+    });
+  }
+
+  isMenuExpanded(menuId: number): boolean {
+    return this.expandedMenus().has(menuId);
+  }
+
+  hasSubmenus(menu: MenuItem): boolean {
+    return menu.submenus && menu.submenus.length > 0;
+  }
+
+  resolveUrl(menu: MenuItem): string {
+    if (menu.url?.endsWith('dashboard')) {
+      try {
+        const userInfo = JSON.parse(localStorage.getItem('userInfo') ?? 'null');
+        if (userInfo?.roles?.includes('CLIENTE')) {
+          return menu.url.replace(/dashboard$/, 'client-dashboard');
+        }
+      } catch {}
+    }
+    return menu.url;
   }
 }

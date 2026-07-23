@@ -1,5 +1,20 @@
-import { Routes } from '@angular/router';
+import { Routes, Router, UrlTree } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { inject } from '@angular/core';
+
+function isCliente(): boolean {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') ?? 'null');
+    return userInfo?.roles?.includes('CLIENTE') ?? false;
+  } catch {
+    return false;
+  }
+}
+
+function redirectByRole(): UrlTree {
+  const router = inject(Router);
+  return router.parseUrl(isCliente() ? '/app/client-dashboard' : '/app/dashboard');
+}
 
 export const routes: Routes = [
   {
@@ -28,11 +43,14 @@ export const routes: Routes = [
     loadComponent: () => import('./layout/layout.component').then(m => m.LayoutComponent),
     children: [
       { path: 'dashboard', loadComponent: () => import('./dashboard/pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+      { path: 'client-dashboard', loadComponent: () => import('./dashboard/pages/client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent) },
       { path: 'personas', loadComponent: () => import('./persona/pages/persona-list/persona-list.component').then(m => m.PersonaListComponent) },
       { path: 'usuarios', loadComponent: () => import('./usuario/pages/usuario-list/usuario-list.component').then(m => m.UsuarioListComponent) },
       { path: 'roles', loadComponent: () => import('./rol/pages/rol-list/rol-list.component').then(m => m.RolListComponent) },
       { path: 'mascotas', loadComponent: () => import('./mascota/pages/mascota-list/mascota-list.component').then(m => m.MascotaListComponent) },
       { path: 'clientes', loadComponent: () => import('./cliente/pages/cliente-list/cliente-list.component').then(m => m.ClienteListComponent) },
+      { path: 'clientes/:id/mascotas', loadComponent: () => import('./mascota/pages/mascota-cliente/mascota-cliente.component').then(m => m.MascotaClienteComponent) },
+      { path: 'mascotas/:id', loadComponent: () => import('./mascota/pages/mascota-detail/mascota-detail.component').then(m => m.MascotaDetailComponent) },
       { path: 'proveedores', loadComponent: () => import('./proveedor/pages/proveedor-list/proveedor-list.component').then(m => m.ProveedorListComponent) },
       { path: 'servicios', loadComponent: () => import('./servicio/pages/servicio-list/servicio-list.component').then(m => m.ServicioListComponent) },
       { path: 'reservas', loadComponent: () => import('./reserva/pages/reserva-list/reserva-list.component').then(m => m.ReservaListComponent) },
@@ -40,7 +58,7 @@ export const routes: Routes = [
       { path: 'promociones', loadComponent: () => import('./promocion/pages/promocion-list/promocion-list.component').then(m => m.PromocionListComponent) },
       { path: 'pagos', loadComponent: () => import('./pago/pages/pago-list/pago-list.component').then(m => m.PagoListComponent) },
       { path: 'reportes', loadComponent: () => import('./reportes/pages/reportes/reportes.component').then(m => m.ReportesComponent) },
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: '', canActivate: [redirectByRole], children: [] },
     ],
   },
   { path: '**', redirectTo: '' },

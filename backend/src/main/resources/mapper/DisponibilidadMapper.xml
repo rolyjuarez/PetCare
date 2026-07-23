@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.disponibilidad.mapper.DisponibilidadMapper">
+<mapper namespace="bo.capital.tec.pet.proveedor.mapper.DisponibilidadMapper">
     <sql id="baseColumns">
         id, proveedor_id, servicio_id, dia_semana, hora_inicio, hora_fin, activo,
         created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.disponibilidad</sql>
+    <sql id="table">disponibilidad</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">
         INSERT INTO <include refid="table"/> (proveedor_id, servicio_id, dia_semana, hora_inicio, hora_fin, activo)
@@ -28,8 +28,19 @@
         <where>
             deleted = FALSE
             <if test="proveedorId != null">AND proveedor_id = #{proveedorId}</if>
+            <if test="servicioId != null">AND servicio_id = #{servicioId}</if>
         </where>
         ORDER BY dia_semana ASC, hora_inicio ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM <include refid="table"/>
+        <where>
+            deleted = FALSE
+            <if test="proveedorId != null">AND proveedor_id = #{proveedorId}</if>
+            <if test="servicioId != null">AND servicio_id = #{servicioId}</if>
+        </where>
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">

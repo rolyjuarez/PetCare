@@ -4,7 +4,7 @@
     <sql id="baseColumns">
         id, proveedor_id, servicio_id, created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.proveedor_especialidad</sql>
+    <sql id="table">proveedor_especialidad</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.proveedor.entity.ProveedorEspecialidad">
         INSERT INTO <include refid="table"/> (proveedor_id, servicio_id)

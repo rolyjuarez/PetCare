@@ -6,7 +6,7 @@
         rv.lote, rv.veterinario, rv.observaciones,
         rv.created_at, rv.updated_at, rv.deleted, rv.version
     </sql>
-    <sql id="table">petcare.registro_vacunacion rv</sql>
+    <sql id="table">registro_vacunacion rv</sql>
 
     <resultMap id="registroCompletoResultMap" type="bo.capital.tec.pet.vacuna.entity.RegistroVacunacion">
         <id property="id" column="id"/>
@@ -24,7 +24,7 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.vacuna.entity.RegistroVacunacion">
-        INSERT INTO petcare.registro_vacunacion (mascota_id, vacuna_id, fecha_aplicacion, fecha_vencimiento, lote, veterinario, observaciones)
+        INSERT INTO registro_vacunacion (mascota_id, vacuna_id, fecha_aplicacion, fecha_vencimiento, lote, veterinario, observaciones)
         VALUES (#{mascotaId}, #{vacunaId}, #{fechaAplicacion}, #{fechaVencimiento}, #{lote}, #{veterinario}, #{observaciones})
     </insert>
 
@@ -32,7 +32,7 @@
         SELECT rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
                rv.lote, rv.veterinario, rv.observaciones,
                rv.created_at, rv.updated_at, rv.deleted, rv.version
-        FROM petcare.registro_vacunacion rv
+        FROM registro_vacunacion rv
         WHERE rv.id = #{id} AND rv.deleted = FALSE
     </select>
 
@@ -40,14 +40,14 @@
         SELECT rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
                rv.lote, rv.veterinario, rv.observaciones,
                rv.created_at, rv.updated_at, rv.deleted, rv.version
-        FROM petcare.registro_vacunacion rv
+        FROM registro_vacunacion rv
         WHERE rv.mascota_id = #{mascotaId} AND rv.deleted = FALSE
         ORDER BY rv.fecha_aplicacion DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countByMascotaId" resultType="long">
-        SELECT COUNT(*) FROM petcare.registro_vacunacion rv
+        SELECT COUNT(*) FROM registro_vacunacion rv
         WHERE rv.mascota_id = #{mascotaId} AND rv.deleted = FALSE
     </select>
 
@@ -55,7 +55,7 @@
         SELECT rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
                rv.lote, rv.veterinario, rv.observaciones,
                rv.created_at, rv.updated_at, rv.deleted, rv.version
-        FROM petcare.registro_vacunacion rv
+        FROM registro_vacunacion rv
         <where>
             rv.deleted = FALSE
             <if test="mascotaId != null">AND rv.mascota_id = #{mascotaId}</if>
@@ -64,7 +64,7 @@
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM petcare.registro_vacunacion rv
+        SELECT COUNT(*) FROM registro_vacunacion rv
         <where>
             rv.deleted = FALSE
             <if test="mascotaId != null">AND rv.mascota_id = #{mascotaId}</if>
@@ -72,7 +72,7 @@
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.vacuna.entity.RegistroVacunacion">
-        UPDATE petcare.registro_vacunacion
+        UPDATE registro_vacunacion
         SET mascota_id = #{mascotaId}, vacuna_id = #{vacunaId},
             fecha_aplicacion = #{fechaAplicacion}, fecha_vencimiento = #{fechaVencimiento},
             lote = #{lote}, veterinario = #{veterinario}, observaciones = #{observaciones},
@@ -81,6 +81,6 @@
     </update>
 
     <update id="softDelete">
-        UPDATE petcare.registro_vacunacion SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE registro_vacunacion SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 </mapper>

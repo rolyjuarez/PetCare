@@ -14,7 +14,7 @@ SET search_path TO petcare, public;
 -- TABLA: estado_reserva
 -- Meta Indexing: Catálogo de estados del ciclo de vida de una reserva
 -- =============================================================================
-CREATE TABLE petcare.estado_reserva (
+CREATE TABLE estado_reserva (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(50)     NOT NULL,
     descripcion     TEXT,
@@ -27,15 +27,15 @@ CREATE TABLE petcare.estado_reserva (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.estado_reserva IS 'Catálogo de estados disponibles para las reservas del sistema';
-COMMENT ON COLUMN petcare.estado_reserva.color IS 'Color hexadecimal para representación visual del estado';
-COMMENT ON COLUMN petcare.estado_reserva.orden IS 'Orden de apresentación en listados y flujos';
+COMMENT ON TABLE estado_reserva IS 'Catálogo de estados disponibles para las reservas del sistema';
+COMMENT ON COLUMN estado_reserva.color IS 'Color hexadecimal para representación visual del estado';
+COMMENT ON COLUMN estado_reserva.orden IS 'Orden de apresentación en listados y flujos';
 
 -- =============================================================================
 -- TABLA: ciudad
 -- Meta Indexing: Catálogo de ciudades del sistema
 -- =============================================================================
-CREATE TABLE petcare.ciudad (
+CREATE TABLE ciudad (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(100)    NOT NULL,
     codigo          VARCHAR(10)     NOT NULL,
@@ -47,13 +47,13 @@ CREATE TABLE petcare.ciudad (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.ciudad IS 'Catálogo de ciudades donde opera el sistema PETCare';
+COMMENT ON TABLE ciudad IS 'Catálogo de ciudades donde opera el sistema PETCare';
 
 -- =============================================================================
 -- TABLA: estado
 -- Meta Indexing: Catálogo de estados/departamentos por ciudad
 -- =============================================================================
-CREATE TABLE petcare.estado (
+CREATE TABLE estado (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(100)    NOT NULL,
     codigo          VARCHAR(10)     NOT NULL,
@@ -64,13 +64,13 @@ CREATE TABLE petcare.estado (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.estado IS 'Estados o departamentos asociados a ciudades';
+COMMENT ON TABLE estado IS 'Estados o departamentos asociados a ciudades';
 
 -- =============================================================================
 -- TABLA: direccion
 -- Meta Indexing: Direcciones geográficas del sistema
 -- =============================================================================
-CREATE TABLE petcare.direccion (
+CREATE TABLE direccion (
     id              BIGSERIAL       PRIMARY KEY,
     calle           VARCHAR(200)    NOT NULL,
     numero          VARCHAR(20),
@@ -87,14 +87,14 @@ CREATE TABLE petcare.direccion (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.direccion IS 'Direcciones físicas registradas en el sistema';
-COMMENT ON COLUMN petcare.direccion.referencia IS 'Referencia adicional para ubicar el punto de entrega';
+COMMENT ON TABLE direccion IS 'Direcciones físicas registradas en el sistema';
+COMMENT ON COLUMN direccion.referencia IS 'Referencia adicional para ubicar el punto de entrega';
 
 -- =============================================================================
 -- TABLA: persona
 -- Meta Indexing: Datos personales base del sistema
 -- =============================================================================
-CREATE TABLE petcare.persona (
+CREATE TABLE persona (
     id                  BIGSERIAL       PRIMARY KEY,
     nombre              VARCHAR(100)    NOT NULL,
     primer_apellido     VARCHAR(100)    NOT NULL,
@@ -111,15 +111,15 @@ CREATE TABLE petcare.persona (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.persona IS 'Registro central de datos personales de todos los actores del sistema';
-COMMENT ON COLUMN petcare.persona.ci IS 'Carnet de identidad - único por persona';
-COMMENT ON COLUMN petcare.persona.genero IS 'M=Masculino, F=Femenino, O=Otro';
+COMMENT ON TABLE persona IS 'Registro central de datos personales de todos los actores del sistema';
+COMMENT ON COLUMN persona.ci IS 'Carnet de identidad - único por persona';
+COMMENT ON COLUMN persona.genero IS 'M=Masculino, F=Femenino, O=Otro';
 
 -- =============================================================================
 -- TABLA: rol
 -- Meta Indexing: Catálogo de roles del sistema
 -- =============================================================================
-CREATE TABLE petcare.rol (
+CREATE TABLE rol (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(50)     NOT NULL,
     descripcion     TEXT,
@@ -130,13 +130,13 @@ CREATE TABLE petcare.rol (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.rol IS 'Roles asignables a los usuarios del sistema';
+COMMENT ON TABLE rol IS 'Roles asignables a los usuarios del sistema';
 
 -- =============================================================================
 -- TABLA: usuario
 -- Meta Indexing: Cuentas de acceso al sistema
 -- =============================================================================
-CREATE TABLE petcare.usuario (
+CREATE TABLE usuario (
     id                  BIGSERIAL       PRIMARY KEY,
     username            VARCHAR(50)     NOT NULL,
     password            VARCHAR(255)    NOT NULL,
@@ -152,15 +152,15 @@ CREATE TABLE petcare.usuario (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.usuario IS 'Cuentas de usuario para autenticación y acceso al sistema';
-COMMENT ON COLUMN petcare.usuario.password IS 'Contraseña hasheada con BCrypt';
-COMMENT ON COLUMN petcare.usuario.token_refresh IS 'Token JWT de refresco para sesiones';
+COMMENT ON TABLE usuario IS 'Cuentas de usuario para autenticación y acceso al sistema';
+COMMENT ON COLUMN usuario.password IS 'Contraseña hasheada con BCrypt';
+COMMENT ON COLUMN usuario.token_refresh IS 'Token JWT de refresco para sesiones';
 
 -- =============================================================================
 -- TABLA: usuario_rol
 -- Meta Indexing: Asignación de roles a usuarios (N:M)
 -- =============================================================================
-CREATE TABLE petcare.usuario_rol (
+CREATE TABLE usuario_rol (
     id              BIGSERIAL       PRIMARY KEY,
     usuario_id      BIGINT          NOT NULL,
     rol_id          BIGINT          NOT NULL,
@@ -170,13 +170,13 @@ CREATE TABLE petcare.usuario_rol (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.usuario_rol IS 'Relación many-to-many entre usuarios y roles';
+COMMENT ON TABLE usuario_rol IS 'Relación many-to-many entre usuarios y roles';
 
 -- =============================================================================
 -- TABLA: menu
 -- Meta Indexing: Menús principales del sistema
 -- =============================================================================
-CREATE TABLE petcare.menu (
+CREATE TABLE menu (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(100)    NOT NULL,
     descripcion     TEXT,
@@ -190,13 +190,13 @@ CREATE TABLE petcare.menu (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.menu IS 'Menús principales de navegación del sistema';
+COMMENT ON TABLE menu IS 'Menús principales de navegación del sistema';
 
 -- =============================================================================
 -- TABLA: submenu
 -- Meta Indexing: Submenús del sistema
 -- =============================================================================
-CREATE TABLE petcare.submenu (
+CREATE TABLE submenu (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(100)    NOT NULL,
     descripcion     TEXT,
@@ -211,13 +211,13 @@ CREATE TABLE petcare.submenu (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.submenu IS 'Submenús dependientes de un menú principal';
+COMMENT ON TABLE submenu IS 'Submenús dependientes de un menú principal';
 
 -- =============================================================================
 -- TABLA: permiso
 -- Meta Indexing: Permisos de acceso por rol y menú
 -- =============================================================================
-CREATE TABLE petcare.permiso (
+CREATE TABLE permiso (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(150)    NOT NULL,
     descripcion     TEXT,
@@ -234,17 +234,17 @@ CREATE TABLE petcare.permiso (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.permiso IS 'Permisos granulares CRUD por rol, menú y submenú';
-COMMENT ON COLUMN petcare.permiso.crear IS 'Indica si el rol puede crear registros en esta sección';
-COMMENT ON COLUMN petcare.permiso.leer IS 'Indica si el rol puede leer registros en esta sección';
-COMMENT ON COLUMN petcare.permiso.actualizar IS 'Indica si el rol puede actualizar registros en esta sección';
-COMMENT ON COLUMN petcare.permiso.eliminar IS 'Indica si el rol puede eliminar registros en esta sección';
+COMMENT ON TABLE permiso IS 'Permisos granulares CRUD por rol, menú y submenú';
+COMMENT ON COLUMN permiso.crear IS 'Indica si el rol puede crear registros en esta sección';
+COMMENT ON COLUMN permiso.leer IS 'Indica si el rol puede leer registros en esta sección';
+COMMENT ON COLUMN permiso.actualizar IS 'Indica si el rol puede actualizar registros en esta sección';
+COMMENT ON COLUMN permiso.eliminar IS 'Indica si el rol puede eliminar registros en esta sección';
 
 -- =============================================================================
 -- TABLA: especie
 -- Meta Indexing: Catálogo de especies de mascotas
 -- =============================================================================
-CREATE TABLE petcare.especie (
+CREATE TABLE especie (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(50)     NOT NULL,
     descripcion     TEXT,
@@ -254,13 +254,13 @@ CREATE TABLE petcare.especie (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.especie IS 'Catálogo de especies de mascotas (Perro, Gato, etc.)';
+COMMENT ON TABLE especie IS 'Catálogo de especies de mascotas (Perro, Gato, etc.)';
 
 -- =============================================================================
 -- TABLA: raza
 -- Meta Indexing: Catálogo de razas por especie
 -- =============================================================================
-CREATE TABLE petcare.raza (
+CREATE TABLE raza (
     id              BIGSERIAL       PRIMARY KEY,
     nombre          VARCHAR(100)    NOT NULL,
     especie_id      BIGINT          NOT NULL,
@@ -271,13 +271,13 @@ CREATE TABLE petcare.raza (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.raza IS 'Razas asociadas a cada especie de mascota';
+COMMENT ON TABLE raza IS 'Razas asociadas a cada especie de mascota';
 
 -- =============================================================================
 -- TABLA: mascota
 -- Meta Indexing: Registro de mascotas de los clientes
 -- =============================================================================
-CREATE TABLE petcare.mascota (
+CREATE TABLE mascota (
     id                  BIGSERIAL       PRIMARY KEY,
     nombre              VARCHAR(100)    NOT NULL,
     fecha_nacimiento    DATE,
@@ -294,15 +294,15 @@ CREATE TABLE petcare.mascota (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.mascota IS 'Registro de mascotas asociadas a cada cliente';
-COMMENT ON COLUMN petcare.mascota.genero IS 'M=Masculino, F=Femenino, O=Otro';
-COMMENT ON COLUMN petcare.mascota.peso IS 'Peso en kilogramos';
+COMMENT ON TABLE mascota IS 'Registro de mascotas asociadas a cada cliente';
+COMMENT ON COLUMN mascota.genero IS 'M=Masculino, F=Femenino, O=Otro';
+COMMENT ON COLUMN mascota.peso IS 'Peso en kilogramos';
 
 -- =============================================================================
 -- TABLA: cliente
 -- Meta Indexing: Datos específicos del rol cliente
 -- =============================================================================
-CREATE TABLE petcare.cliente (
+CREATE TABLE cliente (
     id              BIGSERIAL       PRIMARY KEY,
     persona_id      BIGINT          NOT NULL,
     usuario_id      BIGINT          NOT NULL,
@@ -313,13 +313,13 @@ CREATE TABLE petcare.cliente (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.cliente IS 'Información específica de clientes registrados en el sistema';
+COMMENT ON TABLE cliente IS 'Información específica de clientes registrados en el sistema';
 
 -- =============================================================================
 -- TABLA: proveedor
 -- Meta Indexing: Datos específicos del rol proveedor de servicios
 -- =============================================================================
-CREATE TABLE petcare.proveedor (
+CREATE TABLE proveedor (
     id                      BIGSERIAL       PRIMARY KEY,
     persona_id              BIGINT          NOT NULL,
     usuario_id              BIGINT          NOT NULL,
@@ -335,15 +335,15 @@ CREATE TABLE petcare.proveedor (
     version                 INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.proveedor IS 'Información de proveedores de servicios de cuidado de mascotas';
-COMMENT ON COLUMN petcare.proveedor.radio_cobertura_km IS 'Radio de cobertura del proveedor en kilómetros';
-COMMENT ON COLUMN petcare.proveedor.calificacion IS 'Calificación promedio de 0.00 a 5.00';
+COMMENT ON TABLE proveedor IS 'Información de proveedores de servicios de cuidado de mascotas';
+COMMENT ON COLUMN proveedor.radio_cobertura_km IS 'Radio de cobertura del proveedor en kilómetros';
+COMMENT ON COLUMN proveedor.calificacion IS 'Calificación promedio de 0.00 a 5.00';
 
 -- =============================================================================
 -- TABLA: proveedor_especialidad
 -- Meta Indexing: Servicios que ofrece cada proveedor
 -- =============================================================================
-CREATE TABLE petcare.proveedor_especialidad (
+CREATE TABLE proveedor_especialidad (
     id              BIGSERIAL       PRIMARY KEY,
     proveedor_id    BIGINT          NOT NULL,
     servicio_id     BIGINT          NOT NULL,
@@ -353,13 +353,13 @@ CREATE TABLE petcare.proveedor_especialidad (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.proveedor_especialidad IS 'Relación N:M entre proveedores y servicios que ofrecen';
+COMMENT ON TABLE proveedor_especialidad IS 'Relación N:M entre proveedores y servicios que ofrecen';
 
 -- =============================================================================
 -- TABLA: sucursal
 -- Meta Indexing: Sucursales físicas del sistema
 -- =============================================================================
-CREATE TABLE petcare.sucursal (
+CREATE TABLE sucursal (
     id                  BIGSERIAL       PRIMARY KEY,
     nombre              VARCHAR(100)    NOT NULL,
     direccion_id        BIGINT,
@@ -376,13 +376,13 @@ CREATE TABLE petcare.sucursal (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.sucursal IS 'Sucursales físicas del sistema PETCare';
+COMMENT ON TABLE sucursal IS 'Sucursales físicas del sistema PETCare';
 
 -- =============================================================================
 -- TABLA: servicio
 -- Meta Indexing: Catálogo de servicios ofrecidos
 -- =============================================================================
-CREATE TABLE petcare.servicio (
+CREATE TABLE servicio (
     id                  BIGSERIAL       PRIMARY KEY,
     nombre              VARCHAR(100)    NOT NULL,
     descripcion         TEXT,
@@ -397,14 +397,14 @@ CREATE TABLE petcare.servicio (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.servicio IS 'Catálogo de servicios disponibles para mascotas';
-COMMENT ON COLUMN petcare.servicio.categoria IS 'Categoría del servicio: PELUQUERIA, PASEO, VETERINARIA, GUARDERIA, etc.';
+COMMENT ON TABLE servicio IS 'Catálogo de servicios disponibles para mascotas';
+COMMENT ON COLUMN servicio.categoria IS 'Categoría del servicio: PELUQUERIA, PASEO, VETERINARIA, GUARDERIA, etc.';
 
 -- =============================================================================
 -- TABLA: disponibilidad
 -- Meta Indexing: Horarios disponibles de proveedores por servicio
 -- =============================================================================
-CREATE TABLE petcare.disponibilidad (
+CREATE TABLE disponibilidad (
     id              BIGSERIAL       PRIMARY KEY,
     proveedor_id    BIGINT          NOT NULL,
     servicio_id     BIGINT          NOT NULL,
@@ -418,14 +418,14 @@ CREATE TABLE petcare.disponibilidad (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.disponibilidad IS 'Horarios de disponibilidad de proveedores para cada servicio';
-COMMENT ON COLUMN petcare.disponibilidad.dia_semana IS '0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado';
+COMMENT ON TABLE disponibilidad IS 'Horarios de disponibilidad de proveedores para cada servicio';
+COMMENT ON COLUMN disponibilidad.dia_semana IS '0=Domingo, 1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado';
 
 -- =============================================================================
 -- TABLA: reserva
 -- Meta Indexing: Reservaciones de servicios
 -- =============================================================================
-CREATE TABLE petcare.reserva (
+CREATE TABLE reserva (
     id                      BIGSERIAL       PRIMARY KEY,
     codigo                  VARCHAR(20)     NOT NULL,
     cliente_id              BIGINT          NOT NULL,
@@ -449,15 +449,15 @@ CREATE TABLE petcare.reserva (
     version                 INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.reserva IS 'Registro central de reservas de servicios para mascotas';
-COMMENT ON COLUMN petcare.reserva.codigo IS 'Código único de identificación de la reserva';
-COMMENT ON COLUMN petcare.reserva.precio_total IS 'Precio total acordado para el servicio';
+COMMENT ON TABLE reserva IS 'Registro central de reservas de servicios para mascotas';
+COMMENT ON COLUMN reserva.codigo IS 'Código único de identificación de la reserva';
+COMMENT ON COLUMN reserva.precio_total IS 'Precio total acordado para el servicio';
 
 -- =============================================================================
 -- TABLA: vacuna
 -- Meta Indexing: Catálogo de vacunas disponibles
 -- =============================================================================
-CREATE TABLE petcare.vacuna (
+CREATE TABLE vacuna (
     id                  BIGSERIAL       PRIMARY KEY,
     nombre              VARCHAR(100)    NOT NULL,
     descripcion         TEXT,
@@ -468,14 +468,14 @@ CREATE TABLE petcare.vacuna (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.vacuna IS 'Catálogo de vacunas para el control sanitario de mascotas';
-COMMENT ON COLUMN petcare.vacuna.periodicidad_meses IS 'Frecuencia de aplicación en meses';
+COMMENT ON TABLE vacuna IS 'Catálogo de vacunas para el control sanitario de mascotas';
+COMMENT ON COLUMN vacuna.periodicidad_meses IS 'Frecuencia de aplicación en meses';
 
 -- =============================================================================
 -- TABLA: registro_vacunacion
 -- Meta Indexing: Historial de vacunación de mascotas
 -- =============================================================================
-CREATE TABLE petcare.registro_vacunacion (
+CREATE TABLE registro_vacunacion (
     id                  BIGSERIAL       PRIMARY KEY,
     mascota_id          BIGINT          NOT NULL,
     vacuna_id           BIGINT          NOT NULL,
@@ -490,14 +490,14 @@ CREATE TABLE petcare.registro_vacunacion (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.registro_vacunacion IS 'Historial completo de vacunación de cada mascota';
-COMMENT ON COLUMN petcare.registro_vacunacion.lote IS 'Número de lote de la vacuna aplicada';
+COMMENT ON TABLE registro_vacunacion IS 'Historial completo de vacunación de cada mascota';
+COMMENT ON COLUMN registro_vacunacion.lote IS 'Número de lote de la vacuna aplicada';
 
 -- =============================================================================
 -- TABLA: promocion
 -- Meta Indexing: Promociones y descuentos del sistema
 -- =============================================================================
-CREATE TABLE petcare.promocion (
+CREATE TABLE promocion (
     id                  BIGSERIAL       PRIMARY KEY,
     codigo              VARCHAR(30)     NOT NULL,
     nombre              VARCHAR(100)    NOT NULL,
@@ -515,15 +515,15 @@ CREATE TABLE petcare.promocion (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.promocion IS 'Promociones y ofertas disponibles en el sistema';
-COMMENT ON COLUMN petcare.promocion.tipo_descuento IS 'PERCENTAGE=Porcentaje, FIXED=Monto fijo';
-COMMENT ON COLUMN petcare.promocion.limite_usos IS 'Número máximo de veces que se puede usar la promoción';
+COMMENT ON TABLE promocion IS 'Promociones y ofertas disponibles en el sistema';
+COMMENT ON COLUMN promocion.tipo_descuento IS 'PERCENTAGE=Porcentaje, FIXED=Monto fijo';
+COMMENT ON COLUMN promocion.limite_usos IS 'Número máximo de veces que se puede usar la promoción';
 
 -- =============================================================================
 -- TABLA: promocion_local
 -- Meta Indexing: Aplicación de promociones a reservas específicas
 -- =============================================================================
-CREATE TABLE petcare.promocion_local (
+CREATE TABLE promocion_local (
     id                  BIGSERIAL       PRIMARY KEY,
     promocion_id        BIGINT          NOT NULL,
     reserva_id          BIGINT          NOT NULL,
@@ -535,13 +535,13 @@ CREATE TABLE petcare.promocion_local (
     version             INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.promocion_local IS 'Registro de promociones aplicadas a reservas específicas';
+COMMENT ON TABLE promocion_local IS 'Registro de promociones aplicadas a reservas específicas';
 
 -- =============================================================================
 -- TABLA: pago
 -- Meta Indexing: Registro de pagos de reservas
 -- =============================================================================
-CREATE TABLE petcare.pago (
+CREATE TABLE pago (
     id                      BIGSERIAL       PRIMARY KEY,
     reserva_id              BIGINT          NOT NULL,
     monto                   NUMERIC(10, 2)  NOT NULL DEFAULT 0.00,
@@ -556,15 +556,15 @@ CREATE TABLE petcare.pago (
     version                 INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.pago IS 'Registro de transacciones de pago asociadas a reservas';
-COMMENT ON COLUMN petcare.pago.metodo_pago IS 'EFECTIVO, TARJETA_CREDITO, TARJETA_DEBITO, TRANSFERENCIA, QR, etc.';
-COMMENT ON COLUMN petcare.pago.estado_pago IS 'PENDIENTE, PROCESADO, COMPLETADO, FALLIDO, REEMBOLSADO';
+COMMENT ON TABLE pago IS 'Registro de transacciones de pago asociadas a reservas';
+COMMENT ON COLUMN pago.metodo_pago IS 'EFECTIVO, TARJETA_CREDITO, TARJETA_DEBITO, TRANSFERENCIA, QR, etc.';
+COMMENT ON COLUMN pago.estado_pago IS 'PENDIENTE, PROCESADO, COMPLETADO, FALLIDO, REEMBOLSADO';
 
 -- =============================================================================
 -- TABLA: notificacion
 -- Meta Indexing: Notificaciones para usuarios del sistema
 -- =============================================================================
-CREATE TABLE petcare.notificacion (
+CREATE TABLE notificacion (
     id              BIGSERIAL       PRIMARY KEY,
     usuario_id      BIGINT          NOT NULL,
     titulo          VARCHAR(200)    NOT NULL,
@@ -578,14 +578,14 @@ CREATE TABLE petcare.notificacion (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.notificacion IS 'Notificaciones enviadas a los usuarios del sistema';
-COMMENT ON COLUMN petcare.notificacion.tipo IS 'INFO, ADVERTENCIA, ERROR, EXITO, SISTEMA';
+COMMENT ON TABLE notificacion IS 'Notificaciones enviadas a los usuarios del sistema';
+COMMENT ON COLUMN notificacion.tipo IS 'INFO, ADVERTENCIA, ERROR, EXITO, SISTEMA';
 
 -- =============================================================================
 -- TABLA: bitacora
 -- Meta Indexing: Registro de auditoría del sistema
 -- =============================================================================
-CREATE TABLE petcare.bitacora (
+CREATE TABLE bitacora (
     id              BIGSERIAL       PRIMARY KEY,
     usuario_id      BIGINT,
     accion          VARCHAR(50)     NOT NULL,
@@ -598,16 +598,16 @@ CREATE TABLE petcare.bitacora (
     created_at      TIMESTAMP       NOT NULL DEFAULT NOW()
 );
 
-COMMENT ON TABLE petcare.bitacora IS 'Bitácora de auditoría para trazabilidad de acciones en el sistema';
-COMMENT ON COLUMN petcare.bitacora.accion IS 'INSERT, UPDATE, DELETE, LOGIN, LOGOUT, etc.';
-COMMENT ON COLUMN petcare.bitacora.datos_anteriores IS 'JSON con los valores antes del cambio';
-COMMENT ON COLUMN petcare.bitacora.datos_nuevos IS 'JSON con los valores después del cambio';
+COMMENT ON TABLE bitacora IS 'Bitácora de auditoría para trazabilidad de acciones en el sistema';
+COMMENT ON COLUMN bitacora.accion IS 'INSERT, UPDATE, DELETE, LOGIN, LOGOUT, etc.';
+COMMENT ON COLUMN bitacora.datos_anteriores IS 'JSON con los valores antes del cambio';
+COMMENT ON COLUMN bitacora.datos_nuevos IS 'JSON con los valores después del cambio';
 
 -- =============================================================================
 -- TABLA: correo_enviado
 -- Meta Indexing: Historial de correos electrónicos enviados
 -- =============================================================================
-CREATE TABLE petcare.correo_enviado (
+CREATE TABLE correo_enviado (
     id              BIGSERIAL       PRIMARY KEY,
     destino         VARCHAR(150)    NOT NULL,
     asunto          VARCHAR(200)    NOT NULL,
@@ -622,9 +622,9 @@ CREATE TABLE petcare.correo_enviado (
     version         INTEGER         NOT NULL DEFAULT 1
 );
 
-COMMENT ON TABLE petcare.correo_enviado IS 'Historial de correos electrónicos enviados desde el sistema';
-COMMENT ON COLUMN petcare.correo_enviado.tipo IS 'TRANSACCIONAL, MARKETING, NOTIFICACION, SISTEMA';
-COMMENT ON COLUMN petcare.correo_enviado.estado IS 'PENDIENTE, ENVIADO, FALLIDO';
+COMMENT ON TABLE correo_enviado IS 'Historial de correos electrónicos enviados desde el sistema';
+COMMENT ON COLUMN correo_enviado.tipo IS 'TRANSACCIONAL, MARKETING, NOTIFICACION, SISTEMA';
+COMMENT ON COLUMN correo_enviado.estado IS 'PENDIENTE, ENVIADO, FALLIDO';
 
 -- =============================================================================
 -- Mensaje de confirmación

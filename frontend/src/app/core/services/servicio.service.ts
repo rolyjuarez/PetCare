@@ -2,7 +2,25 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse, PagedResponse } from '../models/api-response.model';
-import { Servicio } from '../models/servicio.model';
+
+export interface Servicio {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  duracionMinutos: number;
+  precioBase: number;
+  imagenUrl: string;
+  activo: boolean;
+  categoria: string;
+}
+
+export interface ProveedorSummary {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  calificacion: number;
+  verificado: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ServicioService {
@@ -12,27 +30,11 @@ export class ServicioService {
     return this.api.getPaged('/servicios', params?.page, params?.size, params);
   }
 
-  getAllActivos(): Observable<ApiResponse<Servicio[]>> {
-    return this.api.get('/servicios/activos');
+  getActive(): Observable<ApiResponse<Servicio[]>> {
+    return this.api.get('/servicios/active');
   }
 
-  getById(id: number): Observable<ApiResponse<Servicio>> {
-    return this.api.get(`/servicios/${id}`);
-  }
-
-  create(data: Partial<Servicio>): Observable<ApiResponse<Servicio>> {
-    return this.api.post('/servicios', data);
-  }
-
-  update(id: number, data: Partial<Servicio>): Observable<ApiResponse<Servicio>> {
-    return this.api.put(`/servicios/${id}`, data);
-  }
-
-  toggleActivo(id: number): Observable<ApiResponse<Servicio>> {
-    return this.api.put(`/servicios/${id}/toggle`, {});
-  }
-
-  delete(id: number): Observable<ApiResponse<void>> {
-    return this.api.delete(`/servicios/${id}`);
+  getProveedoresByServicio(servicioId: number): Observable<ApiResponse<ProveedorSummary[]>> {
+    return this.api.get(`/proveedores/by-servicio/${servicioId}`);
   }
 }

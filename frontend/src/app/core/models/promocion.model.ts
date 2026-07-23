@@ -1,24 +1,23 @@
 export interface Promocion {
   id: number;
   codigo: string;
+  nombre: string;
   descripcion: string;
-  porcentajeDescuento: number;
+  tipoDescuento: string;
+  valorDescuento: number;
   fechaInicio: string;
   fechaFin: string;
-  activo: boolean;
-  usoMaximo: number;
-  usoActual: number;
-  servicioIds: number[];
-  servicioNombres: string[];
-  createdAt: string;
+  activa: boolean;
+  limiteUsos: number;
+  usosActuales: number;
 }
 
 export interface PromocionRequest {
   codigo: string;
-  descripcion: string;
-  porcentajeDescuento: number;
+  nombre: string;
+  tipoDescuento: string;
+  valorDescuento: number;
   fechaInicio: string;
   fechaFin: string;
-  usoMaximo: number;
-  servicioIds: number[];
+  limiteUsos: number;
 }

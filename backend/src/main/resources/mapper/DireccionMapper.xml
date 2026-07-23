@@ -6,10 +6,10 @@
         d.ciudad_id, d.estado_id,
         d.created_at, d.updated_at, d.deleted, d.version
     </sql>
-    <sql id="table">petcare.direccion d</sql>
+    <sql id="table">direccion d</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.direccion.entity.Direccion">
-        INSERT INTO petcare.direccion (calle, numero, piso, apartamento, referencia, latitud, longitud, ciudad_id, estado_id)
+        INSERT INTO direccion (calle, numero, piso, apartamento, referencia, latitud, longitud, ciudad_id, estado_id)
         VALUES (#{calle}, #{numero}, #{piso}, #{apartamento}, #{referencia}, #{latitud}, #{longitud}, #{ciudadId}, #{estadoId})
     </insert>
 
@@ -45,9 +45,9 @@
                d.ciudad_id, d.estado_id, d.created_at, d.updated_at, d.deleted, d.version,
                ci.id AS ciudad_id, ci.nombre AS ciudad_nombre, ci.codigo AS ciudad_codigo,
                es.id AS estado_id, es.nombre AS estado_nombre, es.codigo AS estado_codigo
-        FROM petcare.direccion d
-        LEFT JOIN petcare.ciudad ci ON ci.id = d.ciudad_id
-        LEFT JOIN petcare.estado es ON es.id = d.estado_id
+        FROM direccion d
+        LEFT JOIN ciudad ci ON ci.id = d.ciudad_id
+        LEFT JOIN estado es ON es.id = d.estado_id
         WHERE d.id = #{id} AND d.deleted = FALSE
     </select>
 
@@ -58,7 +58,7 @@
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.direccion.entity.Direccion">
-        UPDATE petcare.direccion
+        UPDATE direccion
         SET calle = #{calle}, numero = #{numero}, piso = #{piso}, apartamento = #{apartamento},
             referencia = #{referencia}, latitud = #{latitud}, longitud = #{longitud},
             ciudad_id = #{ciudadId}, estado_id = #{estadoId},
@@ -67,6 +67,6 @@
     </update>
 
     <update id="softDelete">
-        UPDATE petcare.direccion SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE direccion SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 </mapper>

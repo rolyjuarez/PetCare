@@ -5,7 +5,7 @@
         id, nombre, primer_apellido, segundo_apellido, ci, telefono, email,
         fecha_nacimiento, genero, direccion_id, created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.persona</sql>
+    <sql id="table">persona</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.persona.entity.Persona">
         INSERT INTO <include refid="table"/> (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero, direccion_id)

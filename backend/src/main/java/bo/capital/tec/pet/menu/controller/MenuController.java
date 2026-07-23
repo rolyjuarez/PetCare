@@ -6,6 +6,7 @@ import bo.capital.tec.pet.menu.dto.MenuRequestDTO;
 import bo.capital.tec.pet.menu.dto.MenuResponseDTO;
 import bo.capital.tec.pet.menu.dto.MenuSummaryDTO;
 import bo.capital.tec.pet.menu.service.MenuService;
+import bo.capital.tec.pet.security.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -65,6 +66,13 @@ public class MenuController {
     @Operation(summary = "Obtener menus por rol")
     public ResponseEntity<ApiResponse<List<MenuResponseDTO>>> getMenusByRoleId(@PathVariable Long rolId) {
         return ResponseEntity.ok(ApiResponse.success(menuService.getMenusByRoleId(rolId)));
+    }
+
+    @GetMapping("/my-menus")
+    @Operation(summary = "Obtener menus del usuario autenticado")
+    public ResponseEntity<ApiResponse<List<MenuResponseDTO>>> getMyMenus() {
+        String username = SecurityUtil.getCurrentUsername();
+        return ResponseEntity.ok(ApiResponse.success(menuService.getMenusByUsername(username)));
     }
 
     @GetMapping("/tree")

@@ -7,12 +7,36 @@
           @if (sidebarOpen()) { <span class="font-bold text-lg">PETCare</span> }
         </div>
         <nav class="flex-1 overflow-y-auto py-4">
-          @for (item of menuItems; track item.route) {
-            <a [routerLink]="item.route" routerLinkActive="bg-primary-600"
-               class="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors">
-              <span class="material-icons text-xl">{{ item.icon }}</span>
-              @if (sidebarOpen()) { <span>{{ item.label }}</span> }
-            </a>
+          @for (item of menuItems(); track item.id) {
+            @if (hasSubmenus(item)) {
+              <div>
+                <a (click)="toggleMenu(item.id)"
+                   class="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors cursor-pointer">
+                  <span class="material-icons text-xl">{{ item.icono }}</span>
+                  @if (sidebarOpen()) {
+                    <span class="flex-1">{{ item.nombre }}</span>
+                    <span class="material-icons text-sm">{{ isMenuExpanded(item.id) ? 'expand_less' : 'expand_more' }}</span>
+                  }
+                </a>
+                @if (sidebarOpen() && isMenuExpanded(item.id)) {
+                  <div class="bg-gray-800">
+                    @for (sub of item.submenus; track sub.id) {
+                      <a [routerLink]="sub.url" routerLinkActive="bg-primary-600"
+                         class="flex items-center gap-3 px-4 py-2 pl-12 hover:bg-gray-700 transition-colors text-sm">
+                        @if (sub.icono) { <span class="material-icons text-base">{{ sub.icono }}</span> }
+                        <span>{{ sub.nombre }}</span>
+                      </a>
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <a [routerLink]="resolveUrl(item)" routerLinkActive="bg-primary-600"
+                 class="flex items-center gap-3 px-4 py-3 hover:bg-gray-800 transition-colors">
+                <span class="material-icons text-xl">{{ item.icono }}</span>
+                @if (sidebarOpen()) { <span>{{ item.nombre }}</span> }
+              </a>
+            }
           }
         </nav>
         <button (click)="toggleSidebar()" class="p-4 hover:bg-gray-800">

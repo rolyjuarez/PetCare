@@ -14,5 +14,6 @@ public interface MenuService {
     MenuResponseDTO update(Long id, MenuRequestDTO dto);
     void delete(Long id);
     List<MenuResponseDTO> getMenusByRoleId(Long rolId);
+    List<MenuResponseDTO> getMenusByUsername(String username);
     List<MenuResponseDTO> getMenuTree();
 }

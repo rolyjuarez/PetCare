@@ -5,10 +5,10 @@
         m.id, m.nombre, m.descripcion, m.icono, m.url, m.orden, m.activo,
         m.created_at, m.updated_at, m.deleted, m.version
     </sql>
-    <sql id="table">petcare.menu m</sql>
+    <sql id="table">menu m</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.menu.entity.Menu">
-        INSERT INTO petcare.menu (nombre, descripcion, icono, url, orden, activo)
+        INSERT INTO menu (nombre, descripcion, icono, url, orden, activo)
         VALUES (#{nombre}, #{descripcion}, #{icono}, #{url}, #{orden}, #{activo})
     </insert>
 
@@ -24,28 +24,38 @@
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM petcare.menu m
+        SELECT COUNT(*) FROM menu m
         WHERE m.deleted = FALSE
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.menu.entity.Menu">
-        UPDATE petcare.menu
+        UPDATE menu
         SET nombre = #{nombre}, descripcion = #{descripcion}, icono = #{icono}, url = #{url},
             orden = #{orden}, activo = #{activo}, updated_at = NOW(), version = version + 1
         WHERE id = #{id} AND deleted = FALSE
     </update>
 
     <update id="softDelete">
-        UPDATE petcare.menu SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE menu SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 
     <select id="findByRolId" resultType="bo.capital.tec.pet.menu.entity.Menu">
         SELECT DISTINCT m.id, m.nombre, m.descripcion, m.icono, m.url, m.orden, m.activo,
                m.created_at, m.updated_at, m.deleted, m.version
-        FROM petcare.menu m
-        INNER JOIN petcare.submenu sm ON sm.menu_id = m.id AND sm.deleted = FALSE
-        INNER JOIN petcare.permiso p ON p.menu_id = m.id AND p.deleted = FALSE
-        WHERE p.rol_id = #{rolId} AND m.deleted = FALSE
+        FROM menu m
+        INNER JOIN permiso p ON p.menu_id = m.id AND p.deleted = FALSE AND p.leer = TRUE
+        WHERE p.rol_id = #{rolId} AND m.deleted = FALSE AND m.activo = TRUE
+        ORDER BY m.orden ASC
+    </select>
+
+    <select id="findByUsername" resultType="bo.capital.tec.pet.menu.entity.Menu">
+        SELECT DISTINCT m.id, m.nombre, m.descripcion, m.icono, m.url, m.orden, m.activo,
+               m.created_at, m.updated_at, m.deleted, m.version
+        FROM menu m
+        INNER JOIN permiso p ON p.menu_id = m.id AND p.deleted = FALSE AND p.leer = TRUE
+        INNER JOIN usuario_rol ur ON ur.rol_id = p.rol_id AND ur.deleted = FALSE
+        INNER JOIN usuario u ON u.id = ur.usuario_id AND u.deleted = FALSE
+        WHERE u.username = #{username} AND m.deleted = FALSE AND m.activo = TRUE
         ORDER BY m.orden ASC
     </select>
 </mapper>

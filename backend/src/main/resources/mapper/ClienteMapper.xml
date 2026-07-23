@@ -4,10 +4,10 @@
     <sql id="baseColumns">
         c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
     </sql>
-    <sql id="table">petcare.cliente c</sql>
+    <sql id="table">cliente c</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.cliente.entity.Cliente">
-        INSERT INTO petcare.cliente (persona_id, usuario_id, notas)
+        INSERT INTO cliente (persona_id, usuario_id, notas)
         VALUES (#{personaId}, #{usuarioId}, #{notas})
     </insert>
 
@@ -24,14 +24,38 @@
 
     <select id="selectById" resultMap="clienteResultMap">
         SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
-        FROM petcare.cliente c
+        FROM cliente c
         WHERE c.id = #{id} AND c.deleted = FALSE
     </select>
 
-    <select id="selectAll" resultMap="clienteResultMap">
-        SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
-        FROM petcare.cliente c
-        LEFT JOIN petcare.persona p ON p.id = c.persona_id AND p.deleted = FALSE
+    <select id="selectAll" resultType="bo.capital.tec.pet.cliente.dto.ClienteSummaryDTO">
+        SELECT
+            c.id,
+            TRIM(p.nombre || ' ' || p.primer_apellido) AS nombreCompleto,
+            p.ci,
+            p.telefono,
+            c.persona_id AS personaId,
+            p.nombre,
+            p.primer_apellido AS primerApellido,
+            p.segundo_apellido AS segundoApellido,
+            p.email,
+            p.fecha_nacimiento AS fechaNacimiento,
+            p.genero,
+            c.usuario_id AS usuarioId,
+            u.username,
+            dir.id AS direccionId,
+            dir.calle,
+            dir.numero,
+            dir.referencia,
+            dir.ciudad_id AS ciudadId,
+            ci.nombre AS ciudadNombre,
+            dir.latitud,
+            dir.longitud
+        FROM cliente c
+        LEFT JOIN persona p ON p.id = c.persona_id AND p.deleted = FALSE
+        LEFT JOIN usuario u ON u.id = c.usuario_id AND u.deleted = FALSE
+        LEFT JOIN direccion dir ON dir.id = p.direccion_id AND dir.deleted = FALSE
+        LEFT JOIN ciudad ci ON ci.id = dir.ciudad_id
         <where>
             c.deleted = FALSE
             <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
@@ -41,8 +65,8 @@
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM petcare.cliente c
-        LEFT JOIN petcare.persona p ON p.id = c.persona_id AND p.deleted = FALSE
+        SELECT COUNT(*) FROM cliente c
+        LEFT JOIN persona p ON p.id = c.persona_id AND p.deleted = FALSE
         <where>
             c.deleted = FALSE
             <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
@@ -51,25 +75,25 @@
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.cliente.entity.Cliente">
-        UPDATE petcare.cliente
+        UPDATE cliente
         SET persona_id = #{personaId}, usuario_id = #{usuarioId}, notas = #{notas},
             updated_at = NOW(), version = version + 1
         WHERE id = #{id} AND deleted = FALSE
     </update>
 
     <update id="softDelete">
-        UPDATE petcare.cliente SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE cliente SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 
     <select id="findByPersonaId" resultMap="clienteResultMap">
         SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
-        FROM petcare.cliente c
+        FROM cliente c
         WHERE c.persona_id = #{personaId} AND c.deleted = FALSE
     </select>
 
     <select id="findByUsuarioId" resultMap="clienteResultMap">
         SELECT c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
-        FROM petcare.cliente c
+        FROM cliente c
         WHERE c.usuario_id = #{usuarioId} AND c.deleted = FALSE
     </select>
 </mapper>

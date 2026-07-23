@@ -6,6 +6,9 @@ import bo.capital.tec.pet.mascota.dto.MascotaRequestDTO;
 import bo.capital.tec.pet.mascota.dto.MascotaResponseDTO;
 import bo.capital.tec.pet.mascota.dto.MascotaSummaryDTO;
 import bo.capital.tec.pet.mascota.service.MascotaService;
+import bo.capital.tec.pet.security.SecurityUtil;
+import bo.capital.tec.pet.usuario.entity.Usuario;
+import bo.capital.tec.pet.usuario.mapper.UsuarioMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,6 +26,7 @@ import java.util.List;
 public class MascotaController {
 
     private final MascotaService mascotaService;
+    private final UsuarioMapper usuarioMapper;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -47,6 +51,18 @@ public class MascotaController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return ResponseEntity.ok(ApiResponse.success(mascotaService.getAll(nombre, clienteId, especieId, page, size)));
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "Obtener mascotas del usuario autenticado")
+    public ResponseEntity<ApiResponse<List<MascotaSummaryDTO>>> getMyMascotas() {
+        String username = SecurityUtil.getCurrentUsername();
+        Usuario usuario = usuarioMapper.findByUsername(username);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Usuario no autenticado", 401));
+        }
+        return ResponseEntity.ok(ApiResponse.success(mascotaService.getByUsuarioId(usuario.getId())));
     }
 
     @GetMapping("/by-cliente/{clienteId}")

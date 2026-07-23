@@ -6,10 +6,10 @@
         m.imagen_url, m.especie_id, m.raza_id, m.cliente_id,
         m.created_at, m.updated_at, m.deleted, m.version
     </sql>
-    <sql id="table">petcare.mascota m</sql>
+    <sql id="table">mascota m</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.mascota.entity.Mascota">
-        INSERT INTO petcare.mascota (nombre, fecha_nacimiento, genero, peso, color, imagen_url, especie_id, raza_id, cliente_id)
+        INSERT INTO mascota (nombre, fecha_nacimiento, genero, peso, color, imagen_url, especie_id, raza_id, cliente_id)
         VALUES (#{nombre}, #{fechaNacimiento}, #{genero}, #{peso}, #{color}, #{imagenUrl}, #{especieId}, #{razaId}, #{clienteId})
     </insert>
 
@@ -32,57 +32,73 @@
 
     <select id="selectById" resultMap="mascotaCompletoResultMap">
         SELECT m.id, m.nombre, m.fecha_nacimiento, m.genero, m.peso, m.color, m.imagen_url,
-               m.especie_id, m.raza_id, m.cliente_id, m.created_at, m.updated_at, m.deleted, m.version,
-               r.id AS raza_id, r.nombre AS raza_nombre,
-               e.id AS especie_id, e.nombre AS especie_nombre
-        FROM petcare.mascota m
-        LEFT JOIN petcare.raza r ON r.id = m.raza_id AND r.deleted = FALSE
-        LEFT JOIN petcare.especie e ON e.id = m.especie_id AND e.deleted = FALSE
+               m.especie_id, m.raza_id, m.cliente_id, m.created_at, m.updated_at, m.deleted, m.version
+        FROM mascota m
         WHERE m.id = #{id} AND m.deleted = FALSE
     </select>
 
-    <select id="selectAll" resultMap="mascotaCompletoResultMap">
-        SELECT m.id, m.nombre, m.fecha_nacimiento, m.genero, m.peso, m.color, m.imagen_url,
-               m.especie_id, m.raza_id, m.cliente_id, m.created_at, m.updated_at, m.deleted, m.version,
-               r.id AS raza_id, r.nombre AS raza_nombre,
-               e.id AS especie_id, e.nombre AS especie_nombre
-        FROM petcare.mascota m
-        LEFT JOIN petcare.raza r ON r.id = m.raza_id AND r.deleted = FALSE
-        LEFT JOIN petcare.especie e ON e.id = m.especie_id AND e.deleted = FALSE
+    <select id="selectAll" resultType="bo.capital.tec.pet.mascota.dto.MascotaSummaryDTO">
+        SELECT
+            m.id,
+            m.nombre,
+            e.nombre AS especieNombre,
+            r.nombre AS razaNombre,
+            m.peso,
+            m.imagen_url AS imagenUrl,
+            m.fecha_nacimiento AS fechaNacimiento,
+            m.genero,
+            m.cliente_id AS clienteId,
+            TRIM(p.nombre || ' ' || p.primer_apellido) AS clienteNombre
+        FROM mascota m
+        LEFT JOIN raza r ON r.id = m.raza_id AND r.deleted = FALSE
+        LEFT JOIN especie e ON e.id = m.especie_id AND e.deleted = FALSE
+        LEFT JOIN cliente cli ON cli.id = m.cliente_id AND cli.deleted = FALSE
+        LEFT JOIN persona p ON p.id = cli.persona_id AND p.deleted = FALSE
         <where>
             m.deleted = FALSE
             <if test="nombre != null and nombre != ''">AND m.nombre ILIKE '%' || #{nombre} '%'</if>
+            <if test="clienteId != null">AND m.cliente_id = #{clienteId}</if>
         </where>
         ORDER BY m.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM petcare.mascota m
+        SELECT COUNT(*) FROM mascota m
         <where>
             m.deleted = FALSE
             <if test="nombre != null and nombre != ''">AND m.nombre ILIKE '%' || #{nombre} '%'</if>
+            <if test="clienteId != null">AND m.cliente_id = #{clienteId}</if>
         </where>
     </select>
 
-    <select id="selectByClienteId" resultMap="mascotaCompletoResultMap">
-        SELECT m.id, m.nombre, m.fecha_nacimiento, m.genero, m.peso, m.color, m.imagen_url,
-               m.especie_id, m.raza_id, m.cliente_id, m.created_at, m.updated_at, m.deleted, m.version,
-               r.id AS raza_id, r.nombre AS raza_nombre,
-               e.id AS especie_id, e.nombre AS especie_nombre
-        FROM petcare.mascota m
-        LEFT JOIN petcare.raza r ON r.id = m.raza_id AND r.deleted = FALSE
-        LEFT JOIN petcare.especie e ON e.id = m.especie_id AND e.deleted = FALSE
+    <select id="selectByClienteId" resultType="bo.capital.tec.pet.mascota.dto.MascotaSummaryDTO">
+        SELECT
+            m.id,
+            m.nombre,
+            e.nombre AS especieNombre,
+            r.nombre AS razaNombre,
+            m.peso,
+            m.imagen_url AS imagenUrl,
+            m.fecha_nacimiento AS fechaNacimiento,
+            m.genero,
+            m.cliente_id AS clienteId,
+            TRIM(p.nombre || ' ' || p.primer_apellido) AS clienteNombre
+        FROM mascota m
+        LEFT JOIN raza r ON r.id = m.raza_id AND r.deleted = FALSE
+        LEFT JOIN especie e ON e.id = m.especie_id AND e.deleted = FALSE
+        LEFT JOIN cliente cli ON cli.id = m.cliente_id AND cli.deleted = FALSE
+        LEFT JOIN persona p ON p.id = cli.persona_id AND p.deleted = FALSE
         WHERE m.cliente_id = #{clienteId} AND m.deleted = FALSE
         ORDER BY m.nombre ASC
     </select>
 
     <select id="countByClienteId" resultType="long">
-        SELECT COUNT(*) FROM petcare.mascota m
+        SELECT COUNT(*) FROM mascota m
         WHERE m.cliente_id = #{clienteId} AND m.deleted = FALSE
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.mascota.entity.Mascota">
-        UPDATE petcare.mascota
+        UPDATE mascota
         SET nombre = #{nombre}, fecha_nacimiento = #{fechaNacimiento}, genero = #{genero},
             peso = #{peso}, color = #{color}, imagen_url = #{imagenUrl},
             especie_id = #{especieId}, raza_id = #{razaId}, cliente_id = #{clienteId},
@@ -91,6 +107,6 @@
     </update>
 
     <update id="softDelete">
-        UPDATE petcare.mascota SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE mascota SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 </mapper>

@@ -5,10 +5,10 @@
         pl.id, pl.promocion_id, pl.reserva_id, pl.monto_descuento, pl.fecha_aplicacion,
         pl.created_at, pl.updated_at, pl.deleted, pl.version
     </sql>
-    <sql id="table">petcare.promocion_local pl</sql>
+    <sql id="table">promocion_local pl</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.promocion.entity.PromocionLocal">
-        INSERT INTO petcare.promocion_local (promocion_id, reserva_id, monto_descuento, fecha_aplicacion)
+        INSERT INTO promocion_local (promocion_id, reserva_id, monto_descuento, fecha_aplicacion)
         VALUES (#{promocionId}, #{reservaId}, #{montoDescuento}, #{fechaAplicacion})
     </insert>
 

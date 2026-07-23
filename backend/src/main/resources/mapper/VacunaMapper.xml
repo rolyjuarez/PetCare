@@ -4,7 +4,7 @@
     <sql id="baseColumns">
         id, nombre, descripcion, periodicidad_meses, created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.vacuna</sql>
+    <sql id="table">vacuna</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.vacuna.entity.Vacuna">
         INSERT INTO <include refid="table"/> (nombre, descripcion, periodicidad_meses)

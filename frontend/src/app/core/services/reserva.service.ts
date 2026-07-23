@@ -2,41 +2,60 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse, PagedResponse } from '../models/api-response.model';
-import { Reserva, ReservaRequest } from '../models/reserva.model';
+
+export interface Reserva {
+  id: number;
+  codigo: string;
+  clienteId: number;
+  proveedorId: number;
+  servicioId: number;
+  mascotaId: number;
+  estadoReservaId: number;
+  fechaReserva: string;
+  fechaInicio: string;
+  fechaFin: string;
+  horaInicio: string;
+  horaFin: string;
+  notas: string;
+  precioTotal: number;
+  clienteNombre: string;
+  proveedorNombre: string;
+  servicioNombre: string;
+  mascotaNombre: string;
+  estadoReservaNombre: string;
+  estadoReservaColor: string;
+}
+
+export interface ReservaRequest {
+  clienteId: number;
+  proveedorId: number;
+  servicioId: number;
+  mascotaId: number;
+  fechaReserva: string;
+  fechaInicio: string;
+  horaInicio: string;
+  horaFin: string;
+  notas?: string;
+  precioTotal?: number;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ReservaService {
   constructor(private api: ApiService) {}
 
-  getAll(params?: any): Observable<ApiResponse<PagedResponse<Reserva>>> {
-    return this.api.getPaged('/reservas', params?.page, params?.size, params);
-  }
-
-  getById(id: number): Observable<ApiResponse<Reserva>> {
-    return this.api.get(`/reservas/${id}`);
-  }
-
-  getByCodigo(codigo: string): Observable<ApiResponse<Reserva>> {
-    return this.api.get(`/reservas/codigo/${codigo}`);
-  }
-
   create(data: ReservaRequest): Observable<ApiResponse<Reserva>> {
     return this.api.post('/reservas', data);
   }
 
-  update(id: number, data: ReservaRequest): Observable<ApiResponse<Reserva>> {
-    return this.api.put(`/reservas/${id}`, data);
+  getAll(params?: any): Observable<ApiResponse<PagedResponse<Reserva>>> {
+    return this.api.getPaged('/reservas', params?.page, params?.size, params);
   }
 
-  cancelar(id: number): Observable<ApiResponse<Reserva>> {
-    return this.api.put(`/reservas/${id}/cancelar`, {});
+  getByCliente(clienteId: number): Observable<ApiResponse<PagedResponse<Reserva>>> {
+    return this.api.getPaged('/reservas', 0, 50, { clienteId });
   }
 
-  completar(id: number): Observable<ApiResponse<Reserva>> {
-    return this.api.put(`/reservas/${id}/completar`, {});
-  }
-
-  delete(id: number): Observable<ApiResponse<void>> {
-    return this.api.delete(`/reservas/${id}`);
+  getByMascota(mascotaId: number): Observable<ApiResponse<PagedResponse<Reserva>>> {
+    return this.api.getPaged('/reservas', 0, 50, { mascotaId });
   }
 }

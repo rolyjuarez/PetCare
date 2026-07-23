@@ -14,4 +14,5 @@ public interface MenuMapper {
     void update(Menu menu);
     void softDelete(@Param("id") Long id);
     List<Menu> findByRolId(@Param("rolId") Long rolId);
+    List<Menu> findByUsername(@Param("username") String username);
 }

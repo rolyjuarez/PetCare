@@ -17,12 +17,13 @@ import bo.capital.tec.pet.mascota.mapper.RazaMapper;
 import bo.capital.tec.pet.mascota.service.MascotaService;
 import bo.capital.tec.pet.persona.entity.Persona;
 import bo.capital.tec.pet.persona.mapper.PersonaMapper;
+import bo.capital.tec.pet.usuario.entity.Usuario;
+import bo.capital.tec.pet.usuario.mapper.UsuarioMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,7 @@ public class MascotaServiceImpl implements MascotaService {
     private final RazaMapper razaMapper;
     private final ClienteMapper clienteMapper;
     private final PersonaMapper personaMapper;
+    private final UsuarioMapper usuarioMapper;
 
     @Override
     @Transactional
@@ -68,11 +70,8 @@ public class MascotaServiceImpl implements MascotaService {
         page = PaginationUtil.safePage(page);
         size = PaginationUtil.safeSize(size);
         int offset = page * size;
-        List<Mascota> mascotas = mascotaMapper.selectAll(nombre, especieId, offset, size);
-        long total = mascotaMapper.countAll(nombre, especieId);
-        List<MascotaSummaryDTO> content = mascotas.stream()
-                .map(this::toSummaryDTO)
-                .collect(Collectors.toList());
+        List<MascotaSummaryDTO> content = mascotaMapper.selectAll(nombre, clienteId, especieId, offset, size);
+        long total = mascotaMapper.countAll(nombre, clienteId, especieId);
         return PagedResponse.<MascotaSummaryDTO>builder()
                 .content(content)
                 .page(page)
@@ -87,10 +86,21 @@ public class MascotaServiceImpl implements MascotaService {
     @Override
     @Transactional(readOnly = true)
     public List<MascotaSummaryDTO> getByClienteId(Long clienteId) {
-        List<Mascota> mascotas = mascotaMapper.selectByClienteId(clienteId, 0, 1000);
-        return mascotas.stream()
-                .map(this::toSummaryDTO)
-                .collect(Collectors.toList());
+        return mascotaMapper.selectByClienteId(clienteId, 0, 1000);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MascotaSummaryDTO> getByUsuarioId(Long usuarioId) {
+        Usuario usuario = usuarioMapper.selectById(usuarioId);
+        if (usuario == null || usuario.getPersonaId() == null) {
+            return List.of();
+        }
+        Cliente cliente = clienteMapper.findByPersonaId(usuario.getPersonaId());
+        if (cliente == null) {
+            return List.of();
+        }
+        return mascotaMapper.selectByClienteId(cliente.getId(), 0, 1000);
     }
 
     @Override
@@ -152,18 +162,6 @@ public class MascotaServiceImpl implements MascotaService {
                 .clienteId(mascota.getClienteId())
                 .clienteNombre(clienteNombre.trim())
                 .createdAt(mascota.getCreatedAt())
-                .build();
-    }
-
-    private MascotaSummaryDTO toSummaryDTO(Mascota mascota) {
-        Especie especie = especieMapper.selectById(mascota.getEspecieId());
-        Raza raza = razaMapper.selectById(mascota.getRazaId());
-        return MascotaSummaryDTO.builder()
-                .id(mascota.getId())
-                .nombre(mascota.getNombre())
-                .especieNombre(especie != null ? especie.getNombre() : "")
-                .razaNombre(raza != null ? raza.getNombre() : "")
-                .peso(mascota.getPeso())
                 .build();
     }
 }

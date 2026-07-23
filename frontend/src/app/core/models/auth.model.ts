@@ -8,18 +8,18 @@ export interface RegisterRequest {
   password: string;
   nombre: string;
   primerApellido: string;
-  segundoApellido: string;
+  segundoApellido?: string | null;
   ci: string;
   telefono: string;
   email: string;
   fechaNacimiento: string;
   genero: string;
   calle: string;
-  numero: string;
-  referencia: string;
+  numero?: string | null;
+  referencia?: string | null;
   ciudadId: number;
-  latitud: number | null;
-  longitud: number | null;
+  latitud?: number | null;
+  longitud?: number | null;
 }
 
 export interface Ciudad { id: number; nombre: string; codigo: string; latitud: number | null; longitud: number | null; }

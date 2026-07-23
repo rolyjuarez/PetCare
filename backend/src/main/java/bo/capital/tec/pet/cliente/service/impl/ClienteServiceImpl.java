@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -67,11 +66,8 @@ public class ClienteServiceImpl implements ClienteService {
         page = PaginationUtil.safePage(page);
         size = PaginationUtil.safeSize(size);
         int offset = page * size;
-        List<Cliente> clientes = clienteMapper.selectAll(nombre, ci, offset, size);
+        List<ClienteSummaryDTO> content = clienteMapper.selectAll(nombre, ci, offset, size);
         long total = clienteMapper.countAll(nombre, ci);
-        List<ClienteSummaryDTO> content = clientes.stream()
-                .map(this::toSummaryDTO)
-                .collect(Collectors.toList());
         return PagedResponse.<ClienteSummaryDTO>builder()
                 .content(content)
                 .page(page)
@@ -132,25 +128,6 @@ public class ClienteServiceImpl implements ClienteService {
                 .usuarioId(cliente.getUsuarioId())
                 .notas(cliente.getNotas())
                 .createdAt(cliente.getCreatedAt())
-                .build();
-    }
-
-    private ClienteSummaryDTO toSummaryDTO(Cliente cliente) {
-        Persona persona = personaMapper.selectById(cliente.getPersonaId());
-        String nombreCompleto = "";
-        String ci = "";
-        String telefono = "";
-        if (persona != null) {
-            nombreCompleto = (persona.getNombre() != null ? persona.getNombre() : "") + " " +
-                    (persona.getPrimerApellido() != null ? persona.getPrimerApellido() : "");
-            ci = persona.getCi() != null ? persona.getCi() : "";
-            telefono = persona.getTelefono() != null ? persona.getTelefono() : "";
-        }
-        return ClienteSummaryDTO.builder()
-                .id(cliente.getId())
-                .nombreCompleto(nombreCompleto.trim())
-                .ci(ci)
-                .telefono(telefono)
                 .build();
     }
 }

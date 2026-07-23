@@ -16,7 +16,7 @@ SET search_path TO petcare, public;
 -- ---------------------------------------------------------------------------
 -- ROLES
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.rol (nombre, descripcion, activo) VALUES
+INSERT INTO rol (nombre, descripcion, activo) VALUES
 ('ADMIN',        'Administrador del sistema con acceso total',           TRUE),
 ('CLIENTE',      'Cliente que solicita servicios de cuidado de mascotas', TRUE),
 ('PROVEEDOR',    'Proveedor que ofrece servicios de cuidado de mascotas', TRUE),
@@ -28,7 +28,7 @@ INSERT INTO petcare.rol (nombre, descripcion, activo) VALUES
 -- ---------------------------------------------------------------------------
 -- ESTADOS DE RESERVA
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.estado_reserva (nombre, descripcion, color, icono, orden) VALUES
+INSERT INTO estado_reserva (nombre, descripcion, color, icono, orden) VALUES
 ('PENDIENTE',   'Reserva creada, esperando confirmación del proveedor', '#FFA500', 'clock',         1),
 ('CONFIRMADA',  'Reserva confirmada por el proveedor',                  '#4CAF50', 'check-circle',  2),
 ('EN_CURSO',    'Servicio en progreso',                                  '#2196F3', 'play-circle',   3),
@@ -39,7 +39,7 @@ INSERT INTO petcare.estado_reserva (nombre, descripcion, color, icono, orden) VA
 -- ---------------------------------------------------------------------------
 -- CIUDADES
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.ciudad (nombre, codigo, latitud, longitud) VALUES
+INSERT INTO ciudad (nombre, codigo, latitud, longitud) VALUES
 ('La Paz',       'LP', -16.5000000, -68.1500000),
 ('Santa Cruz',   'SC', -17.7833333, -63.1821289),
 ('Cochabamba',   'CB', -17.4139700, -66.1470100),
@@ -54,7 +54,7 @@ INSERT INTO petcare.ciudad (nombre, codigo, latitud, longitud) VALUES
 -- ---------------------------------------------------------------------------
 -- ESTADOS/DEPARTAMENTOS
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.estado (nombre, codigo, ciudad_id) VALUES
+INSERT INTO estado (nombre, codigo, ciudad_id) VALUES
 ('La Paz',           'LP', 1),
 ('Santa Cruz',       'SC', 2),
 ('Cochabamba',       'CB', 3),
@@ -69,7 +69,7 @@ INSERT INTO petcare.estado (nombre, codigo, ciudad_id) VALUES
 -- ---------------------------------------------------------------------------
 -- ESPECIES
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.especie (nombre, descripcion) VALUES
+INSERT INTO especie (nombre, descripcion) VALUES
 ('Perro',    'Canino domesticado, el más popular como mascota'),
 ('Gato',     'Felino doméstico, independiente y cariñoso'),
 ('Ave',      'Aves domésticas como loros, canarios, periquitos'),
@@ -81,7 +81,7 @@ INSERT INTO petcare.especie (nombre, descripcion) VALUES
 -- ---------------------------------------------------------------------------
 
 -- Razas de Perro
-INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
+INSERT INTO raza (nombre, especie_id, descripcion) VALUES
 ('Labrador Retriever',    1, 'Perro amigable, activo y devoto, ideal para familias'),
 ('Golden Retriever',      1, 'Perro inteligente y amigable, excelente compañía'),
 ('Pastor Alemán',         1, 'Perro leal y valiente, usado en trabajo y vigilancia'),
@@ -97,7 +97,7 @@ INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
 ('Mestizo',               1, 'Perro de raza mixta, único y especial');
 
 -- Razas de Gato
-INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
+INSERT INTO raza (nombre, especie_id, descripcion) VALUES
 ('Siamés',                2, 'Gato elegante y vocal, extremidades oscuras'),
 ('Persa',                 2, 'Gato de pelaje largo y temperamento tranquilo'),
 ('Maine Coon',            2, 'Gato grande y sociable, pelaje abundante'),
@@ -109,7 +109,7 @@ INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
 ('Mestizo',               2, 'Gato de raza mixta, único y especial');
 
 -- Razas de Ave
-INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
+INSERT INTO raza (nombre, especie_id, descripcion) VALUES
 ('Loro Gris Africano',    3, 'Ave muy inteligente, excelente para hablar'),
 ('Canario',               3, 'Ave pequeña y cantora, colorida'),
 ('Periquito',             3, 'Ave social y juguetón, fácil de cuidar'),
@@ -117,7 +117,7 @@ INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
 ('Ninfo',                 3, 'Ave tropical colorida y sociable');
 
 -- Razas de Reptil
-INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
+INSERT INTO raza (nombre, especie_id, descripcion) VALUES
 ('Tortuga Marina',        4, 'Reptil acuático, requiere cuidados especiales'),
 ('Iguana Verde',          4, 'Reptil arbóreo, herbívoro y territorial'),
 ('Gecko Leopardo',        4, 'Lagarto pequeño y nocturno, fácil de manejar'),
@@ -125,7 +125,7 @@ INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
 ('Pitón Real',            4, 'Serpiente no venenosa, dócil y grande');
 
 -- Razas de Conejo
-INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
+INSERT INTO raza (nombre, especie_id, descripcion) VALUES
 ('Conejo Holandés',       5, 'Conejo pequeño y amigable, ideal para interiores'),
 ('Conejo Angora',         5, 'Conejo de pelaje largo, suave y elegante'),
 ('Conejo Rex',            5, 'Conejo de pelaje corto y denso, dócil'),
@@ -135,7 +135,7 @@ INSERT INTO petcare.raza (nombre, especie_id, descripcion) VALUES
 -- ---------------------------------------------------------------------------
 -- VACUNAS
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.vacuna (nombre, descripcion, periodicidad_meses) VALUES
+INSERT INTO vacuna (nombre, descripcion, periodicidad_meses) VALUES
 ('Rabia',                'Vacuna contra la rabia, obligatoria por ley',         12),
 ('Moquillo Canino',      'Vacuna contra el moquillo, enfermedad viral grave',   12),
 ('Parvovirus Canino',    'Vacuna contra el parvovirus, altamente contagioso',   12),
@@ -152,7 +152,7 @@ INSERT INTO petcare.vacuna (nombre, descripcion, periodicidad_meses) VALUES
 -- ---------------------------------------------------------------------------
 -- MENÚS PRINCIPALES
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.menu (nombre, descripcion, icono, url, orden, activo) VALUES
+INSERT INTO menu (nombre, descripcion, icono, url, orden, activo) VALUES
 ('Dashboard',        'Panel principal del sistema',          'dashboard',        '/dashboard',       1,  TRUE),
 ('Administracion',   'Gestión administrativa del sistema',   'settings',         '/admin',           2,  TRUE),
 ('Mascotas',         'Gestión de mascotas registradas',      'pets',             '/mascotas',        3,  TRUE),
@@ -173,7 +173,7 @@ INSERT INTO petcare.menu (nombre, descripcion, icono, url, orden, activo) VALUES
 -- ---------------------------------------------------------------------------
 
 -- Submenús de Administración
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Personas',    'Gestión de personas registradas',    'person',       '/admin/personas',      1, 2, TRUE),
 ('Usuarios',    'Gestión de usuarios del sistema',    'people',       '/admin/usuarios',      2, 2, TRUE),
 ('Roles',       'Gestión de roles del sistema',       'admin_panel',  '/admin/roles',         3, 2, TRUE),
@@ -181,20 +181,20 @@ INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, ac
 ('Menus',       'Gestión de menús del sistema',       'menu',         '/admin/menus',         5, 2, TRUE);
 
 -- Submenús de Mascotas
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Mascotas',    'Listado de todas las mascotas',     'list',         '/mascotas/lista',      1, 3, TRUE),
 ('Nueva Mascota',        'Registrar nueva mascota',           'add',          '/mascotas/nueva',      2, 3, TRUE),
 ('Especies y Razas',     'Catálogo de especies y razas',      'category',     '/mascotas/especies',   3, 3, TRUE),
 ('Historial Vacunación', 'Historial de vacunación',          'vaccines',     '/mascotas/vacunas',    4, 3, TRUE);
 
 -- Submenús de Clientes
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Clientes',    'Listado de clientes registrados',   'people',       '/clientes/lista',      1, 4, TRUE),
 ('Nuevo Cliente',        'Registrar nuevo cliente',           'person_add',   '/clientes/nuevo',      2, 4, TRUE),
 ('Detalle Cliente',      'Información detallada del cliente', 'person',       '/clientes/detalle',    3, 4, TRUE);
 
 -- Submenús de Proveedores
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Proveedores',    'Listado de proveedores',              'business',     '/proveedores/lista',       1, 5, TRUE),
 ('Nuevo Proveedor',         'Registrar nuevo proveedor',           'person_add',   '/proveedores/nuevo',       2, 5, TRUE),
 ('Especialidades',           'Gestión de especialidades',           'star',         '/proveedores/especialidades', 3, 5, TRUE),
@@ -202,49 +202,49 @@ INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, ac
 ('Verificar Proveedor',     'Proceso de verificación',            'verified',     '/proveedores/verificar',   5, 5, TRUE);
 
 -- Submenús de Reservas
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Reservas',   'Listado de todas las reservas',      'event',        '/reservas/lista',       1, 6, TRUE),
 ('Nueva Reserva',       'Crear nueva reserva',                'add_task',     '/reservas/nueva',       2, 6, TRUE),
 ('Calendario',          'Vista de calendario de reservas',    'calendar',     '/reservas/calendario',  3, 6, TRUE),
 ('Gestión Estados',     'Gestión de estados de reserva',      'swap_horiz',   '/reservas/estados',     4, 6, TRUE);
 
 -- Submenús de Servicios
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Servicios',  'Catálogo de servicios',              'build',        '/servicios/lista',      1, 7, TRUE),
 ('Nuevo Servicio',      'Agregar nuevo servicio',             'add_circle',   '/servicios/nuevo',      2, 7, TRUE),
 ('Categorías',          'Gestión de categorías',              'category',     '/servicios/categorias', 3, 7, TRUE);
 
 -- Submenús de Promociones
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Promociones',  'Listado de promociones',            'local_offer',  '/promociones/lista',    1, 8, TRUE),
 ('Nueva Promoción',       'Crear nueva promoción',            'add',          '/promociones/nueva',    2, 8, TRUE),
 ('Historial Uso',         'Historial de uso de promociones',  'history',      '/promociones/historial', 3, 8, TRUE);
 
 -- Submenús de Vacunas
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Catálogo Vacunas',     'Listado de vacunas disponibles',    'vaccines',     '/vacunas/catalogo',     1, 9, TRUE),
 ('Registro Vacunación',  'Registrar vacunación',              'add_task',     '/vacunas/registrar',    2, 9, TRUE),
 ('Próximas Vacunas',     'Vacunas próximas a vencer',         'notification', '/vacunas/proximas',     3, 9, TRUE);
 
 -- Submenús de Pagos
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Pagos',      'Listado de transacciones',           'receipt',      '/pagos/lista',          1, 10, TRUE),
 ('Nuevo Pago',          'Registrar nuevo pago',               'add_card',     '/pagos/nuevo',          2, 10, TRUE),
 ('Reporte Financiero',  'Reportes financieros',               'assessment',   '/pagos/reportes',       3, 10, TRUE);
 
 -- Submenús de Sucursales
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Lista de Sucursales',  'Listado de sucursales',             'store',        '/sucursales/lista',     1, 11, TRUE),
 ('Nueva Sucursal',       'Registrar nueva sucursal',          'add_business', '/sucursales/nueva',     2, 11, TRUE);
 
 -- Submenús de Bitácora
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Bitácora General',     'Registro completo de acciones',    'history',      '/bitacora/general',     1, 12, TRUE),
 ('Auditoría Usuarios',   'Auditoría por usuario',            'people',       '/bitacora/usuarios',    2, 12, TRUE),
 ('Auditoría Entidades',  'Auditoría por entidad',            'search',       '/bitacora/entidades',   3, 12, TRUE);
 
 -- Submenús de Reportes
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('Reporte de Reservas',     'Estadísticas de reservas',         'event',        '/reportes/reservas',    1, 13, TRUE),
 ('Reporte de Clientes',     'Estadísticas de clientes',         'people',       '/reportes/clientes',    2, 13, TRUE),
 ('Reporte de Proveedores',  'Estadísticas de proveedores',      'business',     '/reportes/proveedores', 3, 13, TRUE),
@@ -252,7 +252,7 @@ INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, ac
 ('Reporte de Servicios',    'Estadísticas de servicios',        'build',        '/reportes/servicios',   5, 13, TRUE);
 
 -- Submenús de Configuraciones
-INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
+INSERT INTO submenu (nombre, descripcion, icono, url, orden, menu_id, activo) VALUES
 ('General',              'Configuración general',              'settings',     '/config/general',       1, 14, TRUE),
 ('Notificaciones',       'Configuración de notificaciones',    'notifications','/config/notificaciones', 2, 14, TRUE),
 ('Correo Electrónico',   'Configuración de correo',            'email',        '/config/correo',        3, 14, TRUE),
@@ -261,7 +261,7 @@ INSERT INTO petcare.submenu (nombre, descripcion, icono, url, orden, menu_id, ac
 -- ---------------------------------------------------------------------------
 -- PERMISOS PARA ROL ADMIN (acceso total)
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
+INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
 -- Dashboard
 ('Admin: Dashboard',              'Acceso al panel principal',            1, 1,  NULL, TRUE, TRUE, TRUE,  TRUE),
 -- Administración
@@ -328,7 +328,7 @@ INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, c
 -- ---------------------------------------------------------------------------
 -- PERMISOS PARA ROL CLIENTE
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
+INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
 -- Dashboard
 ('Cliente: Dashboard',            'Acceso al panel principal',            2, 1,  NULL, TRUE, TRUE, FALSE, FALSE),
 -- Mascotas (suyas)
@@ -350,7 +350,7 @@ INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, c
 -- ---------------------------------------------------------------------------
 -- PERMISOS PARA ROL PROVEEDOR
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
+INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
 -- Dashboard
 ('Proveedor: Dashboard',          'Acceso al panel principal',            3, 1,  NULL, TRUE, TRUE, FALSE, FALSE),
 -- Mascotas (de sus clientes)
@@ -367,7 +367,7 @@ INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, c
 -- ---------------------------------------------------------------------------
 -- PERMISOS PARA ROL RECEPCIÓN
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
+INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
 -- Dashboard
 ('Recepción: Dashboard',          'Acceso al panel principal',            4, 1,  NULL, TRUE, TRUE, FALSE, FALSE),
 -- Clientes
@@ -387,7 +387,7 @@ INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, c
 -- ---------------------------------------------------------------------------
 -- PERMISOS PARA ROL VETERINARIO
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
+INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
 -- Dashboard
 ('Veterinario: Dashboard',        'Acceso al panel principal',            5, 1,  NULL, TRUE, TRUE, FALSE, FALSE),
 -- Mascotas
@@ -403,7 +403,7 @@ INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, c
 -- ---------------------------------------------------------------------------
 -- PERMISOS PARA ROL PELUQUERO
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
+INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
 -- Dashboard
 ('Peluquero: Dashboard',          'Acceso al panel principal',            6, 1,  NULL, TRUE, TRUE, FALSE, FALSE),
 -- Mascotas
@@ -415,7 +415,7 @@ INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, c
 -- ---------------------------------------------------------------------------
 -- PERMISOS PARA ROL PASEADOR
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
+INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id, crear, leer, actualizar, eliminar) VALUES
 -- Dashboard
 ('Paseador: Dashboard',           'Acceso al panel principal',            7, 1,  NULL, TRUE, TRUE, FALSE, FALSE),
 -- Mascotas
@@ -427,7 +427,7 @@ INSERT INTO petcare.permiso (nombre, descripcion, rol_id, menu_id, submenu_id, c
 -- ---------------------------------------------------------------------------
 -- SERVICIOS
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.servicio (nombre, descripcion, duracion_minutos, precio_base, imagen_url, activo, categoria) VALUES
+INSERT INTO servicio (nombre, descripcion, duracion_minutos, precio_base, imagen_url, activo, categoria) VALUES
 ('Peluquería Básica',       'Corte, baño y secado básico para mascotas',                   60,  80.00,  '/img/servicios/peluqueria_basica.jpg',     TRUE, 'PELUQUERIA'),
 ('Peluquería Premium',      'Corte, baño, secado, corte de uñas y limpieza de oídos',       90,  120.00, '/img/servicios/peluqueria_premium.jpg',    TRUE, 'PELUQUERIA'),
 ('Baño Terapéutico',        'Baño con productos medicinales para problemas de piel',        45,  100.00, '/img/servicios/bano_terapeutico.jpg',      TRUE, 'PELUQUERIA'),
@@ -453,47 +453,47 @@ INSERT INTO petcare.servicio (nombre, descripcion, duracion_minutos, precio_base
 -- Contraseña hasheada con BCrypt: "admin123"
 -- Hash BCrypt: $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
 
-INSERT INTO petcare.persona (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero) VALUES
-('Carlos', 'Administrador', 'Sistema', '1234567', '70123456', 'admin@petcare.com', '1985-01-15', 'M');
+INSERT INTO persona (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero) VALUES
+('Carlos', 'Administrador', 'Sistema', '1234567', '70123456', 'admin@com', '1985-01-15', 'M');
 
-INSERT INTO petcare.usuario (username, password, persona_id, activo, intentos_fallidos, bloqueado) VALUES
+INSERT INTO usuario (username, password, persona_id, activo, intentos_fallidos, bloqueado) VALUES
 ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 1, TRUE, 0, FALSE);
 
-INSERT INTO petcare.usuario_rol (usuario_id, rol_id) VALUES
+INSERT INTO usuario_rol (usuario_id, rol_id) VALUES
 (1, 1);
 
 -- ---------------------------------------------------------------------------
 -- CLIENTE DE EJEMPLO
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.persona (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero) VALUES
+INSERT INTO persona (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero) VALUES
 ('María', 'González', 'López', '7654321', '71234567', 'maria.gonzalez@email.com', '1990-05-20', 'F');
 
-INSERT INTO petcare.usuario (username, password, persona_id, activo, intentos_fallidos, bloqueado) VALUES
+INSERT INTO usuario (username, password, persona_id, activo, intentos_fallidos, bloqueado) VALUES
 ('mgonzalez', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 2, TRUE, 0, FALSE);
 
-INSERT INTO petcare.cliente (persona_id, usuario_id, notas) VALUES
+INSERT INTO cliente (persona_id, usuario_id, notas) VALUES
 (2, 2, 'Cliente frecuente, prefiere servicios por la mañana');
 
-INSERT INTO petcare.usuario_rol (usuario_id, rol_id) VALUES
+INSERT INTO usuario_rol (usuario_id, rol_id) VALUES
 (2, 2);
 
 -- ---------------------------------------------------------------------------
 -- PROVEEDOR DE EJEMPLO
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.persona (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero) VALUES
+INSERT INTO persona (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero) VALUES
 ('Roberto', 'Mamani', 'Quispe', '8765432', '72345678', 'roberto.mamani@email.com', '1988-03-10', 'M');
 
-INSERT INTO petcare.usuario (username, password, persona_id, activo, intentos_fallidos, bloqueado) VALUES
+INSERT INTO usuario (username, password, persona_id, activo, intentos_fallidos, bloqueado) VALUES
 ('rmamani', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 3, TRUE, 0, FALSE);
 
-INSERT INTO petcare.proveedor (persona_id, usuario_id, latitud, longitud, radio_cobertura_km, descripcion, verificado, calificacion) VALUES
+INSERT INTO proveedor (persona_id, usuario_id, latitud, longitud, radio_cobertura_km, descripcion, verificado, calificacion) VALUES
 (3, 3, -16.5000000, -68.1500000, 15.00, 'Peluquero profesional con 10 años de experiencia', TRUE, 4.80);
 
-INSERT INTO petcare.usuario_rol (usuario_id, rol_id) VALUES
+INSERT INTO usuario_rol (usuario_id, rol_id) VALUES
 (3, 3);
 
 -- Asignar especialidades al proveedor
-INSERT INTO petcare.proveedor_especialidad (proveedor_id, servicio_id) VALUES
+INSERT INTO proveedor_especialidad (proveedor_id, servicio_id) VALUES
 (1, 1),  -- Peluquería Básica
 (1, 2),  -- Peluquería Premium
 (1, 3),  -- Baño Terapéutico
@@ -502,7 +502,7 @@ INSERT INTO petcare.proveedor_especialidad (proveedor_id, servicio_id) VALUES
 -- ---------------------------------------------------------------------------
 -- DISPONIBILIDAD DEL PROVEEDOR
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.disponibilidad (proveedor_id, servicio_id, dia_semana, hora_inicio, hora_fin, activo) VALUES
+INSERT INTO disponibilidad (proveedor_id, servicio_id, dia_semana, hora_inicio, hora_fin, activo) VALUES
 (1, 1, 1, '08:00:00', '17:00:00', TRUE),  -- Lunes Peluquería Básica
 (1, 1, 2, '08:00:00', '17:00:00', TRUE),  -- Martes Peluquería Básica
 (1, 1, 3, '08:00:00', '17:00:00', TRUE),  -- Miércoles Peluquería Básica
@@ -519,13 +519,13 @@ INSERT INTO petcare.disponibilidad (proveedor_id, servicio_id, dia_semana, hora_
 -- ---------------------------------------------------------------------------
 -- MASCOTA DE EJEMPLO
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.mascota (nombre, fecha_nacimiento, genero, peso, color, especie_id, raza_id, cliente_id) VALUES
+INSERT INTO mascota (nombre, fecha_nacimiento, genero, peso, color, especie_id, raza_id, cliente_id) VALUES
 ('Max', '2020-06-15', 'M', 25.50, 'Dorado', 1, 1, 1);
 
 -- ---------------------------------------------------------------------------
 -- PROMOCIONES DE EJEMPLO
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.promocion (codigo, nombre, descripcion, tipo_descuento, valor_descuento, fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales) VALUES
+INSERT INTO promocion (codigo, nombre, descripcion, tipo_descuento, valor_descuento, fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales) VALUES
 ('BIENVENIDO10',     'Descuento de Bienvenida',        '10% de descuento para nuevos clientes',              'PERCENTAGE', 10.00,  '2024-01-01 00:00:00', '2025-12-31 23:59:59', TRUE, 100, 0),
 ('VERANO2024',       'Promoción de Verano',            '20% de descuento en servicios de peluquería',         'PERCENTAGE', 20.00,  '2024-12-01 00:00:00', '2025-03-31 23:59:59', TRUE, 50, 0),
 ('PASEO15',          'Descuento en Paseos',            '$15 de descuento en paseos',                          'FIXED',      15.00,  '2024-01-01 00:00:00', '2025-12-31 23:59:59', TRUE, 200, 0),
@@ -535,8 +535,8 @@ INSERT INTO petcare.promocion (codigo, nombre, descripcion, tipo_descuento, valo
 -- ---------------------------------------------------------------------------
 -- ESTADO DE CORREO
 -- ---------------------------------------------------------------------------
-INSERT INTO petcare.correo_enviado (destino, asunto, cuerpo, tipo, estado, fecha_envio) VALUES
-('admin@petcare.com', 'Bienvenido a PETCare', 'Bienvenido al sistema PETCare Home Services', 'SISTEMA', 'ENVIADO', NOW());
+INSERT INTO correo_enviado (destino, asunto, cuerpo, tipo, estado, fecha_envio) VALUES
+('admin@com', 'Bienvenido a PETCare', 'Bienvenido al sistema PETCare Home Services', 'SISTEMA', 'ENVIADO', NOW());
 
 -- =============================================================================
 -- Mensaje de confirmación

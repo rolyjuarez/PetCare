@@ -1,7 +1,7 @@
 -- =============================================================================
 -- PETCare Home Services - Script 01: Creación de Base de Datos
 -- Base de Datos: petcaredb
--- Esquema: petcare
+-- Esquema: public
 -- Motor: PostgreSQL
 -- =============================================================================
 
@@ -31,18 +31,8 @@ COMMENT ON DATABASE petcaredb IS 'Base de datos del sistema PETCare Home Service
 -- Conectar a la base de datos petcaredb
 \connect petcaredb
 
--- Crear esquema principal
-CREATE SCHEMA IF NOT EXISTS petcare
-    AUTHORIZATION postgres;
-
-COMMENT ON SCHEMA petcare IS 'Esquema principal del sistema PETCare Home Services';
-
 -- Establecer search_path por defecto
-ALTER DATABASE petcaredb SET search_path TO petcare, public;
-
--- Otorgar permisos al esquema
-GRANT ALL ON SCHEMA petcare TO postgres;
-GRANT USAGE ON SCHEMA petcare TO public;
+ALTER DATABASE petcaredb SET search_path TO public;
 
 -- Crear extensiones útiles
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -53,7 +43,7 @@ DO $$
 BEGIN
     RAISE NOTICE '============================================================';
     RAISE NOTICE 'Base de datos petcaredb creada exitosamente';
-    RAISE NOTICE 'Esquema: petcare';
+    RAISE NOTICE 'Esquema: public';
     RAISE NOTICE 'Propietario: postgres';
     RAISE NOTICE '============================================================';
 END $$;

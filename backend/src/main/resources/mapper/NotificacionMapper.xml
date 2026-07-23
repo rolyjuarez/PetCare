@@ -5,7 +5,7 @@
         id, usuario_id, titulo, mensaje, tipo, leida, fecha_lectura,
         created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.notificacion</sql>
+    <sql id="table">notificacion</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.notificacion.entity.Notificacion">
         INSERT INTO <include refid="table"/> (titulo, mensaje, tipo, leida, usuario_id)

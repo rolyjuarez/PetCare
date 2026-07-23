@@ -5,7 +5,7 @@
         id, nombre, descripcion, duracion_minutos, precio_base, imagen_url, activo, categoria,
         created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.servicio</sql>
+    <sql id="table">servicio</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.servicio.entity.Servicio">
         INSERT INTO <include refid="table"/> (nombre, descripcion, duracion_minutos, precio_base, imagen_url, activo, categoria)

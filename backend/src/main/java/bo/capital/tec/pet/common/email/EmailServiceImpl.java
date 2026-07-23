@@ -43,6 +43,26 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
+    @Override
+    public void sendEmailSync(String to, String subject, String templateName, Map<String, Object> variables) {
+        try {
+            Context context = new Context();
+            context.setVariables(variables);
+            String htmlContent = templateEngine.process(templateName, context);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(fromEmail);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            log.info("Correo enviado (sync) a: {} - Asunto: {}", to, subject);
+        } catch (Exception e) {
+            log.error("Error al enviar correo (sync) a {}: {}", to, e.getMessage(), e);
+            throw new RuntimeException("Error al enviar correo", e);
+        }
+    }
+
     @Async("asyncExecutor")
     @Override
     public void sendSimpleEmail(String to, String subject, String body) {

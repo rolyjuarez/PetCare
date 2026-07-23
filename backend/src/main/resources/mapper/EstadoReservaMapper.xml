@@ -4,7 +4,7 @@
     <sql id="baseColumns">
         id, nombre, descripcion, color, icono, orden, created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.estado_reserva</sql>
+    <sql id="table">estado_reserva</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.reserva.entity.EstadoReserva">
         INSERT INTO <include refid="table"/> (nombre, descripcion, color, icono, orden)

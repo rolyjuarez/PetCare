@@ -6,7 +6,7 @@
         pg.referencia_transaccion, pg.fecha_pago, pg.comprobante_url,
         pg.created_at, pg.updated_at, pg.deleted, pg.version
     </sql>
-    <sql id="table">petcare.pago pg</sql>
+    <sql id="table">pago pg</sql>
 
     <resultMap id="pagoCompletoResultMap" type="bo.capital.tec.pet.pago.entity.Pago">
         <id property="id" column="id"/>
@@ -24,7 +24,7 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.pago.entity.Pago">
-        INSERT INTO petcare.pago (reserva_id, monto, metodo_pago, estado_pago, referencia_transaccion, fecha_pago, comprobante_url)
+        INSERT INTO pago (reserva_id, monto, metodo_pago, estado_pago, referencia_transaccion, fecha_pago, comprobante_url)
         VALUES (#{reservaId}, #{monto}, #{metodoPago}, #{estadoPago}, #{referenciaTransaccion}, #{fechaPago}, #{comprobanteUrl})
     </insert>
 
@@ -32,7 +32,7 @@
         SELECT pg.id, pg.reserva_id, pg.monto, pg.metodo_pago, pg.estado_pago,
                pg.referencia_transaccion, pg.fecha_pago, pg.comprobante_url,
                pg.created_at, pg.updated_at, pg.deleted, pg.version
-        FROM petcare.pago pg
+        FROM pago pg
         WHERE pg.id = #{id} AND pg.deleted = FALSE
     </select>
 
@@ -40,13 +40,13 @@
         SELECT pg.id, pg.reserva_id, pg.monto, pg.metodo_pago, pg.estado_pago,
                pg.referencia_transaccion, pg.fecha_pago, pg.comprobante_url,
                pg.created_at, pg.updated_at, pg.deleted, pg.version
-        FROM petcare.pago pg
+        FROM pago pg
         WHERE pg.deleted = FALSE
         ORDER BY pg.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countAll" resultType="long">
-        SELECT COUNT(*) FROM petcare.pago pg
+        SELECT COUNT(*) FROM pago pg
         WHERE pg.deleted = FALSE
     </select>
 
@@ -54,7 +54,7 @@
         SELECT pg.id, pg.reserva_id, pg.monto, pg.metodo_pago, pg.estado_pago,
                pg.referencia_transaccion, pg.fecha_pago, pg.comprobante_url,
                pg.created_at, pg.updated_at, pg.deleted, pg.version
-        FROM petcare.pago pg
+        FROM pago pg
         WHERE pg.reserva_id = #{reservaId} AND pg.deleted = FALSE
         ORDER BY pg.created_at DESC
     </select>
@@ -63,13 +63,13 @@
         SELECT pg.id, pg.reserva_id, pg.monto, pg.metodo_pago, pg.estado_pago,
                pg.referencia_transaccion, pg.fecha_pago, pg.comprobante_url,
                pg.created_at, pg.updated_at, pg.deleted, pg.version
-        FROM petcare.pago pg
+        FROM pago pg
         WHERE pg.estado_pago = #{estadoPago} AND pg.deleted = FALSE
         ORDER BY pg.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.pago.entity.Pago">
-        UPDATE petcare.pago
+        UPDATE pago
         SET reserva_id = #{reservaId}, monto = #{monto}, metodo_pago = #{metodoPago},
             estado_pago = #{estadoPago}, referencia_transaccion = #{referenciaTransaccion},
             fecha_pago = #{fechaPago}, comprobante_url = #{comprobanteUrl},
@@ -78,12 +78,12 @@
     </update>
 
     <update id="updateEstadoPago">
-        UPDATE petcare.pago
+        UPDATE pago
         SET estado_pago = #{estadoPago}, updated_at = NOW(), version = version + 1
         WHERE id = #{id} AND deleted = FALSE
     </update>
 
     <update id="softDelete">
-        UPDATE petcare.pago SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE pago SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 </mapper>

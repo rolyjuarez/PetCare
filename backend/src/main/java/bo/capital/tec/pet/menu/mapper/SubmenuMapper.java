@@ -10,6 +10,7 @@ public interface SubmenuMapper {
     Long insert(Submenu submenu);
     Submenu selectById(@Param("id") Long id);
     List<Submenu> selectByMenuId(@Param("menuId") Long menuId);
+    List<Submenu> selectByMenuIdAndUsername(@Param("menuId") Long menuId, @Param("username") String username);
     void update(Submenu submenu);
     void softDelete(@Param("id") Long id);
 }

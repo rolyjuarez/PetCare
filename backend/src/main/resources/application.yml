@@ -24,8 +24,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: ${MAIL_USERNAME:noreply@petcare.com}
-    password: ${MAIL_PASSWORD:password}
+    username: roly.juarez@gmail.com
+    password: srek cder xteq iqnj
     properties:
       mail.smtp.auth: true
       mail.smtp.starttls.enable: true
@@ -48,7 +48,7 @@ jwt:
 
 app:
   mail:
-    from: noreply@petcare.com
+    from: roly.juarez@gmail.com
 
 logging:
   level:

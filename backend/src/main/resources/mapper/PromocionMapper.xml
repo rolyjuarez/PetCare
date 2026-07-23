@@ -6,7 +6,7 @@
         fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales,
         created_at, updated_at, deleted, version
     </sql>
-    <sql id="table">petcare.promocion</sql>
+    <sql id="table">promocion</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.promocion.entity.Promocion">
         INSERT INTO <include refid="table"/> (codigo, nombre, descripcion, tipo_descuento, valor_descuento,
