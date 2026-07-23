@@ -716,7 +716,7 @@ export class LandingComponent implements OnInit {
 
   ngOnInit() {
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/app/dashboard']);
+      this.redirectToApp();
     }
   }
 
@@ -724,9 +724,11 @@ export class LandingComponent implements OnInit {
     this.error.set('');
     this.loading.set(true);
     this.authService.login({ username: this.username, password: this.password }).subscribe({
-      next: () => {
+      next: (res) => {
         this.loading.set(false);
-        this.router.navigate(['/app/dashboard']);
+        if (res.success) {
+          this.redirectToApp();
+        }
       },
       error: (err) => {
         this.loading.set(false);
@@ -741,5 +743,18 @@ export class LandingComponent implements OnInit {
 
   goToForgotPassword() {
     this.router.navigate(['/forgot-password']);
+  }
+
+  private redirectToApp(): void {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') ?? 'null');
+      if (userInfo?.roles?.includes('CLIENTE')) {
+        this.router.navigate(['/app/client-dashboard']);
+      } else {
+        this.router.navigate(['/app/dashboard']);
+      }
+    } catch {
+      this.router.navigate(['/app/dashboard']);
+    }
   }
 }
