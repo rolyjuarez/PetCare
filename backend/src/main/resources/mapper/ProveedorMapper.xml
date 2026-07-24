@@ -2,21 +2,22 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="bo.capital.tec.pet.proveedor.mapper.ProveedorMapper">
     <sql id="baseColumns">
-        pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
+        pr.id, pr.persona_id, pr.usuario_id, pr.empresa, pr.latitud, pr.longitud,
         pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
         pr.created_at, pr.updated_at, pr.deleted, pr.version
     </sql>
     <sql id="table">proveedor pr</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.proveedor.entity.Proveedor">
-        INSERT INTO proveedor (persona_id, usuario_id, latitud, longitud, radio_cobertura_km, descripcion, verificado, calificacion)
-        VALUES (#{personaId}, #{usuarioId}, #{latitud}, #{longitud}, #{radioCoberturaKm}, #{descripcion}, #{verificado}, #{calificacion})
+        INSERT INTO proveedor (persona_id, usuario_id, empresa, latitud, longitud, radio_cobertura_km, descripcion, verificado, calificacion)
+        VALUES (#{personaId}, #{usuarioId}, #{empresa}, #{latitud}, #{longitud}, #{radioCoberturaKm}, #{descripcion}, #{verificado}, #{calificacion})
     </insert>
 
     <resultMap id="proveedorPersonaResultMap" type="bo.capital.tec.pet.proveedor.entity.Proveedor">
         <id property="id" column="id"/>
         <result property="personaId" column="persona_id"/>
         <result property="usuarioId" column="usuario_id"/>
+        <result property="empresa" column="empresa"/>
         <result property="latitud" column="latitud"/>
         <result property="longitud" column="longitud"/>
         <result property="radioCoberturaKm" column="radio_cobertura_km"/>
@@ -30,22 +31,18 @@
     </resultMap>
 
     <select id="selectById" resultMap="proveedorPersonaResultMap">
-        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
-               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
-               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        SELECT <include refid="baseColumns"/>
         FROM proveedor pr
         WHERE pr.id = #{id} AND pr.deleted = FALSE
     </select>
 
     <select id="selectAll" resultMap="proveedorPersonaResultMap">
-        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
-               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
-               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        SELECT <include refid="baseColumns"/>
         FROM proveedor pr
         LEFT JOIN persona p ON p.id = pr.persona_id AND p.deleted = FALSE
         <where>
             pr.deleted = FALSE
-            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
+            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%' OR pr.empresa ILIKE '%' || #{nombre} '%')</if>
         </where>
         ORDER BY pr.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -55,7 +52,7 @@
         LEFT JOIN persona p ON p.id = pr.persona_id AND p.deleted = FALSE
         <where>
             pr.deleted = FALSE
-            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%')</if>
+            <if test="nombre != null and nombre != ''">AND (p.nombre ILIKE '%' || #{nombre} '%' OR p.primer_apellido ILIKE '%' || #{nombre} '%' OR pr.empresa ILIKE '%' || #{nombre} '%')</if>
         </where>
     </select>
 
@@ -63,6 +60,7 @@
         <id property="id" column="id"/>
         <result property="personaId" column="persona_id"/>
         <result property="usuarioId" column="usuario_id"/>
+        <result property="empresa" column="empresa"/>
         <result property="latitud" column="latitud"/>
         <result property="longitud" column="longitud"/>
         <result property="radioCoberturaKm" column="radio_cobertura_km"/>
@@ -76,9 +74,7 @@
     </resultMap>
 
     <select id="findByServicioId" resultMap="proveedorServicioResultMap">
-        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
-               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
-               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        SELECT <include refid="baseColumns"/>
         FROM proveedor pr
         INNER JOIN proveedor_especialidad pe ON pe.proveedor_id = pr.id AND pe.deleted = FALSE
         INNER JOIN servicio s ON s.id = pe.servicio_id AND s.deleted = FALSE
@@ -87,9 +83,7 @@
     </select>
 
     <select id="searchNearby" resultMap="proveedorPersonaResultMap">
-        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
-               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
-               pr.created_at, pr.updated_at, pr.deleted, pr.version,
+        SELECT <include refid="baseColumns"/>,
                (6371 * acos(
                    cos(radians(#{latitud})) * cos(radians(pr.latitud)) *
                    cos(radians(pr.longitud) - radians(#{longitud})) +
@@ -108,16 +102,15 @@
     </select>
 
     <select id="findByUsuarioId" resultMap="proveedorPersonaResultMap">
-        SELECT pr.id, pr.persona_id, pr.usuario_id, pr.latitud, pr.longitud,
-               pr.radio_cobertura_km, pr.descripcion, pr.verificado, pr.calificacion,
-               pr.created_at, pr.updated_at, pr.deleted, pr.version
+        SELECT <include refid="baseColumns"/>
         FROM proveedor pr
         WHERE pr.usuario_id = #{usuarioId} AND pr.deleted = FALSE
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.proveedor.entity.Proveedor">
         UPDATE proveedor
-        SET persona_id = #{personaId}, usuario_id = #{usuarioId}, latitud = #{latitud}, longitud = #{longitud},
+        SET persona_id = #{personaId}, usuario_id = #{usuarioId}, empresa = #{empresa},
+            latitud = #{latitud}, longitud = #{longitud},
             radio_cobertura_km = #{radioCoberturaKm}, descripcion = #{descripcion},
             verificado = #{verificado}, calificacion = #{calificacion},
             updated_at = NOW(), version = version + 1

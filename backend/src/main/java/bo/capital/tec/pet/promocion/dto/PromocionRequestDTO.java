@@ -1,5 +1,6 @@
 package bo.capital.tec.pet.promocion.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -13,13 +14,15 @@ public class PromocionRequestDTO {
     private String nombre;
     @Size(max = 500)
     private String descripcion;
-    @NotBlank @Pattern(regexp = "^(PORCENTAJE|MONTO_FIJO)$")
+    @NotBlank @Pattern(regexp = "^(PERCENTAGE|FIXED)$")
     private String tipoDescuento;
     @NotNull @DecimalMin("0.01")
     private BigDecimal valorDescuento;
     @NotNull
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaInicio;
     @NotNull
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime fechaFin;
     private Boolean activa;
     @Min(1)

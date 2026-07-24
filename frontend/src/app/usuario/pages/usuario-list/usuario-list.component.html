@@ -2,14 +2,14 @@
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold dark:text-white">Usuarios</h1>
-        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+        <button (click)="openForm()" class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
           <span class="material-icons text-sm">add</span> Nuevo Usuario
         </button>
       </div>
 
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
-               placeholder="Buscar usuario..."
+               placeholder="Buscar por username o nombre..."
                class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
       </div>
 
@@ -18,8 +18,7 @@
           <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
               <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Username</th>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Nombre</th>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Email</th>
+              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Persona</th>
               <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Roles</th>
               <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Estado</th>
               <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Acciones</th>
@@ -29,30 +28,94 @@
             @for (item of items(); track item.id) {
               <tr class="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750">
                 <td class="px-6 py-4 dark:text-gray-300">{{ item.username }}</td>
-                <td class="px-6 py-4 dark:text-gray-300">{{ item.nombre }}</td>
-                <td class="px-6 py-4 dark:text-gray-300">{{ item.email }}</td>
+                <td class="px-6 py-4 dark:text-gray-300">{{ item.personaNombre }}</td>
                 <td class="px-6 py-4">
                   @for (rol of item.roles; track rol) {
                     <span class="bg-primary-100 text-primary-700 text-xs px-2 py-1 rounded-full mr-1 dark:bg-primary-900 dark:text-primary-300">{{ rol }}</span>
                   }
                 </td>
                 <td class="px-6 py-4">
-                  <span [class]="item.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-                        class="text-xs px-2 py-1 rounded-full">
+                  <button (click)="toggleActivo(item)"
+                          [class]="item.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                          class="text-xs px-2 py-1 rounded-full cursor-pointer hover:opacity-80">
                     {{ item.activo ? 'Activo' : 'Inactivo' }}
-                  </span>
+                  </button>
                 </td>
-                <td class="px-6 py-4">
-                  <button class="text-primary-500 hover:underline mr-3">Editar</button>
-                  <button class="text-red-500 hover:underline">Eliminar</button>
+                <td class="px-6 py-4 flex gap-2">
+                  <button (click)="openEdit(item)" class="text-primary-500 hover:underline text-sm flex items-center gap-1">
+                    <span class="material-icons text-sm">edit</span> Editar
+                  </button>
+                  <button (click)="deleteUsuario(item)" class="text-red-500 hover:underline text-sm flex items-center gap-1">
+                    <span class="material-icons text-sm">delete</span> Eliminar
+                  </button>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay usuarios registrados</td>
+                <td colspan="5" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay usuarios registrados</td>
               </tr>
             }
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Modal Formulario -->
+    @if (showForm()) {
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto dark:bg-gray-800">
+          <div class="flex justify-between items-center p-6 border-b dark:border-gray-700">
+            <h2 class="text-xl font-bold dark:text-white">{{ editMode() ? 'Editar Usuario' : 'Registrar Nuevo Usuario' }}</h2>
+            <button (click)="closeForm()" class="text-gray-400 hover:text-gray-600">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          @if (error()) {
+            <div class="mx-6 mt-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error() }}</div>
+          }
+
+          <form (ngSubmit)="onSubmit()" class="p-6 space-y-5">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Username *</label>
+              <input type="text" [(ngModel)]="form.username" name="username" required
+                     class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="Nombre de usuario" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">
+                Contrasena {{ editMode() ? '(dejar vacio para no cambiar)' : '*' }}
+              </label>
+              <input type="password" [(ngModel)]="form.password" name="password"
+                     [required]="!editMode()" [minlength]="editMode() ? 0 : 6"
+                     class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                     [placeholder]="editMode() ? 'Dejar vacio para mantener actual' : 'Minimo 6 caracteres'" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">ID Persona *</label>
+              <input type="number" [(ngModel)]="form.personaId" name="personaId" required
+                     class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600" placeholder="ID de la persona asociada" />
+            </div>
+
+            <div>
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" [(ngModel)]="form.activo" name="activo" class="rounded" />
+                <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Activo</span>
+              </label>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
+              <button type="button" (click)="closeForm()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600">Cancelar</button>
+              <button type="submit" [disabled]="loading()" class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 flex items-center gap-2">
+                @if (loading()) {
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> {{ editMode() ? 'Actualizando...' : 'Registrando...' }}
+                } @else {
+                  <span class="material-icons text-sm">{{ editMode() ? 'save' : 'person_add' }}</span> {{ editMode() ? 'Guardar Cambios' : 'Registrar' }}
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

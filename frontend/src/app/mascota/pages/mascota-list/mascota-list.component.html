@@ -2,7 +2,7 @@
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold dark:text-white">Mascotas</h1>
-        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+        <button (click)="openModal()" class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
           <span class="material-icons text-sm">add</span> Nueva Mascota
         </button>
       </div>
@@ -15,31 +15,172 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @for (item of items(); track item.id) {
-          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-            <div class="h-40 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 group">
+            <div class="relative h-80 overflow-hidden">
               @if (item.imagenUrl) {
-                <img [src]="item.imagenUrl" [alt]="item.nombre" class="w-full h-full object-cover" />
+                <img [src]="item.imagenUrl" [alt]="item.nombre" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
               } @else {
-                <span class="material-icons text-white text-6xl">pets</span>
+                <div class="w-full h-full bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
+                  <span class="material-icons text-white/80 text-7xl group-hover:scale-110 transition-transform duration-500">pets</span>
+                </div>
               }
+              <div class="absolute top-3 right-3">
+                <span class="bg-white/90 dark:bg-gray-900/80 backdrop-blur-sm text-xs font-medium px-2.5 py-1 rounded-full shadow">
+                  {{ item.genero === 'M' ? '♂ Macho' : item.genero === 'F' ? '♀ Hembra' : item.genero }}
+                </span>
+              </div>
+              <div class="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/40 to-transparent"></div>
             </div>
             <div class="p-4">
-              <h3 class="font-semibold text-lg dark:text-white">{{ item.nombre }}</h3>
-              <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.especieNombre }} - {{ item.razaNombre }}</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Dueño: {{ item.clienteNombre }}</p>
-              <div class="flex gap-4 mt-2 text-xs text-gray-400">
-                <span>Edad: {{ calculateAge(item.fechaNacimiento) }}</span>
-                <span>Peso: {{ item.peso }}kg</span>
-                <span>{{ item.genero }}</span>
+              <div class="flex items-center justify-between mb-1">
+                <h3 class="font-bold text-lg dark:text-white">{{ item.nombre }}</h3>
+                <span class="text-xs text-gray-400">{{ item.peso }}kg</span>
               </div>
-              <div class="flex gap-2 mt-4">
-                <button class="text-primary-500 hover:underline text-sm">Editar</button>
-                <button class="text-red-500 hover:underline text-sm">Eliminar</button>
+              <p class="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <span class="material-icons text-xs">category</span>
+                {{ item.especieNombre }} - {{ item.razaNombre }}
+              </p>
+              @if (!isCliente) {
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                  <span class="material-icons text-xs">person</span>
+                  {{ item.clienteNombre }}
+                </p>
+              }
+              <div class="flex items-center gap-3 mt-3 pt-3 border-t dark:border-gray-700">
+                <span class="text-xs text-gray-400 flex items-center gap-1">
+                  <span class="material-icons text-xs">cake</span>
+                  {{ calculateAge(item.fechaNacimiento) }}
+                </span>
+                <div class="flex gap-2 ml-auto">
+                  <button class="text-primary-500 hover:text-primary-600 text-sm font-medium">Editar</button>
+                  <button class="text-red-500 hover:text-red-600 text-sm font-medium">Eliminar</button>
+                </div>
               </div>
             </div>
           </div>
         } @empty {
-          <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">No hay mascotas registradas</div>
+          <div class="col-span-full text-center py-12 text-gray-500 dark:text-gray-400">
+            <span class="material-icons text-5xl text-gray-300 dark:text-gray-600 mb-2">pets</span>
+            <p>No hay mascotas registradas</p>
+          </div>
         }
       </div>
     </div>
+
+    @if (showModal()) {
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+            <h2 class="text-xl font-bold dark:text-white">Nueva Mascota</h2>
+            <button (click)="closeModal()" class="text-gray-400 hover:text-gray-600">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          @if (error()) {
+            <div class="mx-6 mt-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+              {{ error() }}
+            </div>
+          }
+
+          <form (ngSubmit)="save()" class="p-6 space-y-4">
+            <div class="flex flex-col items-center">
+              @if (previewUrl()) {
+                <div class="relative mb-3">
+                  <img [src]="previewUrl()" class="w-32 h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600" />
+                  <button type="button" (click)="removeFile()"
+                          class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600">
+                    <span class="material-icons text-sm">close</span>
+                  </button>
+                </div>
+              } @else {
+                <div class="w-32 h-32 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 flex flex-col items-center justify-center text-gray-400 mb-3 cursor-pointer"
+                     (click)="fileInput.click()">
+                  <span class="material-icons text-3xl">add_a_photo</span>
+                  <span class="text-xs mt-1">Foto</span>
+                </div>
+              }
+              <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" class="hidden" />
+              @if (!previewUrl()) {
+                <button type="button" (click)="fileInput.click()" class="text-primary-500 text-sm hover:underline">
+                  Seleccionar imagen
+                </button>
+              }
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre *</label>
+              <input type="text" [(ngModel)]="form.nombre" name="nombre" required
+                     class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                     placeholder="Nombre de la mascota" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fecha Nacimiento *</label>
+                <input type="date" [(ngModel)]="form.fechaNacimiento" name="fechaNacimiento" required
+                       class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Genero *</label>
+                <select [(ngModel)]="form.genero" name="genero"
+                        class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                  <option value="M">Macho</option>
+                  <option value="F">Hembra</option>
+                  <option value="O">Otro</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Peso (kg)</label>
+                <input type="number" [(ngModel)]="form.peso" name="peso" step="0.1" min="0"
+                       class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                       placeholder="0.0" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Color</label>
+                <input type="text" [(ngModel)]="form.color" name="color"
+                       class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                       placeholder="Color" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Especie *</label>
+              <select [(ngModel)]="form.especieId" name="especieId" (ngModelChange)="onEspecieChange()" required
+                      class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                <option [ngValue]="null" disabled>Seleccione especie</option>
+                @for (e of especies(); track e.id) {
+                  <option [ngValue]="e.id">{{ e.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Raza *</label>
+              <select [(ngModel)]="form.razaId" name="razaId" required
+                      [disabled]="!form.especieId"
+                      class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600 disabled:opacity-50">
+                <option [ngValue]="null" disabled>Seleccione raza</option>
+                @for (r of razas(); track r.id) {
+                  <option [ngValue]="r.id">{{ r.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
+              <button type="button" (click)="closeModal()"
+                      class="px-4 py-2 border rounded-lg text-gray-700 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="loading()"
+                      class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50">
+                @if (loading()) { Guardando... } @else { Guardar }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

@@ -6,6 +6,11 @@ import bo.capital.tec.pet.cliente.dto.ClienteRequestDTO;
 import bo.capital.tec.pet.cliente.dto.ClienteResponseDTO;
 import bo.capital.tec.pet.cliente.dto.ClienteSummaryDTO;
 import bo.capital.tec.pet.cliente.service.ClienteService;
+import bo.capital.tec.pet.cliente.mapper.ClienteMapper;
+import bo.capital.tec.pet.persona.mapper.PersonaMapper;
+import bo.capital.tec.pet.security.SecurityUtil;
+import bo.capital.tec.pet.usuario.entity.Usuario;
+import bo.capital.tec.pet.usuario.mapper.UsuarioMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,6 +26,25 @@ import org.springframework.web.bind.annotation.*;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final UsuarioMapper usuarioMapper;
+    private final ClienteMapper clienteMapper;
+
+    @GetMapping("/me")
+    @Operation(summary = "Obtener cliente del usuario autenticado")
+    public ResponseEntity<ApiResponse<ClienteResponseDTO>> getMe() {
+        String username = SecurityUtil.getCurrentUsername();
+        Usuario usuario = usuarioMapper.findByUsername(username);
+        if (usuario == null || usuario.getPersonaId() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Usuario no autenticado", 401));
+        }
+        bo.capital.tec.pet.cliente.entity.Cliente cliente = clienteMapper.findByPersonaId(usuario.getPersonaId());
+        if (cliente == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error("Cliente no encontrado", 404));
+        }
+        return ResponseEntity.ok(ApiResponse.success(clienteService.getById(cliente.getId())));
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

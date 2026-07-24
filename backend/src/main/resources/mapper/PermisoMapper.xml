@@ -2,14 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="bo.capital.tec.pet.menu.mapper.PermisoMapper">
     <sql id="baseColumns">
-        id, nombre, descripcion, rol_id, menu_id, submenu_id,
-        crear, leer, actualizar, eliminar,
-        created_at, updated_at, deleted, version
+        p.id, p.nombre, p.descripcion, p.rol_id, p.menu_id, p.submenu_id,
+        p.crear, p.leer, p.actualizar, p.eliminar,
+        p.created_at, p.updated_at, p.deleted, p.version
     </sql>
-    <sql id="table">permiso</sql>
+    <sql id="table">permiso p</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.menu.entity.Permiso">
-        INSERT INTO <include refid="table"/> (nombre, descripcion, rol_id, menu_id, submenu_id,
+        INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id,
             crear, leer, actualizar, eliminar)
         VALUES (#{nombre}, #{descripcion}, #{rolId}, #{menuId}, #{submenuId},
             #{crear}, #{leer}, #{actualizar}, #{eliminar})
@@ -17,33 +17,33 @@
 
     <select id="selectById" resultType="bo.capital.tec.pet.menu.entity.Permiso">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
-        WHERE id = #{id} AND deleted = FALSE
+        WHERE p.id = #{id} AND p.deleted = FALSE
     </select>
 
     <select id="selectByRolId" resultType="bo.capital.tec.pet.menu.entity.Permiso">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
-        WHERE rol_id = #{rolId} AND deleted = FALSE
+        WHERE p.rol_id = #{rolId} AND p.deleted = FALSE
     </select>
 
     <select id="selectAll" resultType="bo.capital.tec.pet.menu.entity.Permiso">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         <where>
-            deleted = FALSE
-            <if test="nombre != null and nombre != ''">AND nombre ILIKE '%' || #{nombre} '%'</if>
+            p.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND p.nombre ILIKE '%' || #{nombre} '%'</if>
         </where>
-        ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
+        ORDER BY p.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="countAll" resultType="long">
         SELECT COUNT(*) FROM <include refid="table"/>
         <where>
-            deleted = FALSE
-            <if test="nombre != null and nombre != ''">AND nombre ILIKE '%' || #{nombre} '%'</if>
+            p.deleted = FALSE
+            <if test="nombre != null and nombre != ''">AND p.nombre ILIKE '%' || #{nombre} '%'</if>
         </where>
     </select>
 
     <update id="update" parameterType="bo.capital.tec.pet.menu.entity.Permiso">
-        UPDATE <include refid="table"/>
+        UPDATE permiso
         SET nombre = #{nombre}, descripcion = #{descripcion}, rol_id = #{rolId},
             menu_id = #{menuId}, submenu_id = #{submenuId},
             crear = #{crear}, leer = #{leer}, actualizar = #{actualizar}, eliminar = #{eliminar},
@@ -52,6 +52,6 @@
     </update>
 
     <update id="softDelete">
-        UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+        UPDATE permiso SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 </mapper>

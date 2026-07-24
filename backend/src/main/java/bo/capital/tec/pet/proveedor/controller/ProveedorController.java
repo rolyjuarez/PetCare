@@ -2,6 +2,8 @@ package bo.capital.tec.pet.proveedor.controller;
 
 import bo.capital.tec.pet.common.response.ApiResponse;
 import bo.capital.tec.pet.common.response.PagedResponse;
+import bo.capital.tec.pet.proveedor.dto.ProveedorFullCreateDTO;
+import bo.capital.tec.pet.proveedor.dto.ProveedorFullUpdateDTO;
 import bo.capital.tec.pet.proveedor.dto.ProveedorRequestDTO;
 import bo.capital.tec.pet.proveedor.dto.ProveedorResponseDTO;
 import bo.capital.tec.pet.proveedor.dto.ProveedorSummaryDTO;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/proveedores")
@@ -31,6 +34,14 @@ public class ProveedorController {
     public ResponseEntity<ApiResponse<ProveedorResponseDTO>> create(@Valid @RequestBody ProveedorRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(proveedorService.create(dto), "Proveedor creado"));
+    }
+
+    @PostMapping("/full")
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "Crear proveedor completo (persona + usuario + rol + proveedor + especialidades + disponibilidades)")
+    public ResponseEntity<ApiResponse<ProveedorResponseDTO>> createFull(@Valid @RequestBody ProveedorFullCreateDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(proveedorService.createFull(dto), "Proveedor registrado exitosamente"));
     }
 
     @GetMapping("/{id}")
@@ -56,11 +67,24 @@ public class ProveedorController {
         return ResponseEntity.ok(ApiResponse.success(proveedorService.update(id, dto), "Proveedor actualizado"));
     }
 
+    @PutMapping("/{id}/full")
+    @Operation(summary = "Actualizar proveedor completo")
+    public ResponseEntity<ApiResponse<ProveedorResponseDTO>> updateFull(@PathVariable Long id, @Valid @RequestBody ProveedorFullUpdateDTO dto) {
+        return ResponseEntity.ok(ApiResponse.success(proveedorService.updateFull(id, dto), "Proveedor actualizado exitosamente"));
+    }
+
     @DeleteMapping("/{id}")
     @Operation(summary = "Eliminar proveedor")
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         proveedorService.delete(id);
         return ResponseEntity.ok(ApiResponse.success(null, "Proveedor eliminado"));
+    }
+
+    @GetMapping("/{id}/has-reservas")
+    @Operation(summary = "Verificar si un proveedor tiene reservas")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> hasReservas(@PathVariable Long id) {
+        boolean has = proveedorService.hasReservas(id);
+        return ResponseEntity.ok(ApiResponse.success(Map.of("hasReservas", has)));
     }
 
     @GetMapping("/nearby")

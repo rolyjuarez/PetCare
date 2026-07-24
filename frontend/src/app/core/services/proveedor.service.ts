@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiService } from './api.service';
 import { ApiResponse, PagedResponse } from '../models/api-response.model';
-import { Proveedor } from '../models/proveedor.model';
+import { Proveedor, ProveedorFullCreate, ProveedorFullUpdate } from '../models/proveedor.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProveedorService {
@@ -16,20 +16,16 @@ export class ProveedorService {
     return this.api.get(`/proveedores/${id}`);
   }
 
-  getVerificados(): Observable<ApiResponse<Proveedor[]>> {
-    return this.api.get('/proveedores/verificados');
+  createFull(data: ProveedorFullCreate): Observable<ApiResponse<Proveedor>> {
+    return this.api.post('/proveedores/full', data);
   }
 
-  create(data: Partial<Proveedor>): Observable<ApiResponse<Proveedor>> {
-    return this.api.post('/proveedores', data);
+  updateFull(id: number, data: ProveedorFullUpdate): Observable<ApiResponse<Proveedor>> {
+    return this.api.put(`/proveedores/${id}/full`, data);
   }
 
-  update(id: number, data: Partial<Proveedor>): Observable<ApiResponse<Proveedor>> {
-    return this.api.put(`/proveedores/${id}`, data);
-  }
-
-  verificar(id: number): Observable<ApiResponse<Proveedor>> {
-    return this.api.put(`/proveedores/${id}/verificar`, {});
+  hasReservas(id: number): Observable<ApiResponse<{ hasReservas: boolean }>> {
+    return this.api.get(`/proveedores/${id}/has-reservas`);
   }
 
   delete(id: number): Observable<ApiResponse<void>> {

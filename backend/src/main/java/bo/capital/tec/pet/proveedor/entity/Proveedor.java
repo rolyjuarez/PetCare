@@ -12,6 +12,7 @@ public class Proveedor {
     private Long usuarioId;
     private BigDecimal latitud;
     private BigDecimal longitud;
+    private String empresa;
     private BigDecimal radioCoberturaKm;
     private String descripcion;
     private Boolean verificado;

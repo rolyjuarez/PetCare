@@ -148,7 +148,7 @@ import { AuthService } from '../core/services/auth.service';
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 1rem;
-      padding: 1.25rem;
+      overflow: hidden;
       backdrop-filter: blur(12px);
       transition: all 0.3s ease;
       cursor: default;
@@ -156,13 +156,40 @@ import { AuthService } from '../core/services/auth.service';
     .service-card:hover {
       background: rgba(255, 255, 255, 0.1);
       border-color: rgba(34, 197, 94, 0.3);
-      transform: translateY(-4px);
-      box-shadow: 0 8px 32px rgba(34, 197, 94, 0.15);
+      transform: translateY(-6px);
+      box-shadow: 0 12px 40px rgba(34, 197, 94, 0.2);
     }
-    .service-card .icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-      display: block;
+    .card-img-wrapper {
+      position: relative;
+      width: 100%;
+      height: 120px;
+      overflow: hidden;
+    }
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+    .service-card:hover .card-img {
+      transform: scale(1.1);
+    }
+    .card-icon-overlay {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 1.4rem;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(6px);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-body {
+      padding: 0.75rem 1rem 1rem;
     }
     .service-card .name {
       font-weight: 600;
@@ -694,12 +721,12 @@ export class LandingComponent implements OnInit {
   showPassword = signal(false);
 
   services = signal([
-    { icon: '🩺', name: 'Veterinaria', desc: 'Consultas y tratamientos en casa' },
-    { icon: '✂️', name: 'Peluquería', desc: 'Estética canina y felina' },
-    { icon: '🦮', name: 'Paseos', desc: 'Ejercicio y socialización diaria' },
-    { icon: '🏠', name: 'Hospedaje', desc: 'Cuidado temporal con amor' },
-    { icon: '💉', name: 'Vacunación', desc: 'Programas de prevención' },
-    { icon: '🍽️', name: 'Nutrición', desc: 'Dietas personalizadas' },
+    { icon: '🩺', name: 'Veterinaria', desc: 'Consultas y tratamientos en casa', img: 'https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?w=300&h=200&fit=crop' },
+    { icon: '✂️', name: 'Peluquería', desc: 'Estética canina y felina', img: 'https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=300&h=200&fit=crop' },
+    { icon: '🦮', name: 'Paseos', desc: 'Ejercicio y socialización diaria', img: 'https://images.unsplash.com/photo-1558929996-da64ba858215?w=300&h=200&fit=crop' },
+    { icon: '🏠', name: 'Hospedaje', desc: 'Cuidado temporal con amor', img: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=300&h=200&fit=crop' },
+    { icon: '💉', name: 'Vacunación', desc: 'Programas de prevención', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=300&h=200&fit=crop' },
+    { icon: '🍽️', name: 'Nutrición', desc: 'Dietas personalizadas', img: 'https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=300&h=200&fit=crop' },
   ]);
 
   stats = signal([

@@ -12,24 +12,27 @@
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       @for (mascota of mascotas(); track mascota.id) {
-        <a [routerLink]="['/app/mascotas', mascota.id]" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow block">
-          <div class="h-32 bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center">
+        <a [routerLink]="['/app/mascotas', mascota.id]" class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 block group">
+          <div class="relative h-72 overflow-hidden">
             @if (mascota.imagenUrl) {
-              <img [src]="mascota.imagenUrl" [alt]="mascota.nombre" class="w-full h-full object-cover" />
+              <img [src]="mascota.imagenUrl" [alt]="mascota.nombre" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
             } @else {
-              <span class="material-icons text-white text-5xl">pets</span>
+              <div class="w-full h-full bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center">
+                <span class="material-icons text-white/80 text-5xl group-hover:scale-110 transition-transform duration-500">pets</span>
+              </div>
             }
+            <div class="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-black/30 to-transparent"></div>
           </div>
           <div class="p-3">
-            <h3 class="font-semibold dark:text-white">{{ mascota.nombre }}</h3>
+            <h3 class="font-bold dark:text-white">{{ mascota.nombre }}</h3>
             <p class="text-sm text-gray-500 dark:text-gray-400">{{ mascota.especieNombre }} - {{ mascota.razaNombre }}</p>
-            <p class="text-xs text-gray-400 mt-1">Edad: {{ calculateAge(mascota.fechaNacimiento) }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ calculateAge(mascota.fechaNacimiento) }}</p>
           </div>
         </a>
       } @empty {
-        <div class="col-span-full text-center py-8 bg-white dark:bg-gray-800 rounded-xl">
-          <span class="material-icons text-gray-300 text-4xl">pets</span>
-          <p class="text-gray-500 mt-2">No tienes mascotas registradas</p>
+        <div class="col-span-full text-center py-8 bg-white dark:bg-gray-800 rounded-2xl">
+          <span class="material-icons text-gray-300 dark:text-gray-600 text-5xl mb-2 block">pets</span>
+          <p class="text-gray-500">No tienes mascotas registradas</p>
         </div>
       }
     </div>
@@ -48,7 +51,7 @@
           <p class="text-sm text-green-700 dark:text-green-400 mb-2">{{ promo.descripcion }}</p>
           <div class="flex justify-between items-center">
             <span class="text-lg font-bold text-green-600 dark:text-green-300">
-              @if (promo.tipoDescuento === 'PORCENTAJE') {
+              @if (promo.tipoDescuento === 'PERCENTAGE') {
                 {{ promo.valorDescuento }}% OFF
               } @else {
                 Bs. {{ promo.valorDescuento }} OFF

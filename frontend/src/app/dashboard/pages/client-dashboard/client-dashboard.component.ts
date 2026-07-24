@@ -2,7 +2,8 @@ import { Component, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MascotaService } from '../../../core/services/mascota.service';
-import { PromocionService, Promocion } from '../../../core/services/promocion.service';
+import { PromocionService } from '../../../core/services/promocion.service';
+import { Promocion } from '../../../core/models/promocion.model';
 import { Mascota } from '../../../core/models/mascota.model';
 
 @Component({

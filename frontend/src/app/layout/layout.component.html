@@ -53,7 +53,10 @@
             <button (click)="toggleDarkMode()" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
               <span class="material-icons">{{ darkMode() ? 'light_mode' : 'dark_mode' }}</span>
             </button>
-            <span class="text-sm dark:text-gray-300">{{ auth.currentUser()?.username }}</span>
+            <a routerLink="/app/profile" class="flex items-center gap-2 text-sm dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-400 transition-colors cursor-pointer" title="Mi perfil">
+              <span class="material-icons text-lg">account_circle</span>
+              <span>{{ auth.currentUser()?.username }}</span>
+            </a>
             <button (click)="auth.logout()" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm">Salir</button>
           </div>
         </header>

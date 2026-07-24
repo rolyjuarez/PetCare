@@ -1,54 +1,98 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold dark:text-white">Vacunas</h1>
+    <button (click)="openForm()"
+            class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+      <span class="material-icons text-sm">add</span> Nueva Vacuna
+    </button>
+  </div>
 
-    <div class="space-y-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold dark:text-white">Vacunas</h1>
-        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
-          <span class="material-icons text-sm">add</span> Nueva Vacuna
-        </button>
-      </div>
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+           placeholder="Buscar vacuna..."
+           class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+  </div>
 
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
-               placeholder="Buscar vacuna..."
-               class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
-      </div>
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+    <table class="w-full">
+      <thead class="bg-gray-50 dark:bg-gray-700">
+        <tr>
+          <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Nombre</th>
+          <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Descripcion</th>
+          <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Periodicidad</th>
+          <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.id) {
+          <tr class="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750">
+            <td class="px-6 py-4 dark:text-gray-300 font-medium">{{ item.nombre }}</td>
+            <td class="px-6 py-4 dark:text-gray-300 text-sm">{{ item.descripcion || '-' }}</td>
+            <td class="px-6 py-4 dark:text-gray-300">{{ item.periodicidadMeses }} meses</td>
+            <td class="px-6 py-4">
+              <button (click)="openEdit(item)" class="text-primary-500 hover:underline mr-3">Editar</button>
+              <button (click)="deleteVacuna(item)" class="text-red-500 hover:underline">Eliminar</button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay vacunas registradas</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
 
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <table class="w-full">
-          <thead class="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Nombre</th>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Fabricante</th>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Dosis</th>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Intervalo</th>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Estado</th>
-              <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of items(); track item.id) {
-              <tr class="border-t dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750">
-                <td class="px-6 py-4 dark:text-gray-300 font-medium">{{ item.nombre }}</td>
-                <td class="px-6 py-4 dark:text-gray-300">{{ item.fabricante }}</td>
-                <td class="px-6 py-4 dark:text-gray-300">{{ item.dosisRequeridas }}</td>
-                <td class="px-6 py-4 dark:text-gray-300">{{ item.intervaloDias }} dias</td>
-                <td class="px-6 py-4">
-                  <span [class]="item.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-                        class="text-xs px-2 py-1 rounded-full">
-                    {{ item.activo ? 'Activa' : 'Inactiva' }}
-                  </span>
-                </td>
-                <td class="px-6 py-4">
-                  <button class="text-primary-500 hover:underline mr-3">Editar</button>
-                  <button class="text-red-500 hover:underline">Eliminar</button>
-                </td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="6" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay vacunas registradas</td>
-              </tr>
-            }
-          </tbody>
-        </table>
+  @if (showForm()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+          <h2 class="text-lg font-semibold dark:text-white">{{ editMode() ? 'Editar Vacuna' : 'Nueva Vacuna' }}</h2>
+          <button (click)="closeForm()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        @if (error()) {
+          <div class="mx-4 mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-sm">
+            {{ error() }}
+          </div>
+        }
+
+        <form (ngSubmit)="onSubmit()" class="p-4 space-y-4">
+          <div>
+            <label class="block text-sm font-medium dark:text-gray-300 mb-1">Nombre *</label>
+            <input type="text" [(ngModel)]="form.nombre" name="nombre" required
+                   class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                   placeholder="Ej: Rabia, Parvovirus..." />
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium dark:text-gray-300 mb-1">Descripcion</label>
+            <textarea [(ngModel)]="form.descripcion" name="descripcion" rows="2"
+                      class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                      placeholder="Descripcion de la vacuna..."></textarea>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium dark:text-gray-300 mb-1">Periodicidad (meses) *</label>
+            <input type="number" [(ngModel)]="form.periodicidadMeses" name="periodicidadMeses"
+                   min="1" required
+                   class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="closeForm()"
+                    class="px-4 py-2 text-gray-700 dark:text-gray-300 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="loading()"
+                    class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50">
+              {{ loading() ? 'Guardando...' : (editMode() ? 'Actualizar' : 'Registrar') }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+  }
+</div>

@@ -74,9 +74,14 @@
           <div class="services-grid">
             @for (service of services(); track service.name) {
               <div class="service-card">
-                <span class="icon">{{ service.icon }}</span>
-                <div class="name">{{ service.name }}</div>
-                <div class="desc">{{ service.desc }}</div>
+                <div class="card-img-wrapper">
+                  <img [src]="service.img" [alt]="service.name" class="card-img" loading="lazy" />
+                  <span class="card-icon-overlay">{{ service.icon }}</span>
+                </div>
+                <div class="card-body">
+                  <div class="name">{{ service.name }}</div>
+                  <div class="desc">{{ service.desc }}</div>
+                </div>
               </div>
             }
           </div>

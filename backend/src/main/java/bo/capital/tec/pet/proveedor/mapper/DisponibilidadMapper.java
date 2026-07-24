@@ -14,4 +14,5 @@ public interface DisponibilidadMapper {
     long countAll(@Param("proveedorId") Long proveedorId, @Param("servicioId") Long servicioId);
     void update(Disponibilidad disponibilidad);
     void softDelete(@Param("id") Long id);
+    void deleteByProveedorId(@Param("proveedorId") Long proveedorId);
 }

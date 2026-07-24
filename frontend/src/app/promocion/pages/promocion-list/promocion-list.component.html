@@ -1,50 +1,151 @@
-    <div class="space-y-6">
-      <div class="flex justify-between items-center">
-        <h1 class="text-2xl font-bold dark:text-white">Promociones</h1>
-        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
-          <span class="material-icons text-sm">add</span> Nueva Promocion
-        </button>
-      </div>
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold dark:text-white">Promociones</h1>
+    <button (click)="openForm()"
+            class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+      <span class="material-icons text-sm">add</span> Nueva Promocion
+    </button>
+  </div>
 
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-        <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
-               placeholder="Buscar promocion..."
-               class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
-      </div>
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+    <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
+           placeholder="Buscar promocion..."
+           class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+  </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @for (item of items(); track item.id) {
-          <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div class="flex justify-between items-start mb-3">
-              <div>
-                <h3 class="font-semibold text-lg dark:text-white">{{ item.nombre }}</h3>
-                <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.descripcion || item.codigo }}</p>
-              </div>
-              <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold">
-                @if (item.tipoDescuento === 'PORCENTAJE') {
-                  {{ item.valorDescuento }}% OFF
-                } @else {
-                  Bs. {{ item.valorDescuento }} OFF
-                }
-              </span>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    @for (item of items(); track item.id) {
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div class="flex justify-between items-start mb-3">
+          <div>
+            <h3 class="font-semibold text-lg dark:text-white">{{ item.nombre }}</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.descripcion || item.codigo }}</p>
+          </div>
+          <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-bold">
+            @if (item.tipoDescuento === 'PERCENTAGE') {
+              {{ item.valorDescuento }}% OFF
+            } @else {
+              Bs. {{ item.valorDescuento }} OFF
+            }
+          </span>
+        </div>
+        <div class="space-y-1 text-sm text-gray-500 dark:text-gray-400 mb-4">
+          <p>Inicio: {{ item.fechaInicio }}</p>
+          <p>Fin: {{ item.fechaFin }}</p>
+          @if (item.limiteUsos) {
+            <p>Usos: {{ item.usosActuales || 0 }} / {{ item.limiteUsos }}</p>
+          }
+        </div>
+        <span [class]="item.activa ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+              class="text-xs px-2 py-1 rounded-full">
+          {{ item.activa ? 'Activa' : 'Inactiva' }}
+        </span>
+        <div class="flex gap-2 mt-4">
+          <button (click)="openEdit(item)" class="text-primary-500 hover:underline text-sm">Editar</button>
+          <button (click)="deletePromocion(item)" class="text-red-500 hover:underline text-sm">Eliminar</button>
+        </div>
+      </div>
+    } @empty {
+      <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">No hay promociones registradas</div>
+    }
+  </div>
+
+  @if (showForm()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center p-4 border-b dark:border-gray-700">
+          <h2 class="text-lg font-semibold dark:text-white">{{ editMode() ? 'Editar Promocion' : 'Nueva Promocion' }}</h2>
+          <button (click)="closeForm()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        @if (error()) {
+          <div class="mx-4 mt-4 p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-sm">
+            {{ error() }}
+          </div>
+        }
+
+        <form (ngSubmit)="onSubmit()" class="p-4 space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium dark:text-gray-300 mb-1">Codigo *</label>
+              <input type="text" [(ngModel)]="form.codigo" name="codigo" required
+                     class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                     placeholder="Ej: PROMO001" />
             </div>
-            <div class="space-y-1 text-sm text-gray-500 dark:text-gray-400 mb-4">
-              <p>Fin: {{ item.fechaFin }}</p>
-              @if (item.limiteUsos) {
-                <p>Usos: {{ item.usosActuales || 0 }} / {{ item.limiteUsos }}</p>
-              }
-            </div>
-            <span [class]="item.activa ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
-                  class="text-xs px-2 py-1 rounded-full">
-              {{ item.activa ? 'Activa' : 'Inactiva' }}
-            </span>
-            <div class="flex gap-2 mt-4">
-              <button class="text-primary-500 hover:underline text-sm">Editar</button>
-              <button class="text-red-500 hover:underline text-sm">Eliminar</button>
+            <div>
+              <label class="block text-sm font-medium dark:text-gray-300 mb-1">Nombre *</label>
+              <input type="text" [(ngModel)]="form.nombre" name="nombre" required
+                     class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                     placeholder="Nombre de la promocion" />
             </div>
           </div>
-        } @empty {
-          <div class="col-span-full text-center py-8 text-gray-500 dark:text-gray-400">No hay promociones registradas</div>
-        }
+
+          <div>
+            <label class="block text-sm font-medium dark:text-gray-300 mb-1">Descripcion</label>
+            <textarea [(ngModel)]="form.descripcion" name="descripcion" rows="2"
+                      class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                      placeholder="Descripcion de la promocion..."></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium dark:text-gray-300 mb-1">Tipo descuento *</label>
+              <select [(ngModel)]="form.tipoDescuento" name="tipoDescuento"
+                      class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                <option value="PERCENTAGE">Porcentaje (%)</option>
+                <option value="FIXED">Monto fijo (Bs.)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium dark:text-gray-300 mb-1">Valor descuento *</label>
+              <input type="number" [(ngModel)]="form.valorDescuento" name="valorDescuento"
+                     min="0.01" step="0.01" required
+                     class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium dark:text-gray-300 mb-1">Fecha inicio *</label>
+              <input type="datetime-local" [(ngModel)]="form.fechaInicio" name="fechaInicio" required
+                     class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium dark:text-gray-300 mb-1">Fecha fin *</label>
+              <input type="datetime-local" [(ngModel)]="form.fechaFin" name="fechaFin" required
+                     class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium dark:text-gray-300 mb-1">Limite de usos</label>
+              <input type="number" [(ngModel)]="form.limiteUsos" name="limiteUsos"
+                     min="1"
+                     class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                     placeholder="Sin limite" />
+            </div>
+            <div class="flex items-center gap-2 pt-6">
+              <input type="checkbox" [(ngModel)]="form.activa" name="activa"
+                     class="w-4 h-4 rounded" />
+              <label class="text-sm font-medium dark:text-gray-300">Activa</label>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="closeForm()"
+                    class="px-4 py-2 text-gray-700 dark:text-gray-300 border rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="loading()"
+                    class="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50">
+              {{ loading() ? 'Guardando...' : (editMode() ? 'Actualizar' : 'Registrar') }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
+  }
+</div>

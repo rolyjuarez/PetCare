@@ -24,8 +24,12 @@ export class UsuarioService {
     return this.api.put(`/usuarios/${id}`, data);
   }
 
+  changePassword(id: number, oldPassword: string, newPassword: string): Observable<ApiResponse<void>> {
+    return this.api.put(`/usuarios/${id}/change-password?oldPassword=${encodeURIComponent(oldPassword)}&newPassword=${encodeURIComponent(newPassword)}`, {});
+  }
+
   toggleActivo(id: number): Observable<ApiResponse<Usuario>> {
-    return this.api.put(`/usuarios/${id}/toggle`, {});
+    return this.api.put(`/usuarios/${id}/toggle-active`, {});
   }
 
   delete(id: number): Observable<ApiResponse<void>> {

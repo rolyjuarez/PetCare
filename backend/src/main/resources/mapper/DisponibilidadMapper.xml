@@ -19,7 +19,10 @@
 
     <select id="selectByProveedorYServicio" resultType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
-        WHERE proveedor_id = #{proveedorId} AND servicio_id = #{servicioId} AND deleted = FALSE
+        <where>
+            proveedor_id = #{proveedorId} AND deleted = FALSE
+            <if test="servicioId != null">AND servicio_id = #{servicioId}</if>
+        </where>
         ORDER BY dia_semana ASC, hora_inicio ASC
     </select>
 
@@ -53,5 +56,10 @@
 
     <update id="softDelete">
         UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+
+    <update id="deleteByProveedorId">
+        UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE proveedor_id = #{proveedorId} AND deleted = FALSE
     </update>
 </mapper>

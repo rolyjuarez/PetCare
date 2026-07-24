@@ -5,10 +5,10 @@ Sistema de gestión de servicios de cuidado de mascotas a domicilio. Plataforma 
 ## Arquitectura
 
 ```
-                    ┌──────────────────────────────────────────┐
-                    │              Docker Network              │
-                    │           (petcare-network)              │
-                    │                                          │
+                   ┌──────────────────────────────────────────┐
+                   │              Docker Network              │
+                   │           (petcare-network)              │
+                   │                                          │
   Browser ────────►│  ┌──────────┐    ┌──────────────────┐    │
   :4200            │  │ Frontend │───►│     Backend      │    │
                    │  │  Nginx   │    │   Spring Boot    │    │
@@ -16,7 +16,7 @@ Sistema de gestión de servicios de cuidado de mascotas a domicilio. Plataforma 
                    │  └──────────┘    └────────┬─────────┘    │
                    │                           │              │
                    │                  ┌────────▼─────────┐    │
-                   │                  │    PostgreSQL     │    │
+                   │                  │    PostgreSQL    │    │
                    │                  │      :5432       │    │
                    │                  └──────────────────┘    │
                    │                                          │
@@ -26,6 +26,8 @@ Sistema de gestión de servicios de cuidado de mascotas a domicilio. Plataforma 
                    │  └──────────┘                            │
                    └──────────────────────────────────────────┘
 ```
+
+#
 
 ## Prerrequisitos
 
@@ -76,6 +78,10 @@ PetCare/
 └── README.md
 ```
 
+# Base de datos
+https://mermaid.ai/play?utm_source=mermaid_live_editor&utm_medium=share#pako:eNrNWktv4zYQ_iuCgL1lgzxcJ_B1i172UhTopQggjCnaYUOJKkW522Tz3zuUSD0oUvEjiRwgic3hNyLnxZmhXmIiUhqvYip_ZbCVkD3kEf7QUkEqEklLKncQvTSj-mfNtjjGgEcsjX7_3hF2IMkjyCgX2VrSblzRHypKaUkkKwgT-RhBBBdyPMyIyEU3zHJFt1RGQqa0x0SxTC82KyIiKSiaJqB81KpIR9S1EJxCjqvjFGnjZ-2oLNslvz6YD4RVKaRHCCX687tv9ynbigEprzLkRiIOiqkq9RBEvh1SZhBDYyMn2cZQBgNG-Gwj6ASZ_fZ91q2mTFKijfeg3RLg3LPZWoliPF6w0jMKBUjcDs2VOM1AtBtKuqGS5oTBnrI2RBMO5ldEgaMih3cxukLiCmUCBeWcpR7Rl3Rb5bjt8AzCvC6tcFObQfCyFJoB4wOMFk20oUhNciAsY0NN16gtzQcWY7TSWuUZKEYKfmpADB8Udk1AFNuJWfdZlRVIdljUq5Ccowt7baWAsvwXz7SRdo2pjzzyTVlUHD-j1RJCS8_5qf-jiZXJBmqrLse811z8U1HoW3ytHCWeaI5JwQbzgsdzUEOyr9kZmVqYP8ohszPwJAz11ce5UiC5ak1V8jczrjPyxrJaHymuz5JVY1l6kYc78meeqhkmHx8kxrB3TUmnIRkFh2SnJSTHw5xS6RV0BZw9-xCU48mb9ymzJNQFJYx-nPPPkRfA82nZWpuB1rIZxedz2ivhOnmjhxxIoUN-8riqN50LBeW8BxWUBBdxknaPyX5tjVNQX70UaiZkgHySQcyeNi0bttCAAySj73Moi6TYUZoK-eG2d0TlaSkSUuRHxJpKVUlInrJDcn_cONswMkhKLWcstGva7BFAd8sYYeLjQrh9fooSrEs_PLYq1U_iW_fA4hDlvYaS7ukOgYSka2fgo4Xs9w7mNPWk8VtU_b7NOGv3LYdAzmGUeAZ-XVakkiXw9zhBg92CPbsWw61Gj0LW8QGKxp0DZAyssr-YI-LHwC5h5j5gWYicrdmnGV3r7wySEvWQ-wSdsFxjfZQNO8_K7ZibBU-nfPokPlH2tjxp8pzp1qjZTzhmNEmOmRae4NNknz7Q58EGcGzfuIsdvg6yLx91TiGFVD6rwe2AVEc1jg88mDEcMrRTogNEgvug5cx-tmWlkiJp9r_3HcZett_wdIm9nB4KPkrLeuSdNiQ357fS50J5Epcdbl7qSp25zUmxrl1LP2xmmWO8ycTht0Xj6HZ8y0qxQiR6RuW_ONoBVkm-CSfFo9BJbcWlmywYpauyn69aoh5Nmh7Nuegv4YIAP_CYN9BANek_JqxaMoHK2EctPseaQ1KwFYeIZ5_tj405o0rgEasf5slNm_PXT-xOq0RJyEsgIZE1YvVzISJDva5BZxiDimkGieMx25a673Dz0cULVXE3omYUJfY39UcXX9cVz7ywbDkl4zrhk6W3ZgoIZkXvKDnXpFq7zJVOAcb5YjOO7Nx4DvpSThsZPk0OQmBHziu66wfPtp4vEkhTRLkwffeY6Fpf7SP4rpUpsGoTCc137NB3PDB6KearIqGshjFNrw8DnSzEWyY2dHaHBRaYeJaNjNW1P72XeWueL1-iPygfZCjmVaKfP79-FS_2jZpV9BBvnhIT2ZopD7EP0L2XYjBdoj6EGc5vw4yEY_e9F4O0718YnG0htvMs0M4zMHtrbmDWpcwsC7KzhqD6jtcB6rsk89mC9az9gPhrQfXloUHZu0SDsDdP-o_nGfbKrBOE_hriHZjd520fP40wszq1NjdGBlRfthhE3bc29IBW7H2FQdgielorAZCjDWdh9qrAgGxV4SyvXv40Qk9pXcGsZBphZgVE0DXOraDbXsG0GCaAjii6mS502MEc8elTu-HWXmyr-RSulknQ39sGZOsVzXePx7vbdHplbaTpj769rb24uNtwLMP2mqxnmCTUtQx3AwHYm0sO4NxFWnudRplZwzjevpc7jR1ODj533CBo-YxI7npMV-U4Xs3HnvxN1dxZ9KAM60y5P9x9b8PIUDh7snGk5DLRhY5F4md3uhMdBlm6gfXH3BjhwNs01UDt9z4svoi3kqXxagO8pBcxVlAZ6O9xnaw9xOqRZmjcmkUK8kljXhFUQP6XEFm8UrJCmBTV9rFl0iQ75k3wdhQrqJTKbwLTt3h1s7ivmcSrl_hHvPr6y3JxeX93vby7vrm_ub5dXMT_4ejdcnl5f3O7vLpfXF_dLJf3rxfxc_3Y28vF3eLu9upqubhZ3CK35ev_Qwrs8Q
+
+
 ## Inicio Rápido
 
 ### 1. Clonar y configurar
@@ -94,12 +100,11 @@ docker-compose up --build -d
 
 ### 3. Verificar servicios
 
-| Servicio   | URL                          |
-|------------|------------------------------|
+| Servicio   | URL                           |
+|------------|-------------------------------|
 | Frontend   | http://localhost:4200         |
 | Backend    | http://localhost:8080         |
-| pgAdmin    | http://localhost:5050         |
-| Swagger    | http://localhost:8080/swagger-ui.html |
+
 
 ## Base de Datos
 

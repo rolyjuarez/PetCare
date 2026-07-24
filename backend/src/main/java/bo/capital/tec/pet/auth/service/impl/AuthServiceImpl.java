@@ -295,6 +295,73 @@ public class AuthServiceImpl implements AuthService {
         log.info("Contrasena restablecida para: {}", username);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ProfileResponseDTO getProfile(String username) {
+        Usuario usuario = usuarioMapper.findByUsername(username);
+        if (usuario == null) {
+            throw new BusinessException("Usuario no encontrado");
+        }
+        Persona persona = usuario.getPersona() != null ? usuario.getPersona() : personaMapper.selectById(usuario.getPersonaId());
+        List<String> roles = usuarioMapper.findRolesByUsuarioId(usuario.getId());
+        return buildProfileResponse(usuario, persona, roles);
+    }
+
+    @Override
+    @Transactional
+    public ProfileResponseDTO updateProfile(String username, UpdateProfileRequestDTO dto) {
+        Usuario usuario = usuarioMapper.findByUsername(username);
+        if (usuario == null) {
+            throw new BusinessException("Usuario no encontrado");
+        }
+        Persona persona = usuario.getPersona() != null ? usuario.getPersona() : personaMapper.selectById(usuario.getPersonaId());
+        if (persona == null) {
+            throw new BusinessException("Persona no encontrada");
+        }
+        if (dto.getNombre() != null) persona.setNombre(dto.getNombre());
+        if (dto.getPrimerApellido() != null) persona.setPrimerApellido(dto.getPrimerApellido());
+        if (dto.getSegundoApellido() != null) persona.setSegundoApellido(dto.getSegundoApellido());
+        if (dto.getTelefono() != null) persona.setTelefono(dto.getTelefono());
+        if (dto.getEmail() != null) persona.setEmail(dto.getEmail());
+        personaMapper.update(persona);
+        List<String> roles = usuarioMapper.findRolesByUsuarioId(usuario.getId());
+        log.info("Perfil actualizado para: {}", username);
+        return buildProfileResponse(usuario, persona, roles);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(String username, ChangePasswordRequestDTO dto) {
+        Usuario usuario = usuarioMapper.findByUsername(username);
+        if (usuario == null) {
+            throw new BusinessException("Usuario no encontrado");
+        }
+        if (!passwordEncoder.matches(dto.getOldPassword(), usuario.getPassword())) {
+            throw new BusinessException("La contrasena actual no es correcta");
+        }
+        usuario.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        usuarioMapper.update(usuario);
+        log.info("Contrasena cambiada para: {}", username);
+    }
+
+    private ProfileResponseDTO buildProfileResponse(Usuario usuario, Persona persona, List<String> roles) {
+        ProfileResponseDTO.ProfileResponseDTOBuilder builder = ProfileResponseDTO.builder()
+                .usuarioId(usuario.getId())
+                .username(usuario.getUsername())
+                .roles(roles);
+        if (persona != null) {
+            builder.nombre(persona.getNombre())
+                    .primerApellido(persona.getPrimerApellido())
+                    .segundoApellido(persona.getSegundoApellido())
+                    .ci(persona.getCi())
+                    .telefono(persona.getTelefono())
+                    .email(persona.getEmail())
+                    .fechaNacimiento(persona.getFechaNacimiento())
+                    .genero(persona.getGenero());
+        }
+        return builder.build();
+    }
+
     private String findUsernameByPersonaId(Long personaId) {
         Usuario usuario = usuarioMapper.selectByPersonaId(personaId);
         return usuario != null ? usuario.getUsername() : null;

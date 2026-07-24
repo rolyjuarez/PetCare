@@ -8,6 +8,10 @@ import { Cliente, ClienteSummary } from '../models/cliente.model';
 export class ClienteService {
   constructor(private api: ApiService) {}
 
+  getMe(): Observable<ApiResponse<Cliente>> {
+    return this.api.get('/clientes/me');
+  }
+
   getAll(params?: any): Observable<ApiResponse<PagedResponse<ClienteSummary>>> {
     return this.api.getPaged('/clientes', params?.page, params?.size, params);
   }

@@ -97,6 +97,18 @@ export class AuthService {
     }
   }
 
+  getProfile(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/me`);
+  }
+
+  updateProfile(data: any): Observable<ApiResponse<any>> {
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/profile`, data);
+  }
+
+  changePassword(oldPassword: string, newPassword: string): Observable<ApiResponse<void>> {
+    return this.http.put<ApiResponse<void>>(`${this.apiUrl}/change-password`, { oldPassword, newPassword });
+  }
+
   private loadFromStorage(): void {
     const token = localStorage.getItem('accessToken');
     const refreshToken = localStorage.getItem('refreshToken');

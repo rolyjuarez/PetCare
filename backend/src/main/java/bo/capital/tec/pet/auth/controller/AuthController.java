@@ -63,4 +63,26 @@ public class AuthController {
         authService.logout(username);
         return ResponseEntity.ok(ApiResponse.success(null, "Sesion cerrada"));
     }
+
+    @GetMapping("/me")
+    @Operation(summary = "Obtener perfil del usuario autenticado")
+    public ResponseEntity<ApiResponse<ProfileResponseDTO>> getProfile() {
+        String username = SecurityUtil.getCurrentUsername();
+        return ResponseEntity.ok(ApiResponse.success(authService.getProfile(username)));
+    }
+
+    @PutMapping("/profile")
+    @Operation(summary = "Actualizar perfil del usuario autenticado")
+    public ResponseEntity<ApiResponse<ProfileResponseDTO>> updateProfile(@Valid @RequestBody UpdateProfileRequestDTO dto) {
+        String username = SecurityUtil.getCurrentUsername();
+        return ResponseEntity.ok(ApiResponse.success(authService.updateProfile(username, dto), "Perfil actualizado"));
+    }
+
+    @PutMapping("/change-password")
+    @Operation(summary = "Cambiar contrasena del usuario autenticado")
+    public ResponseEntity<ApiResponse<Void>> changePassword(@Valid @RequestBody ChangePasswordRequestDTO dto) {
+        String username = SecurityUtil.getCurrentUsername();
+        authService.changePassword(username, dto);
+        return ResponseEntity.ok(ApiResponse.success(null, "Contrasena cambiada exitosamente"));
+    }
 }

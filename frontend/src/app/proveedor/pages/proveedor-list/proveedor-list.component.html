@@ -2,14 +2,14 @@
     <div class="space-y-6">
       <div class="flex justify-between items-center">
         <h1 class="text-2xl font-bold dark:text-white">Proveedores</h1>
-        <button class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
+        <button (click)="openForm()" class="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 flex items-center gap-2">
           <span class="material-icons text-sm">add</span> Nuevo Proveedor
         </button>
       </div>
 
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
         <input type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearch()"
-               placeholder="Buscar proveedor..."
+               placeholder="Buscar por nombre, descripcion o especialidad..."
                class="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white dark:border-gray-600" />
       </div>
 
@@ -17,18 +17,24 @@
         @for (item of items(); track item.id) {
           <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div class="flex justify-between items-start mb-3">
-              <h3 class="font-semibold text-lg dark:text-white">{{ item.personaNombre }}</h3>
+              <div>
+                <h3 class="font-semibold text-lg dark:text-white">{{ item.personaNombre }}</h3>
+                @if (item.empresa) {
+                  <p class="text-sm text-primary-500 font-medium">{{ item.empresa }}</p>
+                }
+              </div>
               <div class="flex items-center gap-1">
                 @if (item.verificado) {
-                  <span class="material-icons text-primary-500 text-sm">verified</span>
-                  <span class="text-xs text-primary-500">Verificado</span>
+                  <span class="material-icons text-green-500 text-sm">verified</span>
+                  <span class="text-xs text-green-500">Verificado</span>
                 } @else {
                   <span class="material-icons text-yellow-500 text-sm">pending</span>
                   <span class="text-xs text-yellow-500">Pendiente</span>
                 }
               </div>
             </div>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.personaTelefono }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">{{ item.personaTelefono }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">{{ item.personaEmail }}</p>
             <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ item.descripcion }}</p>
             <div class="flex items-center gap-2 mb-3">
               <span class="material-icons text-yellow-500 text-sm">star</span>
@@ -41,8 +47,12 @@
               }
             </div>
             <div class="flex gap-2">
-              <button class="text-primary-500 hover:underline text-sm">Editar</button>
-              <button class="text-red-500 hover:underline text-sm">Eliminar</button>
+              <button (click)="openEdit(item)" class="text-primary-500 hover:underline text-sm flex items-center gap-1">
+                <span class="material-icons text-sm">edit</span> Editar
+              </button>
+              <button (click)="deleteProveedor(item)" class="text-red-500 hover:underline text-sm flex items-center gap-1">
+                <span class="material-icons text-sm">delete</span> Eliminar
+              </button>
             </div>
           </div>
         } @empty {
@@ -50,3 +60,245 @@
         }
       </div>
     </div>
+
+    <!-- Modal Formulario -->
+    @if (showForm()) {
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center p-6 border-b">
+            <h2 class="text-xl font-bold">{{ editMode() ? 'Editar Proveedor' : 'Registrar Nuevo Proveedor' }}</h2>
+            <button (click)="closeForm()" class="text-gray-400 hover:text-gray-600">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          @if (error()) {
+            <div class="mx-6 mt-4 bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg text-sm">{{ error() }}</div>
+          }
+
+          <form (ngSubmit)="onSubmit()" class="p-6 space-y-5">
+
+            <!-- Credenciales (solo crear) -->
+            @if (!editMode()) {
+              <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h3 class="font-semibold text-sm mb-3 dark:text-white">Credenciales de Acceso</h3>
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Usuario *</label>
+                    <input type="text" [(ngModel)]="form.username" name="username" required
+                           class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" placeholder="Nombre de usuario" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Contrasena *</label>
+                    <input type="password" [(ngModel)]="form.password" name="password" required minlength="6"
+                           class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" placeholder="Minimo 6 caracteres" />
+                  </div>
+                </div>
+              </div>
+            }
+
+            <!-- Datos Personales -->
+            <div>
+              <h3 class="font-semibold text-sm mb-3 dark:text-white">Datos Personales</h3>
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre *</label>
+                  <input type="text" [(ngModel)]="form.nombre" name="nombre" required
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Primer Apellido *</label>
+                  <input type="text" [(ngModel)]="form.primerApellido" name="primerApellido" required
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Segundo Apellido</label>
+                  <input type="text" [(ngModel)]="form.segundoApellido" name="segundoApellido"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-4 mt-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">CI *</label>
+                  <input type="text" [(ngModel)]="form.ci" name="ci" required
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Telefono</label>
+                  <input type="text" [(ngModel)]="form.telefono" name="telefono"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Email</label>
+                  <input type="email" [(ngModel)]="form.email" name="email"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-4 mt-3">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Fecha Nacimiento</label>
+                  <input type="date" [(ngModel)]="form.fechaNacimiento" name="fechaNacimiento"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Genero</label>
+                  <select [(ngModel)]="form.genero" name="genero" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                    <option value="O">Otro</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Ciudad</label>
+                  <select [(ngModel)]="form.ciudadId" name="ciudadId" (ngModelChange)="onCiudadChange()" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    @for (ciudad of ciudades(); track ciudad.id) {
+                      <option [ngValue]="ciudad.id">{{ ciudad.nombre }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Direccion -->
+            <div>
+              <h3 class="font-semibold text-sm mb-3 dark:text-white">Direccion</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Calle *</label>
+                  <input type="text" [(ngModel)]="form.calle" name="calle" required
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Numero</label>
+                  <input type="text" [(ngModel)]="form.numero" name="numero"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+              </div>
+              <div class="mt-3">
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Referencia</label>
+                <input type="text" [(ngModel)]="form.referencia" name="referencia"
+                       class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+              </div>
+              <div class="mt-3">
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Ubicacion en el mapa (click o arrastre el marcador)</label>
+                <div id="proveedor-map" class="w-full h-56 border rounded-lg"></div>
+                <div class="grid grid-cols-2 gap-4 mt-2">
+                  <div>
+                    <label class="block text-xs text-gray-500">Latitud</label>
+                    <input type="text" [value]="form.latitud" readonly class="w-full p-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-600 dark:text-white" />
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-500">Longitud</label>
+                    <input type="text" [value]="form.longitud" readonly class="w-full p-2 border rounded-lg text-sm bg-gray-50 dark:bg-gray-600 dark:text-white" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Datos Proveedor -->
+            <div>
+              <h3 class="font-semibold text-sm mb-3 dark:text-white">Datos del Proveedor</h3>
+              <div class="grid grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Nombre de Empresa *</label>
+                  <input type="text" [(ngModel)]="form.empresa" name="empresa" required
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" placeholder="Nombre de la empresa" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Radio de Cobertura (km)</label>
+                  <input type="number" [(ngModel)]="form.radioCoberturaKm" name="radioCoberturaKm" min="1" max="100"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Descripcion</label>
+                  <input type="text" [(ngModel)]="form.descripcion" name="descripcion"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" placeholder="Breve descripcion del proveedor" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Especialidades -->
+            <div>
+              <h3 class="font-semibold text-sm mb-3 dark:text-white">Especialidades (Servicios que ofrece)</h3>
+              <div class="flex flex-wrap gap-3">
+                @for (servicio of servicios(); track servicio.id) {
+                  <label class="flex items-center gap-2 cursor-pointer bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+                         [class.ring-2]="form.servicioIds.includes(servicio.id)"
+                         [class.ring-primary-500]="form.servicioIds.includes(servicio.id)">
+                    <input type="checkbox" [checked]="form.servicioIds.includes(servicio.id)"
+                           (change)="toggleServicio(servicio.id)" class="rounded" />
+                    <span class="text-sm dark:text-gray-300">{{ servicio.nombre }}</span>
+                  </label>
+                } @empty {
+                  <p class="text-sm text-gray-400">No hay servicios disponibles</p>
+                }
+              </div>
+            </div>
+
+            <!-- Disponibilidad -->
+            <div>
+              <h3 class="font-semibold text-sm mb-3 dark:text-white">Disponibilidad Horaria</h3>
+              @if (form.disponibilidades.length > 0) {
+                <div class="space-y-2 mb-3">
+                  @for (disp of form.disponibilidades; track $index) {
+                    <div class="flex items-center gap-3 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg">
+                      <span class="text-sm font-medium dark:text-white w-24">{{ getServicioNombre(disp.servicioId) }}</span>
+                      <span class="text-sm dark:text-gray-300">{{ dispDiaLabels[disp.diaSemana] }}</span>
+                      <span class="text-sm text-gray-500">{{ disp.horaInicio }} - {{ disp.horaFin }}</span>
+                      <button type="button" (click)="removeDisponibilidad($index)" class="ml-auto text-red-500 hover:text-red-700">
+                        <span class="material-icons text-sm">close</span>
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+              <div class="grid grid-cols-4 gap-3 items-end bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Servicio</label>
+                  <select [(ngModel)]="newDisp.servicioId" name="newDispServicio" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    <option [ngValue]="null" disabled>Seleccionar</option>
+                    @for (servicio of servicios(); track servicio.id) {
+                      <option [ngValue]="servicio.id">{{ servicio.nombre }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Dia</label>
+                  <select [(ngModel)]="newDisp.diaSemana" name="newDispDia" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500">
+                    @for (dia of dispDias; track dia) {
+                      <option [ngValue]="dia">{{ dispDiaLabels[dia] }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Hora Inicio</label>
+                  <input type="time" [(ngModel)]="newDisp.horaInicio" name="newDispInicio"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-300 mb-1">Hora Fin</label>
+                  <div class="flex gap-2">
+                    <input type="time" [(ngModel)]="newDisp.horaFin" name="newDispFin"
+                           class="flex-1 p-2 border rounded-lg text-sm dark:bg-gray-600 dark:text-white dark:border-gray-500" />
+                    <button type="button" (click)="addDisponibilidad()" class="bg-primary-500 text-white px-3 py-2 rounded-lg hover:bg-primary-600">
+                      <span class="material-icons text-sm">add</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t">
+              <button type="button" (click)="closeForm()" class="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:border-gray-600">Cancelar</button>
+              <button type="submit" [disabled]="loading()" class="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 flex items-center gap-2">
+                @if (loading()) {
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> {{ editMode() ? 'Actualizando...' : 'Registrando...' }}
+                } @else {
+                  <span class="material-icons text-sm">{{ editMode() ? 'save' : 'person_add' }}</span> {{ editMode() ? 'Guardar Cambios' : 'Registrar' }}
+                }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

@@ -323,6 +323,7 @@ CREATE TABLE proveedor (
     id                      BIGSERIAL       PRIMARY KEY,
     persona_id              BIGINT          NOT NULL,
     usuario_id              BIGINT          NOT NULL,
+    empresa                 VARCHAR(150),
     latitud                 NUMERIC(10, 7),
     longitud                NUMERIC(10, 7),
     radio_cobertura_km      NUMERIC(5, 2)   DEFAULT 10.00,

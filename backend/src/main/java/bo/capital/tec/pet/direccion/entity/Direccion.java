@@ -17,6 +17,8 @@ public class Direccion {
     private String referencia;
     private Long ciudadId;
     private Long estadoId;
+    private Ciudad ciudad;
+    private Estado estado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean deleted;

@@ -10,6 +10,7 @@ public class ProveedorRequestDTO {
     @NotNull
     private Long personaId;
     private Long usuarioId;
+    private String empresa;
     private BigDecimal latitud;
     private BigDecimal longitud;
     private BigDecimal radioCoberturaKm;
