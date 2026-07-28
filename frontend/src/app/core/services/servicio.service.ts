@@ -17,6 +17,7 @@ export interface Servicio {
 export interface ProveedorSummary {
   id: number;
   nombre: string;
+  empresa: string;
   descripcion: string;
   calificacion: number;
   verificado: boolean;

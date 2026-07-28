@@ -1,0 +1,7 @@
+package bo.capital.tec.pet.modules.servicio.api;
+
+import bo.capital.tec.pet.modules.servicio.entity.Servicio;
+
+public interface ServicioApi {
+    Servicio selectById(Long id);
+}

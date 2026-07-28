@@ -776,7 +776,7 @@ export class LandingComponent implements OnInit {
     try {
       const userInfo = JSON.parse(localStorage.getItem('userInfo') ?? 'null');
       if (userInfo?.roles?.includes('CLIENTE')) {
-        this.router.navigate(['/app/client-dashboard']);
+        this.router.navigate(['/app/mascotas']);
       } else {
         this.router.navigate(['/app/dashboard']);
       }

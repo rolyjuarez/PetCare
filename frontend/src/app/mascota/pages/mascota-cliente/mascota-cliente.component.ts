@@ -27,7 +27,9 @@ export class MascotaClienteComponent implements OnInit {
   error = signal('');
   uploading = signal(false);
   previewUrl = signal('');
+  editingId = signal<number | null>(null);
   private selectedFile: File | null = null;
+  private _pendingRazaId: number | null = null;
 
   form = {
     nombre: '',
@@ -83,6 +85,10 @@ export class MascotaClienteComponent implements OnInit {
         next: (res) => {
           if (res.success) {
             this.razas.set(res.data);
+            if (this.form.razaId === null && this._pendingRazaId != null) {
+              this.form.razaId = this._pendingRazaId;
+              this._pendingRazaId = null;
+            }
           }
         }
       });
@@ -94,12 +100,40 @@ export class MascotaClienteComponent implements OnInit {
 
   openForm(): void {
     this.resetForm();
+    this.editingId.set(null);
     this.showForm.set(true);
+  }
+
+  openEditForm(mascota: Mascota): void {
+    this.editingId.set(mascota.id);
+    this.form = {
+      nombre: mascota.nombre,
+      fechaNacimiento: this.parseDate(mascota.fechaNacimiento),
+      genero: mascota.genero,
+      peso: mascota.peso,
+      color: mascota.color,
+      especieId: mascota.especieId,
+      razaId: mascota.razaId,
+    };
+    this.previewUrl.set(mascota.imagenUrl || '');
+    if (mascota.especieId && mascota.razaId) {
+      this._pendingRazaId = mascota.razaId;
+      this.onEspecieChange();
+    }
+    this.showForm.set(true);
+  }
+
+  private parseDate(fecha: any): string {
+    if (!fecha) return '';
+    if (typeof fecha === 'string') return fecha.substring(0, 10);
+    if (Array.isArray(fecha)) return `${fecha[0]}-${String(fecha[1]).padStart(2, '0')}-${String(fecha[2]).padStart(2, '0')}`;
+    return '';
   }
 
   closeForm(): void {
     this.showForm.set(false);
     this.error.set('');
+    this.editingId.set(null);
     this.previewUrl.set('');
     this.selectedFile = null;
   }
@@ -131,16 +165,21 @@ export class MascotaClienteComponent implements OnInit {
       };
       if (imagenUrl) body.imagenUrl = imagenUrl;
 
-      this.mascotaService.create(body).subscribe({
+      const id = this.editingId();
+      const obs = id
+        ? this.mascotaService.update(id, body)
+        : this.mascotaService.create(body);
+
+      obs.subscribe({
         next: () => {
           this.loading.set(false);
-          this.toast.success('Mascota registrada exitosamente');
+          this.toast.success(id ? 'Mascota actualizada' : 'Mascota registrada exitosamente');
           this.showForm.set(false);
           this.loadMascotas();
         },
         error: (err) => {
           this.loading.set(false);
-          const msg = err.error?.message || 'Error al registrar mascota';
+          const msg = err.error?.message || 'Error al guardar mascota';
           this.error.set(msg);
           this.toast.error(msg);
         }

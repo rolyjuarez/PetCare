@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.sucursal.mapper.SucursalMapper">
+<mapper namespace="bo.capital.tec.pet.modules.sucursal.mapper.SucursalMapper">
     <sql id="baseColumns">
         s.id, s.nombre, s.direccion_id, s.telefono, s.email,
         s.horario_apertura, s.horario_cierre,
@@ -9,12 +9,12 @@
     </sql>
     <sql id="table">sucursal s</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.sucursal.entity.Sucursal">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.sucursal.entity.Sucursal">
         INSERT INTO sucursal (nombre, direccion_id, telefono, email, horario_apertura, horario_cierre, latitud, longitud, activa)
         VALUES (#{nombre}, #{direccionId}, #{telefono}, #{email}, #{horarioApertura}, #{horarioCierre}, #{latitud}, #{longitud}, #{activa})
     </insert>
 
-    <resultMap id="sucursalDireccionResultMap" type="bo.capital.tec.pet.sucursal.entity.Sucursal">
+    <resultMap id="sucursalDireccionResultMap" type="bo.capital.tec.pet.modules.sucursal.entity.Sucursal">
         <id property="id" column="id"/>
         <result property="nombre" column="nombre"/>
         <result property="direccionId" column="direccion_id"/>
@@ -68,7 +68,7 @@
         ORDER BY s.nombre ASC
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.sucursal.entity.Sucursal">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.sucursal.entity.Sucursal">
         UPDATE sucursal
         SET nombre = #{nombre}, direccion_id = #{direccionId}, telefono = #{telefono}, email = #{email},
             horario_apertura = #{horarioApertura}, horario_cierre = #{horarioCierre},

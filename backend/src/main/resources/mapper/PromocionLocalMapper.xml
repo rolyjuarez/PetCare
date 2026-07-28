@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.promocion.mapper.PromocionLocalMapper">
+<mapper namespace="bo.capital.tec.pet.modules.promocion.mapper.PromocionLocalMapper">
     <sql id="baseColumns">
         pl.id, pl.promocion_id, pl.reserva_id, pl.monto_descuento, pl.fecha_aplicacion,
         pl.created_at, pl.updated_at, pl.deleted, pl.version
     </sql>
     <sql id="table">promocion_local pl</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.promocion.entity.PromocionLocal">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.promocion.entity.PromocionLocal">
         INSERT INTO promocion_local (promocion_id, reserva_id, monto_descuento, fecha_aplicacion)
         VALUES (#{promocionId}, #{reservaId}, #{montoDescuento}, #{fechaAplicacion})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.promocion.entity.PromocionLocal">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.promocion.entity.PromocionLocal">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE pl.id = #{id} AND pl.deleted = FALSE
     </select>
 
-    <select id="selectByReservaId" resultType="bo.capital.tec.pet.promocion.entity.PromocionLocal">
+    <select id="selectByReservaId" resultType="bo.capital.tec.pet.modules.promocion.entity.PromocionLocal">
         SELECT <include refid="baseColumns"/>
         FROM <include refid="table"/>
         WHERE pl.reserva_id = #{reservaId} AND pl.deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.promocion.entity.PromocionLocal">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.promocion.entity.PromocionLocal">
         SELECT <include refid="baseColumns"/>
         FROM <include refid="table"/>
         WHERE pl.deleted = FALSE

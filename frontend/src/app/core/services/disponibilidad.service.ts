@@ -22,4 +22,8 @@ export class DisponibilidadService {
   getByProveedorServicio(proveedorId: number, servicioId: number): Observable<ApiResponse<Disponibilidad[]>> {
     return this.api.get(`/disponibilidades/by-proveedor-servicio/${proveedorId}/${servicioId}`);
   }
+
+  getByServicio(servicioId: number): Observable<ApiResponse<Disponibilidad[]>> {
+    return this.api.get(`/disponibilidades/by-servicio/${servicioId}`);
+  }
 }

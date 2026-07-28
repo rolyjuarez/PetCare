@@ -182,7 +182,7 @@
                 <select [(ngModel)]="reservaForm.proveedorId" name="proveedorId" (ngModelChange)="onProveedorChange()" required [disabled]="!reservaForm.servicioId" class="w-full p-2 border rounded-lg text-sm disabled:opacity-50">
                   <option [ngValue]="null" disabled>Seleccionar proveedor...</option>
                   @for (p of proveedores(); track p.id) {
-                    <option [ngValue]="p.id">{{ p.nombre }} {{ p.verificado ? '(Verificado)' : '' }}</option>
+                    <option [ngValue]="p.id">{{ p.empresa || p.nombre }} {{ p.verificado ? '(Verificado)' : '' }}</option>
                   }
                 </select>
               </div>

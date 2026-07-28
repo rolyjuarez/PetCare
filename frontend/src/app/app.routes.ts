@@ -13,7 +13,7 @@ function isCliente(): boolean {
 
 function redirectByRole(): UrlTree {
   const router = inject(Router);
-  return router.parseUrl(isCliente() ? '/app/client-dashboard' : '/app/dashboard');
+  return router.parseUrl(isCliente() ? '/app/mascotas' : '/app/dashboard');
 }
 
 export const routes: Routes = [

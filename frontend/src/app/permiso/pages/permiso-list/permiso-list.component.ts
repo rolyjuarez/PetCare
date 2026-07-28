@@ -65,10 +65,10 @@ export class PermisoListComponent implements OnInit {
   }
 
   loadRoles(): void {
-    this.rolService.getAllActivos().subscribe({
+    this.rolService.getAll({ size: 100 }).subscribe({
       next: (res) => {
         if (res.success) {
-          this.roles.set(res.data);
+          this.roles.set(res.data.content);
         }
       }
     });
@@ -166,7 +166,7 @@ export class PermisoListComponent implements OnInit {
       nombre: this.form.nombre,
       rolId: this.form.rolId,
       menuId: this.form.menuId,
-      submenuId: this.form.submenuId || 0,
+      submenuId: this.form.submenuId || null,
       crear: this.form.crear,
       leer: this.form.leer,
       actualizar: this.form.actualizar,
@@ -197,7 +197,7 @@ export class PermisoListComponent implements OnInit {
       nombre: this.form.nombre,
       rolId: this.form.rolId,
       menuId: this.form.menuId,
-      submenuId: this.form.submenuId || 0,
+      submenuId: this.form.submenuId || null,
       crear: this.form.crear,
       leer: this.form.leer,
       actualizar: this.form.actualizar,

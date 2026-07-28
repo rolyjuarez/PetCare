@@ -36,7 +36,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
   loadMenus(): void {
     if (!this.auth.isAuthenticated()) return;
     this.sub = this.menuService.getMyMenus().subscribe({
-      next: menus => this.menuItems.set(menus),
+      next: menus => {
+        const isCliente = this.auth.hasRole('CLIENTE');
+        if (isCliente) {
+          this.menuItems.set(menus.filter(m =>
+            !m.nombre?.toLowerCase().includes('servicio')
+          ));
+        } else {
+          this.menuItems.set(menus);
+        }
+      },
       error: () => this.menuItems.set([])
     });
   }
@@ -75,7 +84,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       try {
         const userInfo = JSON.parse(localStorage.getItem('userInfo') ?? 'null');
         if (userInfo?.roles?.includes('CLIENTE')) {
-          return menu.url.replace(/dashboard$/, 'client-dashboard');
+          return menu.url.replace(/dashboard$/, 'mascotas');
         }
       } catch {}
     }

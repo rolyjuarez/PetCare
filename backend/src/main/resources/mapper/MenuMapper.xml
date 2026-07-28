@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.menu.mapper.MenuMapper">
+<mapper namespace="bo.capital.tec.pet.modules.menu.mapper.MenuMapper">
     <sql id="baseColumns">
         m.id, m.nombre, m.descripcion, m.icono, m.url, m.orden, m.activo,
         m.created_at, m.updated_at, m.deleted, m.version
     </sql>
     <sql id="table">menu m</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.menu.entity.Menu">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.menu.entity.Menu">
         INSERT INTO menu (nombre, descripcion, icono, url, orden, activo)
         VALUES (#{nombre}, #{descripcion}, #{icono}, #{url}, #{orden}, #{activo})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.menu.entity.Menu">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.menu.entity.Menu">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE m.id = #{id} AND m.deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.menu.entity.Menu">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.menu.entity.Menu">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE m.deleted = FALSE
         ORDER BY m.orden ASC LIMIT #{limit} OFFSET #{offset}
@@ -28,7 +28,7 @@
         WHERE m.deleted = FALSE
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.menu.entity.Menu">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.menu.entity.Menu">
         UPDATE menu
         SET nombre = #{nombre}, descripcion = #{descripcion}, icono = #{icono}, url = #{url},
             orden = #{orden}, activo = #{activo}, updated_at = NOW(), version = version + 1
@@ -39,7 +39,7 @@
         UPDATE menu SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 
-    <select id="findByRolId" resultType="bo.capital.tec.pet.menu.entity.Menu">
+    <select id="findByRolId" resultType="bo.capital.tec.pet.modules.menu.entity.Menu">
         SELECT DISTINCT m.id, m.nombre, m.descripcion, m.icono, m.url, m.orden, m.activo,
                m.created_at, m.updated_at, m.deleted, m.version
         FROM menu m
@@ -48,7 +48,7 @@
         ORDER BY m.orden ASC
     </select>
 
-    <select id="findByUsername" resultType="bo.capital.tec.pet.menu.entity.Menu">
+    <select id="findByUsername" resultType="bo.capital.tec.pet.modules.menu.entity.Menu">
         SELECT DISTINCT m.id, m.nombre, m.descripcion, m.icono, m.url, m.orden, m.activo,
                m.created_at, m.updated_at, m.deleted, m.version
         FROM menu m

@@ -20,6 +20,7 @@ export interface Reserva {
   precioTotal: number;
   clienteNombre: string;
   proveedorNombre: string;
+  proveedorEmpresa: string;
   servicioNombre: string;
   mascotaNombre: string;
   estadoReservaNombre: string;
@@ -28,11 +29,12 @@ export interface Reserva {
 
 export interface ReservaRequest {
   clienteId: number;
-  proveedorId: number;
+  proveedorId?: number;
   servicioId: number;
   mascotaId: number;
   fechaReserva: string;
   fechaInicio: string;
+  fechaFin?: string;
   horaInicio: string;
   horaFin: string;
   notas?: string;
@@ -47,6 +49,10 @@ export class ReservaService {
     return this.api.post('/reservas', data);
   }
 
+  getById(id: number): Observable<ApiResponse<Reserva>> {
+    return this.api.get(`/reservas/${id}`);
+  }
+
   getAll(params?: any): Observable<ApiResponse<PagedResponse<Reserva>>> {
     return this.api.getPaged('/reservas', params?.page, params?.size, params);
   }
@@ -57,5 +63,17 @@ export class ReservaService {
 
   getByMascota(mascotaId: number): Observable<ApiResponse<PagedResponse<Reserva>>> {
     return this.api.getPaged('/reservas', 0, 50, { mascotaId });
+  }
+
+  update(id: number, data: ReservaRequest): Observable<ApiResponse<Reserva>> {
+    return this.api.put(`/reservas/${id}`, data);
+  }
+
+  asignarProveedor(id: number, proveedorId: number): Observable<ApiResponse<Reserva>> {
+    return this.api.put(`/reservas/${id}/asignar-proveedor/${proveedorId}`, {});
+  }
+
+  cancelar(id: number, motivo?: string): Observable<ApiResponse<Reserva>> {
+    return this.api.put(`/reservas/${id}/cancelar`, { motivo: motivo || '' });
   }
 }

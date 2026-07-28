@@ -29,7 +29,7 @@ export class LoginComponent {
         if (res.success) {
           const roles = res.data.userInfo?.roles ?? [];
           console.log('LOGIN DEBUG - roles:', roles, 'includes CLIENTE:', roles.includes('CLIENTE'));
-          const target = roles.includes('CLIENTE') ? '/app/client-dashboard' : '/app/dashboard';
+          const target = roles.includes('CLIENTE') ? '/app/mascotas' : '/app/dashboard';
           console.log('LOGIN DEBUG - navigating to:', target);
           this.router.navigate([target]);
         } else {

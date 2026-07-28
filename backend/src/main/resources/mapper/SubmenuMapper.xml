@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.menu.mapper.SubmenuMapper">
+<mapper namespace="bo.capital.tec.pet.modules.menu.mapper.SubmenuMapper">
     <sql id="baseColumns">
         id, nombre, descripcion, icono, url, orden, menu_id, activo,
         created_at, updated_at, deleted, version
     </sql>
     <sql id="table">submenu</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.menu.entity.Submenu">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.menu.entity.Submenu">
         INSERT INTO <include refid="table"/> (nombre, descripcion, icono, url, orden, menu_id, activo)
         VALUES (#{nombre}, #{descripcion}, #{icono}, #{url}, #{orden}, #{menuId}, #{activo})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.menu.entity.Submenu">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.menu.entity.Submenu">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectByMenuId" resultType="bo.capital.tec.pet.menu.entity.Submenu">
+    <select id="selectByMenuId" resultType="bo.capital.tec.pet.modules.menu.entity.Submenu">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE menu_id = #{menuId} AND deleted = FALSE
         ORDER BY orden ASC
     </select>
 
-    <select id="selectByMenuIdAndUsername" resultType="bo.capital.tec.pet.menu.entity.Submenu">
+    <select id="selectByMenuIdAndUsername" resultType="bo.capital.tec.pet.modules.menu.entity.Submenu">
         SELECT DISTINCT sm.id, sm.nombre, sm.descripcion, sm.icono, sm.url, sm.orden, sm.menu_id, sm.activo,
                sm.created_at, sm.updated_at, sm.deleted, sm.version
         FROM submenu sm
@@ -35,13 +35,13 @@
         ORDER BY sm.orden ASC
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.menu.entity.Submenu">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.menu.entity.Submenu">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE deleted = FALSE
         ORDER BY orden ASC
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.menu.entity.Submenu">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.menu.entity.Submenu">
         UPDATE <include refid="table"/>
         SET nombre = #{nombre}, descripcion = #{descripcion}, icono = #{icono}, url = #{url},
             orden = #{orden}, menu_id = #{menuId}, activo = #{activo},

@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.rol.mapper.RolMapper">
+<mapper namespace="bo.capital.tec.pet.modules.rol.mapper.RolMapper">
     <sql id="baseColumns">
         id, nombre, descripcion, activo, created_at, updated_at, deleted, version
     </sql>
     <sql id="table">rol</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.rol.entity.Rol">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.rol.entity.Rol">
         INSERT INTO <include refid="table"/> (nombre, descripcion, activo)
         VALUES (#{nombre}, #{descripcion}, #{activo})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.rol.entity.Rol">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.rol.entity.Rol">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.rol.entity.Rol">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.rol.entity.Rol">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE deleted = FALSE
         ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
@@ -27,7 +27,7 @@
         WHERE deleted = FALSE
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.rol.entity.Rol">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.rol.entity.Rol">
         UPDATE <include refid="table"/>
         SET nombre = #{nombre}, descripcion = #{descripcion}, activo = #{activo},
             updated_at = NOW(), version = version + 1
@@ -38,12 +38,12 @@
         UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 
-    <select id="selectByNombre" resultType="bo.capital.tec.pet.rol.entity.Rol">
+    <select id="selectByNombre" resultType="bo.capital.tec.pet.modules.rol.entity.Rol">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE nombre = #{nombre} AND deleted = FALSE
     </select>
 
-    <select id="findByUsuarioId" resultType="bo.capital.tec.pet.rol.entity.Rol">
+    <select id="findByUsuarioId" resultType="bo.capital.tec.pet.modules.rol.entity.Rol">
         SELECT r.id, r.nombre, r.descripcion, r.activo, r.created_at, r.updated_at, r.deleted, r.version
         FROM rol r
         INNER JOIN usuario_rol ur ON ur.rol_id = r.id AND ur.deleted = FALSE

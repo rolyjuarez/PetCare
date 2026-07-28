@@ -27,12 +27,12 @@ export interface Reserva {
 
 export interface ReservaRequest {
   clienteId: number;
-  proveedorId: number;
+  proveedorId?: number;
   servicioId: number;
   mascotaId: number;
   fechaReserva: string;
   fechaInicio: string;
-  fechaFin: string;
+  fechaFin?: string;
   horaInicio: string;
   horaFin: string;
   latitud?: number;
