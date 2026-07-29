@@ -1,0 +1,119 @@
+@startuml
+skinparam componentStyle uml2
+skinparam rectangle {
+  BackgroundColor #F9F9F9
+  BorderColor #444444
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4F4F
+}
+skinparam cloud {
+  BackgroundColor #FFF7E6
+  BorderColor #CFA13B
+}
+
+Title Diagrama de componentes de PetCare
+
+actor Cliente as Cliente
+actor Administrador as Administrador
+actor Proveedor as Proveedor
+
+rectangle "Frontend Angular" as Frontend {
+  component "SPA Angular" as AngularSPA
+  note right of AngularSPA
+    - Presentación de la aplicación
+    - Servicios HTTP a /api/v1
+    - Maneja login, registro, reservas,
+      pagos, upload de fotos y mapas
+  end note
+}
+
+rectangle "Backend Spring Boot Monolito" as Backend {
+  component "API REST Gateway" as ApiGateway
+  component "Módulo auth" as AuthModule
+  component "Módulo persona" as PersonaModule
+  component "Módulo cliente" as ClienteModule
+  component "Módulo usuario" as UsuarioModule
+  component "Módulo mascota" as MascotaModule
+  component "Módulo dirección" as DireccionModule
+  component "Módulo proveedor" as ProveedorModule
+  component "Módulo reserva" as ReservaModule
+  component "Módulo pago" as PagoModule
+  component "Módulo promoción" as PromocionModule
+  component "Módulo notificación" as NotificacionModule
+  component "Módulo menu/rol" as MenuRolModule
+  component "Módulo sucursal" as SucursalModule
+  component "Módulo bitácora" as BitacoraModule
+  component "Módulo vacuna" as VacunaModule
+  component "Infraestructura y soporte" as InfraModule
+  note right of Backend
+    - Backend monolítico con división funcional por paquetes.
+    - Cada módulo contiene controlador, servicio y mapper.
+    - MyBatis maneja la persistencia con mappers XML.
+    - Seguridad basada en JWT y Spring Security.
+  end note
+}
+
+database "PostgreSQL" as Database
+storage "Uploads locales" as FileStorage
+cloud "SMTP Gmail" as EmailService
+cloud "Google Maps API" as MapsAPI
+
+Cliente --> AngularSPA : Usa UI web
+Administrador --> AngularSPA : Administra sistema
+Proveedor --> AngularSPA : Gestiona su oferta
+AngularSPA --> ApiGateway : Consume API REST (/api/v1/*)
+ApiGateway --> AuthModule : /auth/login, /auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password
+ApiGateway --> PersonaModule : /personas
+ApiGateway --> ClienteModule : /clientes
+ApiGateway --> UsuarioModule : /usuarios
+ApiGateway --> MascotaModule : /mascotas, /especies, /razas
+ApiGateway --> DireccionModule : /direcciones, /ciudades
+ApiGateway --> ProveedorModule : /proveedores, /disponibilidades
+ApiGateway --> ReservaModule : /reservas
+ApiGateway --> PagoModule : /pagos
+ApiGateway --> PromocionModule : /promociones
+ApiGateway --> NotificacionModule : /notificaciones
+ApiGateway --> MenuRolModule : /menus, /permisos, /roles
+ApiGateway --> SucursalModule : /sucursales
+ApiGateway --> BitacoraModule : /bitacoras
+ApiGateway --> VacunaModule : /vacunas, /registros-vacunacion
+ApiGateway --> InfraModule : Uploads, emails, seguridad, config
+
+AuthModule --> Database : Usuarios / credenciales / tokens
+PersonaModule --> Database : Personas
+ClienteModule --> Database : Clientes
+UsuarioModule --> Database : Usuarios y roles
+MascotaModule --> Database : Mascotas / especies / razas
+DireccionModule --> Database : Direcciones / ciudades / estados
+ProveedorModule --> Database : Proveedores / disponibilidades / especialidades
+ReservaModule --> Database : Reservas / estados de reserva
+PagoModule --> Database : Pagos
+PromocionModule --> Database : Promociones / promociones locales
+NotificacionModule --> Database : Notificaciones
+MenuRolModule --> Database : Menús / permisos / roles
+SucursalModule --> Database : Sucursales
+BitacoraModule --> Database : Bitácora de eventos
+VacunaModule --> Database : Vacunas / registros de vacunación
+
+InfraModule --> FileStorage : Guarda fotos y archivos de mascotas
+InfraModule --> EmailService : Envía correos de registro y recuperación
+AngularSPA --> MapsAPI : Solicita mapas y geocoding
+
+note left of ApiGateway
+  - Enrutamiento por Spring MVC
+  - Uso de @RestController en cada módulo
+  - Filtros y seguridad globales
+end note
+
+note left of InfraModule
+  - UploadController
+  - EmailServiceImpl
+  - GlobalExceptionHandler
+  - SecurityConfig
+  - MyBatisConfig
+  - OpenApiConfig
+end note
+
+@enduml

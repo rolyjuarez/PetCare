@@ -1,0 +1,375 @@
+@startuml
+hide circle
+skinparam databaseBorderColor #333333
+skinparam databaseBackgroundColor #F8F9FA
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4F4F
+}
+
+title Esquema de base de datos PETCare (PostgreSQL localhost:5432)
+
+entity "persona" as persona {
+  * id : bigint
+  --
+  nombre : varchar
+  primer_apellido : varchar
+  segundo_apellido : varchar
+  ci : varchar
+  telefono : varchar
+  email : varchar
+  fecha_nacimiento : date
+  genero : char
+  direccion_id : bigint
+}
+
+entity "usuario" as usuario {
+  * id : bigint
+  --
+  username : varchar
+  password : varchar
+  persona_id : bigint
+  activo : boolean
+  ultimo_acceso : timestamp
+  intentos_fallidos : integer
+  bloqueado : boolean
+  token_refresh : text
+}
+
+entity "rol" as rol {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+  activo : boolean
+}
+
+entity "usuario_rol" as usuario_rol {
+  * id : bigint
+  --
+  usuario_id : bigint
+  rol_id : bigint
+}
+
+entity "menu" as menu {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+  icono : varchar
+  url : varchar
+  orden : integer
+  activo : boolean
+}
+
+entity "submenu" as submenu {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+  icono : varchar
+  url : varchar
+  orden : integer
+  menu_id : bigint
+  activo : boolean
+}
+
+entity "permiso" as permiso {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+  rol_id : bigint
+  menu_id : bigint
+  submenu_id : bigint
+  crear : boolean
+  leer : boolean
+  actualizar : boolean
+  eliminar : boolean
+}
+
+entity "direccion" as direccion {
+  * id : bigint
+  --
+  calle : varchar
+  numero : varchar
+  piso : varchar
+  apartamento : varchar
+  latitud : numeric
+  longitud : numeric
+  referencia : text
+  ciudad_id : bigint
+  estado_id : bigint
+}
+
+entity "ciudad" as ciudad {
+  * id : bigint
+  --
+  nombre : varchar
+  codigo : varchar
+  latitud : numeric
+  longitud : numeric
+}
+
+entity "estado" as estado {
+  * id : bigint
+  --
+  nombre : varchar
+  codigo : varchar
+  ciudad_id : bigint
+}
+
+entity "cliente" as cliente {
+  * id : bigint
+  --
+  persona_id : bigint
+  usuario_id : bigint
+  notas : text
+}
+
+entity "proveedor" as proveedor {
+  * id : bigint
+  --
+  persona_id : bigint
+  usuario_id : bigint
+  empresa : varchar
+  latitud : numeric
+  longitud : numeric
+  radio_cobertura_km : numeric
+  descripcion : text
+  verificado : boolean
+  calificacion : numeric
+}
+
+entity "especie" as especie {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+}
+
+entity "raza" as raza {
+  * id : bigint
+  --
+  nombre : varchar
+  especie_id : bigint
+  descripcion : text
+}
+
+entity "mascota" as mascota {
+  * id : bigint
+  --
+  nombre : varchar
+  fecha_nacimiento : date
+  genero : char
+  peso : numeric
+  color : varchar
+  imagen_url : varchar
+  especie_id : bigint
+  raza_id : bigint
+  cliente_id : bigint
+}
+
+entity "servicio" as servicio {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+  duracion_minutos : integer
+  precio_base : numeric
+  imagen_url : varchar
+  activo : boolean
+  categoria : varchar
+}
+
+entity "proveedor_especialidad" as proveedor_especialidad {
+  * id : bigint
+  --
+  proveedor_id : bigint
+  servicio_id : bigint
+}
+
+entity "sucursal" as sucursal {
+  * id : bigint
+  --
+  nombre : varchar
+  direccion_id : bigint
+  telefono : varchar
+  email : varchar
+  horario_apertura : time
+  horario_cierre : time
+  latitud : numeric
+  longitud : numeric
+  activa : boolean
+}
+
+entity "disponibilidad" as disponibilidad {
+  * id : bigint
+  --
+  proveedor_id : bigint
+  servicio_id : bigint
+  dia_semana : integer
+  hora_inicio : time
+  hora_fin : time
+  activo : boolean
+}
+
+entity "estado_reserva" as estado_reserva {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+  color : varchar
+  icono : varchar
+  orden : integer
+}
+
+entity "reserva" as reserva {
+  * id : bigint
+  --
+  codigo : varchar
+  cliente_id : bigint
+  proveedor_id : bigint
+  servicio_id : bigint
+  mascota_id : bigint
+  estado_reserva_id : bigint
+  fecha_reserva : timestamp
+  fecha_inicio : timestamp
+  fecha_fin : timestamp
+  hora_inicio : time
+  hora_fin : time
+  latitud : numeric
+  longitud : numeric
+  direccion_referencia : text
+  notas : text
+  precio_total : numeric
+}
+
+entity "promocion" as promocion {
+  * id : bigint
+  --
+  codigo : varchar
+  nombre : varchar
+  descripcion : text
+  tipo_descuento : varchar
+  valor_descuento : numeric
+  fecha_inicio : timestamp
+  fecha_fin : timestamp
+  activa : boolean
+  limite_usos : integer
+  usos_actuales : integer
+}
+
+entity "promocion_local" as promocion_local {
+  * id : bigint
+  --
+  promocion_id : bigint
+  reserva_id : bigint
+  monto_descuento : numeric
+  fecha_aplicacion : timestamp
+}
+
+entity "pago" as pago {
+  * id : bigint
+  --
+  reserva_id : bigint
+  monto : numeric
+  metodo_pago : varchar
+  estado_pago : varchar
+  referencia_transaccion : varchar
+  fecha_pago : timestamp
+  comprobante_url : varchar
+}
+
+entity "vacuna" as vacuna {
+  * id : bigint
+  --
+  nombre : varchar
+  descripcion : text
+  periodicidad_meses : integer
+}
+
+entity "registro_vacunacion" as registro_vacunacion {
+  * id : bigint
+  --
+  mascota_id : bigint
+  vacuna_id : bigint
+  fecha_aplicacion : date
+  fecha_vencimiento : date
+  lote : varchar
+  veterinario : varchar
+  observaciones : text
+}
+
+entity "notificacion" as notificacion {
+  * id : bigint
+  --
+  usuario_id : bigint
+  titulo : varchar
+  mensaje : text
+  tipo : varchar
+  leida : boolean
+  fecha_lectura : timestamp
+}
+
+entity "bitacora" as bitacora {
+  * id : bigint
+  --
+  usuario_id : bigint
+  accion : varchar
+  entidad : varchar
+  entidad_id : bigint
+  datos_anteriores : text
+  datos_nuevos : text
+  ip_address : varchar
+  user_agent : text
+}
+
+entity "correo_enviado" as correo_enviado {
+  * id : bigint
+  --
+  destino : varchar
+  asunto : varchar
+  cuerpo : text
+  tipo : varchar
+  estado : varchar
+  error_mensaje : text
+  fecha_envio : timestamp
+}
+
+persona }|..|| direccion
+usuario }|..|| persona
+usuario_rol }|..|| usuario
+usuario_rol }|..|| rol
+submenu }|..|| menu
+permiso }|..|| rol
+permiso }|..|| menu
+permiso }|..|| submenu
+estado }|..|| ciudad
+direccion }|..|| ciudad
+direccion }|..|| estado
+cliente }|..|| persona
+cliente }|..|| usuario
+proveedor }|..|| persona
+proveedor }|..|| usuario
+raza }|..|| especie
+mascota }|..|| cliente
+mascota }|..|| especie
+mascota }|..|| raza
+proveedor_especialidad }|..|| proveedor
+proveedor_especialidad }|..|| servicio
+sucursal }|..|| direccion
+disponibilidad }|..|| proveedor
+disponibilidad }|..|| servicio
+reserva }|..|| cliente
+reserva }|..|| proveedor
+reserva }|..|| servicio
+reserva }|..|| mascota
+reserva }|..|| estado_reserva
+promocion_local }|..|| promocion
+promocion_local }|..|| reserva
+pago }|..|| reserva
+notificacion }|..|| usuario
+registro_vacunacion }|..|| mascota
+registro_vacunacion }|..|| vacuna
+@enduml

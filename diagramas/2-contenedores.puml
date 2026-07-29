@@ -1,0 +1,196 @@
+@startuml
+skinparam rectangle {
+  BackgroundColor #F7F7F7
+  BorderColor #333333
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4F4F
+}
+skinparam cloud {
+  BackgroundColor #E8F7E0
+  BorderColor #4A7C59
+}
+
+Title Diagrama de contenedores de PetCare
+
+actor Cliente as Cliente
+actor Administrador as Administrador
+actor Proveedor as Proveedor
+
+rectangle "Frontend" as Frontend {
+  component "Angular SPA" as SPA
+  note right of SPA
+    - Interfaz del usuario
+    - Consume la API REST
+    - Valida formularios y carga de fotos
+  end note
+}
+
+rectangle "Monolito Backend" as Monolith {
+  component "API REST / Controladores" as Api
+  component "Módulo auth" as AuthModule
+  component "Módulo persona" as PersonaModule
+  component "Módulo cliente" as ClienteModule
+  component "Módulo usuario" as UsuarioModule
+  component "Módulo mascota" as MascotaModule
+  component "Módulo direccion" as DireccionModule
+  component "Módulo proveedor" as ProveedorModule
+  component "Módulo reserva" as ReservaModule
+  component "Módulo pago" as PagoModule
+  component "Módulo promocion" as PromocionModule
+  component "Módulo notificacion" as NotificacionModule
+  component "Módulo rol/menu" as MenuRolModule
+  component "Módulo sucursal" as SucursalModule
+  component "Módulo bitacora" as BitacoraModule
+  component "Infraestructura" as InfraModule
+  note right of Monolith
+    - Spring Boot monolítico con paquetes por dominio
+    - Backend organizado como módulos dentro del mismo proceso
+    - Cada módulo expone controladores, servicios y mappers
+    - Persistencia con MyBatis + XML mappers
+  end note
+}
+
+database "PostgreSQL" as Database
+storage "Uploads locales" as FileStorage
+cloud "SMTP Gmail" as EmailService
+cloud "Google Maps API" as MapsAPI
+
+Cliente --> SPA : Usa la aplicación web
+Administrador --> SPA : Administra recursos
+Proveedor --> SPA : Publica y administra servicios
+SPA --> Api : Consume endpoints REST
+
+Api --> AuthModule : Login / JWT / registro / recuperación
+Api --> PersonaModule : /api/v1/personas
+Api --> ClienteModule : /api/v1/clientes
+Api --> UsuarioModule : /api/v1/usuarios
+Api --> MascotaModule : /api/v1/mascotas, especies, razas
+Api --> DireccionModule : /api/v1/direcciones, /api/v1/ciudades
+Api --> ProveedorModule : /api/v1/proveedores, /api/v1/disponibilidades
+Api --> ReservaModule : /api/v1/reservas
+Api --> PagoModule : /api/v1/pagos
+Api --> PromocionModule : /api/v1/promociones
+Api --> NotificacionModule : /api/v1/notificaciones
+Api --> MenuRolModule : /api/v1/menus, /api/v1/permisos, /api/v1/roles
+Api --> SucursalModule : /api/v1/sucursales
+Api --> BitacoraModule : /api/v1/bitacoras
+Api --> InfraModule : Uploads, emails, seguridad, configuración
+
+AuthModule --> Database : Credenciales / usuarios
+PersonaModule --> Database : Personas
+ClienteModule --> Database : Clientes
+UsuarioModule --> Database : Usuarios
+MascotaModule --> Database : Mascotas, especies, razas
+DireccionModule --> Database : Direcciones, ciudades, estados
+ProveedorModule --> Database : Proveedores, especialidades, disponibilidades
+ReservaModule --> Database : Reservas, estado de reservas
+PagoModule --> Database : Pagos
+PromocionModule --> Database : Promociones, promociones locales
+NotificacionModule --> Database : Notificaciones
+MenuRolModule --> Database : Menús, permisos, roles
+SucursalModule --> Database : Sucursales
+BitacoraModule --> Database : Bitácora de acciones
+InfraModule --> Database : Configuraciones, logs
+InfraModule --> FileStorage : Guarda fotos y archivos de mascotas
+InfraModule --> EmailService : Envío de correos
+SPA --> MapsAPI : Solicita mapas y geolocalización
+
+note left of AuthModule
+  - bo.capital.tec.pet.modules.auth.controller
+  - bo.capital.tec.pet.modules.auth.service
+  - bo.capital.tec.pet.modules.auth.dto
+end note
+
+note left of PersonaModule
+  - bo.capital.tec.pet.modules.persona.controller
+  - bo.capital.tec.pet.modules.persona.service
+  - bo.capital.tec.pet.modules.persona.mapper
+end note
+
+note left of ClienteModule
+  - bo.capital.tec.pet.modules.cliente.controller
+  - bo.capital.tec.pet.modules.cliente.service
+  - bo.capital.tec.pet.modules.cliente.mapper
+end note
+
+note left of UsuarioModule
+  - bo.capital.tec.pet.modules.usuario.controller
+  - bo.capital.tec.pet.modules.usuario.service
+  - bo.capital.tec.pet.modules.usuario.mapper
+end note
+
+note left of MascotaModule
+  - bo.capital.tec.pet.modules.mascota.controller
+  - bo.capital.tec.pet.modules.mascota.service
+  - bo.capital.tec.pet.modules.mascota.mapper
+end note
+
+note left of DireccionModule
+  - bo.capital.tec.pet.modules.direccion.controller
+  - bo.capital.tec.pet.modules.direccion.service
+  - bo.capital.tec.pet.modules.direccion.mapper
+end note
+
+note left of ProveedorModule
+  - bo.capital.tec.pet.modules.proveedor.controller
+  - bo.capital.tec.pet.modules.proveedor.service
+  - bo.capital.tec.pet.modules.proveedor.mapper
+end note
+
+note left of ReservaModule
+  - bo.capital.tec.pet.modules.reserva.controller
+  - bo.capital.tec.pet.modules.reserva.service
+  - bo.capital.tec.pet.modules.reserva.mapper
+end note
+
+note left of PagoModule
+  - bo.capital.tec.pet.modules.pago.controller
+  - bo.capital.tec.pet.modules.pago.service
+  - bo.capital.tec.pet.modules.pago.mapper
+end note
+
+note left of PromocionModule
+  - bo.capital.tec.pet.modules.promocion.controller
+  - bo.capital.tec.pet.modules.promocion.service
+  - bo.capital.tec.pet.modules.promocion.mapper
+end note
+
+note left of NotificacionModule
+  - bo.capital.tec.pet.modules.notificacion.controller
+  - bo.capital.tec.pet.modules.notificacion.service
+  - bo.capital.tec.pet.modules.notificacion.mapper
+end note
+
+note left of MenuRolModule
+  - bo.capital.tec.pet.modules.menu.controller
+  - bo.capital.tec.pet.modules.menu.service
+  - bo.capital.tec.pet.modules.menu.mapper
+  - bo.capital.tec.pet.modules.rol.controller
+  - bo.capital.tec.pet.modules.rol.service
+  - bo.capital.tec.pet.modules.rol.mapper
+end note
+
+note left of SucursalModule
+  - bo.capital.tec.pet.modules.sucursal.controller
+  - bo.capital.tec.pet.modules.sucursal.service
+  - bo.capital.tec.pet.modules.sucursal.mapper
+end note
+
+note left of BitacoraModule
+  - bo.capital.tec.pet.modules.bitacora.controller
+  - bo.capital.tec.pet.modules.bitacora.service
+  - bo.capital.tec.pet.modules.bitacora.mapper
+end note
+
+note left of InfraModule
+  - bo.capital.tec.pet.common.upload.UploadController
+  - bo.capital.tec.pet.common.email.EmailServiceImpl
+  - bo.capital.tec.pet.config.SecurityConfig
+  - bo.capital.tec.pet.config.MyBatisConfig
+  - bo.capital.tec.pet.config.OpenApiConfig
+  - bo.capital.tec.pet.common.exceptions.GlobalExceptionHandler
+end note
+
+@enduml
