@@ -1,3 +1,5 @@
+# ARQUITECTURA MONOLITO POR CAPAS 
+
 # PETCare Home Services
 
 Sistema de gestión de servicios de cuidado de mascotas a domicilio. Plataforma full-stack con backend Spring Boot 3 y frontend Angular 19, desplegada con Docker Compose.

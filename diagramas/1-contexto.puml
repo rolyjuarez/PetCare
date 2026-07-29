@@ -1,0 +1,25 @@
+@startuml
+skinparam rectangle {
+  BackgroundColor #F7F7F7
+  BorderColor #333333
+}
+
+Title Diagrama de contexto del sistema PetCare
+
+actor Cliente as "Cliente"
+actor Administrador as "Administrador"
+actor Proveedor as "Proveedor de servicios veterinarios"
+
+package "PetCare" {
+  rectangle "Frontend Angular" as Frontend
+  rectangle "Backend Spring Boot" as Backend
+  rectangle "PostgreSQL" as Database
+}
+
+Cliente --> Frontend : Usa la aplicación web
+Administrador --> Frontend : Gestiona el sistema
+Proveedor --> Frontend : Presta servicios
+Frontend --> Backend : Consume API REST
+Backend --> Database : Guarda/recupera datos
+
+@enduml 
