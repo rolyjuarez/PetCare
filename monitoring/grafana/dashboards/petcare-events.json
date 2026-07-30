@@ -1,0 +1,46 @@
+{
+  "title": "PETCare Event Metrics",
+  "version": 1,
+  "panels": [
+    {
+      "title": "Messages Published per Topic",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(petcare_messages_published_total[5m])",
+          "legendFormat": "{{topic}}"
+        }
+      ]
+    },
+    {
+      "title": "Messages Consumed per Topic",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(petcare_messages_consumed_total[5m])",
+          "legendFormat": "{{topic}}"
+        }
+      ]
+    },
+    {
+      "title": "Errors per Topic",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(petcare_messages_error_total[5m])",
+          "legendFormat": "{{topic}}"
+        }
+      ]
+    },
+    {
+      "title": "Message Latency (p99)",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.99, rate(petcare_messages_latency_seconds_bucket[5m]))",
+          "legendFormat": "{{topic}}"
+        }
+      ]
+    }
+  ]
+}

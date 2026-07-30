@@ -1,0 +1,63 @@
+@startuml
+skinparam componentStyle rectangle
+skinparam rectangle {
+  BackgroundColor #F8F9FA
+  BorderColor #444444
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #2F4F4F
+}
+skinparam database {
+  BackgroundColor #EAF4FF
+  BorderColor #2B6CB0
+}
+skinparam queue {
+  BackgroundColor #FDECEC
+  BorderColor #C53030
+}
+
+title Event-Driven - Módulo de Reservas
+
+component "ReservaService" as ReservaService
+component "ReservaMapper" as ReservaRepo
+component "ClienteApi" as ClienteApi
+component "ProveedorApi" as ProveedorApi
+component "ServicioApi" as ServicioApi
+component "MascotaApi" as MascotaApi
+component "PersonaApi" as PersonaApi
+component "DomainEventPublisher" as EventPublisher
+component "OutboxPublisher" as Outbox
+component "KafkaDomainEventPublisher" as KafkaPublisher
+component "Kafka Topics" as Kafka
+component "ReservaEventConsumer" as ReservaConsumer
+component "NotificacionApi" as NotificacionApi
+component "PostgreSQL" as Database
+
+ReservaService --> ReservaRepo : persiste y actualiza reserva
+ReservaService --> ClienteApi : obtiene cliente
+ReservaService --> ProveedorApi : obtiene proveedor
+ReservaService --> ServicioApi : obtiene servicio
+ReservaService --> MascotaApi : obtiene mascota
+ReservaService --> PersonaApi : obtiene datos de persona
+
+ReservaService --> EventPublisher : publica ReservaCreadaEvent / ReservaConfirmadaEvent / ReservaCanceladaEvent / ReservaCompletadaEvent
+
+EventPublisher --> KafkaPublisher : modo kafka
+KafkaPublisher --> Outbox : registra eventos
+Outbox --> Kafka : petcare.reserva.event.v1
+Kafka --> ReservaConsumer : consume eventos
+ReservaConsumer --> NotificacionApi : crea notificaciones para cliente y proveedor
+NotificacionApi --> Database : inserta notificaciones
+ReservaRepo --> Database : guarda estado de reserva
+
+note right of ReservaService
+  Al crear, confirmar, cancelar o completar
+  una reserva se emiten eventos de dominio.
+end note
+
+note bottom of Outbox
+  El outbox permite publicar los eventos
+  aunque haya fallos temporales en Kafka.
+end note
+@enduml

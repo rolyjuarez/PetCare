@@ -1,10 +1,12 @@
 package bo.capital.tec.pet.modules.auth.service.impl;
 
 import bo.capital.tec.pet.modules.auth.dto.*;
+import bo.capital.tec.pet.modules.auth.event.UsuarioRegistradoEvent;
 import bo.capital.tec.pet.modules.auth.service.AuthService;
 import bo.capital.tec.pet.modules.cliente.api.ClienteApi;
 import bo.capital.tec.pet.modules.cliente.entity.Cliente;
 import bo.capital.tec.pet.common.email.EmailService;
+import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exceptions.BusinessException;
 import bo.capital.tec.pet.modules.direccion.api.DireccionApi;
 import bo.capital.tec.pet.modules.direccion.entity.Direccion;
@@ -42,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final DomainEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -234,6 +237,17 @@ public class AuthServiceImpl implements AuthService {
             notificacionApi.insert(notificacion);
         } catch (Exception e) {
             log.warn("Error creando notificacion de bienvenida: {}", e.getMessage());
+        }
+
+        try {
+            String nombreCompleto = (dto.getNombre() != null ? dto.getNombre() : "") + " "
+                    + (dto.getPrimerApellido() != null ? dto.getPrimerApellido() : "");
+            eventPublisher.publish(new UsuarioRegistradoEvent(
+                    usuario.getId(), dto.getUsername(), persona.getId(),
+                    nombreCompleto.trim(), dto.getEmail(), cliente.getId()
+            ));
+        } catch (Exception e) {
+            log.warn("Error publishing UsuarioRegistradoEvent: {}", e.getMessage());
         }
 
         log.info("Registro exitoso: {} - CLIENTE", dto.getUsername());

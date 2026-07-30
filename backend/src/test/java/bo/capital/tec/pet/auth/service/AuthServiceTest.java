@@ -1,11 +1,11 @@
 package bo.capital.tec.pet.auth.service;
 
-import bo.capital.tec.pet.auth.dto.*;
-import bo.capital.tec.pet.auth.service.impl.AuthServiceImpl;
+import bo.capital.tec.pet.modules.auth.dto.*;
+import bo.capital.tec.pet.modules.auth.service.impl.AuthServiceImpl;
 import bo.capital.tec.pet.common.exceptions.BusinessException;
 import bo.capital.tec.pet.security.JwtTokenProvider;
-import bo.capital.tec.pet.usuario.entity.Usuario;
-import bo.capital.tec.pet.usuario.mapper.UsuarioMapper;
+import bo.capital.tec.pet.modules.usuario.entity.Usuario;
+import bo.capital.tec.pet.modules.usuario.mapper.UsuarioMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

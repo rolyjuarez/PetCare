@@ -1,9 +1,9 @@
 package bo.capital.tec.pet.reserva.service;
 
-import bo.capital.tec.pet.reserva.entity.EstadoReserva;
-import bo.capital.tec.pet.reserva.entity.Reserva;
-import bo.capital.tec.pet.reserva.mapper.EstadoReservaMapper;
-import bo.capital.tec.pet.reserva.mapper.ReservaMapper;
+import bo.capital.tec.pet.modules.reserva.entity.EstadoReserva;
+import bo.capital.tec.pet.modules.reserva.entity.Reserva;
+import bo.capital.tec.pet.modules.reserva.mapper.EstadoReservaMapper;
+import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,0 +1,58 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9093
+    consumer:
+      group-id: petcare-consumer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    admin:
+      auto-create: true
+
+app:
+  events:
+    mode: kafka
+  kafka:
+    topic:
+      reserva-event: petcare.reserva.event.v1
+      pago-event: petcare.pago.event.v1
+      usuario-event: petcare.usuario.event.v1
+      mascota-event: petcare.mascota.event.v1
+      dlt: petcare.internal.dlt.v1
+  outbox:
+    poll-interval-ms: 5000
+    stale-poll-interval-ms: 300000
+    batch-size: 100
+    max-retries: 5
+    retry-delay-minutes: 5
+    stale-threshold-minutes: 1440
+    cleanup-cron: "0 0 3 * * ?"
+  idempotency:
+    retention-minutes: 1440
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: petcare-backend
+    export:
+      prometheus:
+        enabled: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%traceId] [%thread] %logger{36} - %msg%n"
+  level:
+    bo.capital.tec.pet.common.messaging: DEBUG
+    org.springframework.kafka: INFO

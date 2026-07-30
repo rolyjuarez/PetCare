@@ -23,6 +23,11 @@ public class UsuarioApiImpl implements UsuarioApi {
     }
 
     @Override
+    public Usuario selectById(Long id) {
+        return usuarioMapper.selectById(id);
+    }
+
+    @Override
     public Usuario selectByPersonaId(Long personaId) {
         return usuarioMapper.selectByPersonaId(personaId);
     }

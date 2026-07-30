@@ -2,6 +2,7 @@ package bo.capital.tec.pet.modules.reserva.service.impl;
 
 import bo.capital.tec.pet.modules.cliente.api.ClienteApi;
 import bo.capital.tec.pet.modules.cliente.entity.Cliente;
+import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exceptions.EntityNotFoundException;
 import bo.capital.tec.pet.common.response.PagedResponse;
 import bo.capital.tec.pet.common.util.PaginationUtil;
@@ -16,12 +17,17 @@ import bo.capital.tec.pet.modules.reserva.dto.ReservaResponseDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaSummaryDTO;
 import bo.capital.tec.pet.modules.reserva.entity.EstadoReserva;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
+import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
+import bo.capital.tec.pet.modules.reserva.event.ReservaCompletadaEvent;
+import bo.capital.tec.pet.modules.reserva.event.ReservaConfirmadaEvent;
+import bo.capital.tec.pet.modules.reserva.event.ReservaCreadaEvent;
 import bo.capital.tec.pet.modules.reserva.mapper.EstadoReservaMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
 import bo.capital.tec.pet.modules.reserva.service.ReservaService;
 import bo.capital.tec.pet.modules.servicio.api.ServicioApi;
 import bo.capital.tec.pet.modules.servicio.entity.Servicio;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +36,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReservaServiceImpl implements ReservaService {
@@ -41,6 +48,7 @@ public class ReservaServiceImpl implements ReservaService {
     private final ServicioApi servicioApi;
     private final MascotaApi mascotaApi;
     private final PersonaApi personaApi;
+    private final DomainEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -68,7 +76,51 @@ public class ReservaServiceImpl implements ReservaService {
                 .precioTotal(dto.getPrecioTotal())
                 .build();
         reservaMapper.insert(reserva);
-        return toResponseDTO(reserva);
+        ReservaResponseDTO response = toResponseDTO(reserva);
+        publishReservaCreada(reserva, response);
+        return response;
+    }
+
+    private void publishReservaCreada(Reserva reserva, ReservaResponseDTO response) {
+        try {
+            String clienteEmail = "";
+            if (reserva.getClienteId() != null) {
+                Cliente cliente = clienteApi.selectById(reserva.getClienteId());
+                if (cliente != null && cliente.getPersonaId() != null) {
+                    Persona persona = personaApi.selectById(cliente.getPersonaId());
+                    if (persona != null) {
+                        clienteEmail = persona.getEmail() != null ? persona.getEmail() : "";
+                    }
+                }
+            }
+            eventPublisher.publish(new ReservaCreadaEvent(
+                    reserva.getId(), reserva.getCodigo(),
+                    reserva.getClienteId(), response.getClienteNombre(), clienteEmail,
+                    reserva.getProveedorId(), response.getProveedorEmpresa(),
+                    reserva.getServicioId(), response.getServicioNombre(),
+                    reserva.getMascotaId(), response.getMascotaNombre(),
+                    reserva.getFechaInicio(), reserva.getHoraInicio(),
+                    reserva.getPrecioTotal()
+            ));
+        } catch (Exception e) {
+            log.warn("Error publishing ReservaCreadaEvent: {}", e.getMessage());
+        }
+    }
+
+    private String getClienteEmail(Long clienteId) {
+        if (clienteId == null) return "";
+        try {
+            Cliente cliente = clienteApi.selectById(clienteId);
+            if (cliente != null && cliente.getPersonaId() != null) {
+                Persona persona = personaApi.selectById(cliente.getPersonaId());
+                if (persona != null && persona.getEmail() != null) {
+                    return persona.getEmail();
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Error getting cliente email: {}", e.getMessage());
+        }
+        return "";
     }
 
     @Override
@@ -151,7 +203,20 @@ public class ReservaServiceImpl implements ReservaService {
             reservaMapper.updateEstado(id, estado.getId());
             reserva.setEstadoReservaId(estado.getId());
         }
-        return toResponseDTO(reserva);
+        ReservaResponseDTO response = toResponseDTO(reserva);
+        try {
+            eventPublisher.publish(new ReservaConfirmadaEvent(
+                    reserva.getId(), reserva.getCodigo(),
+                    reserva.getClienteId(), response.getClienteNombre(), getClienteEmail(reserva.getClienteId()),
+                    reserva.getProveedorId(), response.getProveedorEmpresa(),
+                    reserva.getServicioId(), response.getServicioNombre(),
+                    reserva.getFechaInicio(), reserva.getHoraInicio(),
+                    reserva.getPrecioTotal()
+            ));
+        } catch (Exception e) {
+            log.warn("Error publishing ReservaConfirmadaEvent: {}", e.getMessage());
+        }
+        return response;
     }
 
     @Override
@@ -196,7 +261,19 @@ public class ReservaServiceImpl implements ReservaService {
             reservaMapper.updateEstado(id, estado.getId());
             reserva.setEstadoReservaId(estado.getId());
         }
-        return toResponseDTO(reserva);
+        ReservaResponseDTO response = toResponseDTO(reserva);
+        try {
+            eventPublisher.publish(new ReservaCompletadaEvent(
+                    reserva.getId(), reserva.getCodigo(),
+                    reserva.getClienteId(), response.getClienteNombre(), getClienteEmail(reserva.getClienteId()),
+                    reserva.getProveedorId(), response.getProveedorEmpresa(),
+                    reserva.getServicioId(), response.getServicioNombre(),
+                    reserva.getPrecioTotal()
+            ));
+        } catch (Exception e) {
+            log.warn("Error publishing ReservaCompletadaEvent: {}", e.getMessage());
+        }
+        return response;
     }
 
     @Override
@@ -211,7 +288,19 @@ public class ReservaServiceImpl implements ReservaService {
             reservaMapper.updateEstado(id, estado.getId());
             reserva.setEstadoReservaId(estado.getId());
         }
-        return toResponseDTO(reserva);
+        ReservaResponseDTO response = toResponseDTO(reserva);
+        try {
+            eventPublisher.publish(new ReservaCanceladaEvent(
+                    reserva.getId(), reserva.getCodigo(),
+                    reserva.getClienteId(), response.getClienteNombre(), getClienteEmail(reserva.getClienteId()),
+                    reserva.getProveedorId(), response.getProveedorEmpresa(),
+                    reserva.getServicioId(), response.getServicioNombre(),
+                    motivo
+            ));
+        } catch (Exception e) {
+            log.warn("Error publishing ReservaCanceladaEvent: {}", e.getMessage());
+        }
+        return response;
     }
 
     @Override

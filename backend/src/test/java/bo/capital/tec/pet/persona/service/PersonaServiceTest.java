@@ -2,10 +2,10 @@ package bo.capital.tec.pet.persona.service;
 
 import bo.capital.tec.pet.common.exceptions.EntityNotFoundException;
 import bo.capital.tec.pet.common.response.PagedResponse;
-import bo.capital.tec.pet.persona.dto.*;
-import bo.capital.tec.pet.persona.entity.Persona;
-import bo.capital.tec.pet.persona.mapper.PersonaMapper;
-import bo.capital.tec.pet.persona.service.impl.PersonaServiceImpl;
+import bo.capital.tec.pet.modules.persona.dto.*;
+import bo.capital.tec.pet.modules.persona.entity.Persona;
+import bo.capital.tec.pet.modules.persona.mapper.PersonaMapper;
+import bo.capital.tec.pet.modules.persona.service.impl.PersonaServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -1,7 +1,8 @@
 package bo.capital.tec.pet.modules.mascota.service.impl;
 
+import bo.capital.tec.pet.modules.cliente.api.ClienteApi;
 import bo.capital.tec.pet.modules.cliente.entity.Cliente;
-import bo.capital.tec.pet.modules.cliente.mapper.ClienteMapper;
+import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exceptions.EntityNotFoundException;
 import bo.capital.tec.pet.common.response.PagedResponse;
 import bo.capital.tec.pet.common.util.PaginationUtil;
@@ -11,22 +12,26 @@ import bo.capital.tec.pet.modules.mascota.dto.MascotaSummaryDTO;
 import bo.capital.tec.pet.modules.mascota.entity.Especie;
 import bo.capital.tec.pet.modules.mascota.entity.Mascota;
 import bo.capital.tec.pet.modules.mascota.entity.Raza;
+import bo.capital.tec.pet.modules.mascota.event.MascotaActualizadaEvent;
+import bo.capital.tec.pet.modules.mascota.event.MascotaCreadaEvent;
 import bo.capital.tec.pet.modules.mascota.mapper.EspecieMapper;
 import bo.capital.tec.pet.modules.mascota.mapper.MascotaMapper;
 import bo.capital.tec.pet.modules.mascota.mapper.RazaMapper;
 import bo.capital.tec.pet.modules.mascota.service.MascotaService;
+import bo.capital.tec.pet.modules.persona.api.PersonaApi;
 import bo.capital.tec.pet.modules.persona.entity.Persona;
-import bo.capital.tec.pet.modules.persona.mapper.PersonaMapper;
-import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
+import bo.capital.tec.pet.modules.reserva.api.ReservaApi;
+import bo.capital.tec.pet.modules.usuario.api.UsuarioApi;
 import bo.capital.tec.pet.modules.usuario.entity.Usuario;
-import bo.capital.tec.pet.modules.usuario.mapper.UsuarioMapper;
-import bo.capital.tec.pet.modules.vacuna.mapper.RegistroVacunacionMapper;
+import bo.capital.tec.pet.modules.vacuna.api.RegistroVacunacionApi;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MascotaServiceImpl implements MascotaService {
@@ -34,11 +39,12 @@ public class MascotaServiceImpl implements MascotaService {
     private final MascotaMapper mascotaMapper;
     private final EspecieMapper especieMapper;
     private final RazaMapper razaMapper;
-    private final ClienteMapper clienteMapper;
-    private final PersonaMapper personaMapper;
-    private final UsuarioMapper usuarioMapper;
-    private final RegistroVacunacionMapper registroVacunacionMapper;
-    private final ReservaMapper reservaMapper;
+    private final ClienteApi clienteApi;
+    private final PersonaApi personaApi;
+    private final UsuarioApi usuarioApi;
+    private final RegistroVacunacionApi registroVacunacionApi;
+    private final ReservaApi reservaApi;
+    private final DomainEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -55,7 +61,15 @@ public class MascotaServiceImpl implements MascotaService {
                 .clienteId(dto.getClienteId())
                 .build();
         mascotaMapper.insert(mascota);
-        return toResponseDTO(mascota);
+        MascotaResponseDTO response = toResponseDTO(mascota);
+        try {
+            eventPublisher.publish(new MascotaCreadaEvent(
+                    mascota.getId(), mascota.getNombre(), mascota.getClienteId()
+            ));
+        } catch (Exception e) {
+            log.warn("Error publishing MascotaCreadaEvent: {}", e.getMessage());
+        }
+        return response;
     }
 
     @Override
@@ -96,11 +110,11 @@ public class MascotaServiceImpl implements MascotaService {
     @Override
     @Transactional(readOnly = true)
     public List<MascotaSummaryDTO> getByUsuarioId(Long usuarioId) {
-        Usuario usuario = usuarioMapper.selectById(usuarioId);
+        Usuario usuario = usuarioApi.selectById(usuarioId);
         if (usuario == null || usuario.getPersonaId() == null) {
             return List.of();
         }
-        Cliente cliente = clienteMapper.findByPersonaId(usuario.getPersonaId());
+        Cliente cliente = clienteApi.findByPersonaId(usuario.getPersonaId());
         if (cliente == null) {
             return List.of();
         }
@@ -124,7 +138,15 @@ public class MascotaServiceImpl implements MascotaService {
         mascota.setRazaId(dto.getRazaId());
         mascota.setClienteId(dto.getClienteId());
         mascotaMapper.update(mascota);
-        return toResponseDTO(mascota);
+        MascotaResponseDTO response = toResponseDTO(mascota);
+        try {
+            eventPublisher.publish(new MascotaActualizadaEvent(
+                    mascota.getId(), mascota.getNombre(), mascota.getClienteId()
+            ));
+        } catch (Exception e) {
+            log.warn("Error publishing MascotaActualizadaEvent: {}", e.getMessage());
+        }
+        return response;
     }
 
     @Override
@@ -134,8 +156,8 @@ public class MascotaServiceImpl implements MascotaService {
         if (mascota == null) {
             throw new EntityNotFoundException("Mascota", id);
         }
-        registroVacunacionMapper.softDeleteByMascotaId(id);
-        reservaMapper.softDeleteByMascotaId(id);
+        registroVacunacionApi.softDeleteByMascotaId(id);
+        reservaApi.softDeleteByMascotaId(id);
         mascotaMapper.softDelete(id);
     }
 
@@ -144,9 +166,9 @@ public class MascotaServiceImpl implements MascotaService {
         Raza raza = razaMapper.selectById(mascota.getRazaId());
         String clienteNombre = "";
         if (mascota.getClienteId() != null) {
-            Cliente cliente = clienteMapper.selectById(mascota.getClienteId());
+            Cliente cliente = clienteApi.selectById(mascota.getClienteId());
             if (cliente != null && cliente.getPersonaId() != null) {
-                Persona persona = personaMapper.selectById(cliente.getPersonaId());
+                Persona persona = personaApi.selectById(cliente.getPersonaId());
                 if (persona != null) {
                     clienteNombre = persona.getNombre() + " " +
                             (persona.getPrimerApellido() != null ? persona.getPrimerApellido() : "");

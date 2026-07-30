@@ -8,10 +8,10 @@ import bo.capital.tec.pet.modules.bitacora.service.BitacoraService;
 import bo.capital.tec.pet.common.exceptions.EntityNotFoundException;
 import bo.capital.tec.pet.common.response.PagedResponse;
 import bo.capital.tec.pet.common.util.PaginationUtil;
+import bo.capital.tec.pet.modules.persona.api.PersonaApi;
 import bo.capital.tec.pet.modules.persona.entity.Persona;
-import bo.capital.tec.pet.modules.persona.mapper.PersonaMapper;
+import bo.capital.tec.pet.modules.usuario.api.UsuarioApi;
 import bo.capital.tec.pet.modules.usuario.entity.Usuario;
-import bo.capital.tec.pet.modules.usuario.mapper.UsuarioMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -26,8 +26,8 @@ import java.util.stream.Collectors;
 public class BitacoraServiceImpl implements BitacoraService {
 
     private final BitacoraMapper bitacoraMapper;
-    private final UsuarioMapper usuarioMapper;
-    private final PersonaMapper personaMapper;
+    private final UsuarioApi usuarioApi;
+    private final PersonaApi personaApi;
 
     @Override
     @Async
@@ -106,9 +106,9 @@ public class BitacoraServiceImpl implements BitacoraService {
     private BitacoraResponseDTO toResponseDTO(Bitacora bitacora) {
         String usuarioNombre = "";
         if (bitacora.getUsuarioId() != null) {
-            Usuario usuario = usuarioMapper.selectById(bitacora.getUsuarioId());
+            Usuario usuario = usuarioApi.selectById(bitacora.getUsuarioId());
             if (usuario != null && usuario.getPersonaId() != null) {
-                Persona persona = personaMapper.selectById(usuario.getPersonaId());
+                Persona persona = personaApi.selectById(usuario.getPersonaId());
                 if (persona != null) {
                     usuarioNombre = (persona.getNombre() != null ? persona.getNombre() : "") + " " +
                             (persona.getPrimerApellido() != null ? persona.getPrimerApellido() : "");

@@ -7,6 +7,7 @@ import java.util.List;
 
 public interface UsuarioApi {
     Usuario findByUsername(String username);
+    Usuario selectById(Long id);
     Usuario selectByPersonaId(Long personaId);
     Long insert(Usuario usuario);
     void update(Usuario usuario);

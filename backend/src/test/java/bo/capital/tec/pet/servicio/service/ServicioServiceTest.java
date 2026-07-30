@@ -2,12 +2,12 @@ package bo.capital.tec.pet.servicio.service;
 
 import bo.capital.tec.pet.common.exceptions.EntityNotFoundException;
 import bo.capital.tec.pet.common.response.PagedResponse;
-import bo.capital.tec.pet.servicio.dto.ServicioRequestDTO;
-import bo.capital.tec.pet.servicio.dto.ServicioResponseDTO;
-import bo.capital.tec.pet.servicio.dto.ServicioSummaryDTO;
-import bo.capital.tec.pet.servicio.entity.Servicio;
-import bo.capital.tec.pet.servicio.mapper.ServicioMapper;
-import bo.capital.tec.pet.servicio.service.impl.ServicioServiceImpl;
+import bo.capital.tec.pet.modules.servicio.dto.ServicioRequestDTO;
+import bo.capital.tec.pet.modules.servicio.dto.ServicioResponseDTO;
+import bo.capital.tec.pet.modules.servicio.dto.ServicioSummaryDTO;
+import bo.capital.tec.pet.modules.servicio.entity.Servicio;
+import bo.capital.tec.pet.modules.servicio.mapper.ServicioMapper;
+import bo.capital.tec.pet.modules.servicio.service.impl.ServicioServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

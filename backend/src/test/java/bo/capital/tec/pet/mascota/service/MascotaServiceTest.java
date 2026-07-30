@@ -2,12 +2,12 @@ package bo.capital.tec.pet.mascota.service;
 
 import bo.capital.tec.pet.common.exceptions.EntityNotFoundException;
 import bo.capital.tec.pet.common.response.PagedResponse;
-import bo.capital.tec.pet.mascota.dto.MascotaRequestDTO;
-import bo.capital.tec.pet.mascota.dto.MascotaResponseDTO;
-import bo.capital.tec.pet.mascota.dto.MascotaSummaryDTO;
-import bo.capital.tec.pet.mascota.entity.Mascota;
-import bo.capital.tec.pet.mascota.mapper.MascotaMapper;
-import bo.capital.tec.pet.mascota.service.impl.MascotaServiceImpl;
+import bo.capital.tec.pet.modules.mascota.dto.MascotaRequestDTO;
+import bo.capital.tec.pet.modules.mascota.dto.MascotaResponseDTO;
+import bo.capital.tec.pet.modules.mascota.dto.MascotaSummaryDTO;
+import bo.capital.tec.pet.modules.mascota.entity.Mascota;
+import bo.capital.tec.pet.modules.mascota.mapper.MascotaMapper;
+import bo.capital.tec.pet.modules.mascota.service.impl.MascotaServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -95,9 +95,13 @@ class MascotaServiceTest {
 
     @Test
     void getAll_ShouldReturnPagedResponse() {
-        when(mascotaMapper.selectAll(any(), any(), anyInt(), anyInt()))
-                .thenReturn(List.of(mascota));
-        when(mascotaMapper.countAll(any(), any())).thenReturn(1L);
+        MascotaSummaryDTO mascotaSummary = MascotaSummaryDTO.builder()
+                .id(1L).nombre("Max").especieId(1L).razaId(1L).clienteId(1L)
+                .peso(new BigDecimal("25.50")).color("Dorado")
+                .fechaNacimiento(LocalDate.of(2020, 5, 15)).genero("M").build();
+        when(mascotaMapper.selectAll(any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(mascotaSummary));
+        when(mascotaMapper.countAll(any(), any(), any())).thenReturn(1L);
 
         PagedResponse<MascotaSummaryDTO> response = mascotaService.getAll(null, null, null, 0, 20);
 
@@ -109,8 +113,11 @@ class MascotaServiceTest {
 
     @Test
     void getByClienteId_ShouldReturnList() {
+        MascotaSummaryDTO mascotaSummary = MascotaSummaryDTO.builder()
+                .id(1L).nombre("Max").especieId(1L).razaId(1L).clienteId(1L)
+                .peso(new BigDecimal("25.50")).color("Dorado").genero("M").build();
         when(mascotaMapper.selectByClienteId(eq(1L), anyInt(), anyInt()))
-                .thenReturn(List.of(mascota));
+                .thenReturn(List.of(mascotaSummary));
 
         List<MascotaSummaryDTO> response = mascotaService.getByClienteId(1L);
 

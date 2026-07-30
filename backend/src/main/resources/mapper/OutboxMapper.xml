@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.common.messaging.outbox.OutboxMapper">
+
+    <resultMap id="BaseResultMap" type="bo.capital.tec.pet.common.messaging.outbox.Outbox">
+        <id column="id" property="id" />
+        <result column="event_id" property="eventId" />
+        <result column="aggregate_type" property="aggregateType" />
+        <result column="aggregate_id" property="aggregateId" />
+        <result column="event_type" property="eventType" />
+        <result column="topic" property="topic" />
+        <result column="payload" property="payload" />
+        <result column="status" property="status" />
+        <result column="retry_count" property="retryCount" />
+        <result column="last_error" property="lastError" />
+        <result column="created_at" property="createdAt" />
+        <result column="processed_at" property="processedAt" />
+        <result column="next_retry_at" property="nextRetryAt" />
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, event_id, aggregate_type, aggregate_id, event_type, topic, payload,
+        status, retry_count, last_error, created_at, processed_at, next_retry_at
+    </sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="bo.capital.tec.pet.common.messaging.outbox.Outbox">
+        INSERT INTO outbox (event_id, aggregate_type, aggregate_id, event_type, topic,
+                            payload, status, retry_count, created_at)
+        VALUES (#{eventId}, #{aggregateType}, #{aggregateId}, #{eventType}, #{topic},
+                #{payload}, 'PENDING', 0, NOW())
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM outbox WHERE id = #{id}
+    </select>
+
+    <select id="selectPending" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM outbox
+        WHERE status = 'PENDING'
+          AND (next_retry_at IS NULL OR next_retry_at &lt;= #{now})
+        ORDER BY created_at ASC
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <select id="selectStale" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns" />
+        FROM outbox
+        WHERE status = 'PROCESSING'
+          AND created_at &lt;= #{threshold}
+          AND retry_count &lt; #{maxRetries}
+        ORDER BY created_at ASC
+        LIMIT #{limit}
+        FOR UPDATE SKIP LOCKED
+    </select>
+
+    <update id="markProcessing">
+        UPDATE outbox SET status = 'PROCESSING' WHERE id = #{id}
+    </update>
+
+    <update id="markProcessed">
+        UPDATE outbox
+        SET status = 'PROCESSED', processed_at = #{processedAt}
+        WHERE id = #{id}
+    </update>
+
+    <update id="markFailed">
+        UPDATE outbox
+        SET status = 'FAILED', last_error = #{lastError}
+        WHERE id = #{id}
+    </update>
+
+    <update id="incrementRetry">
+        UPDATE outbox
+        SET retry_count = retry_count + 1,
+            last_error = #{lastError},
+            next_retry_at = #{nextRetryAt},
+            status = 'PENDING'
+        WHERE id = #{id}
+    </update>
+
+    <select id="countPending" resultType="long">
+        SELECT COUNT(*) FROM outbox WHERE status = 'PENDING'
+    </select>
+
+    <select id="countByStatus" resultType="long">
+        SELECT COUNT(*) FROM outbox WHERE status = #{status}
+    </select>
+
+    <delete id="deleteProcessedOlderThan">
+        DELETE FROM outbox
+        WHERE status = 'PROCESSED' AND processed_at &lt;= #{cutoff}
+    </delete>
+
+</mapper>

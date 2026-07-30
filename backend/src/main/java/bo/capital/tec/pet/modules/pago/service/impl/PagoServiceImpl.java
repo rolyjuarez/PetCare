@@ -1,17 +1,25 @@
 package bo.capital.tec.pet.modules.pago.service.impl;
 
+import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exceptions.EntityNotFoundException;
 import bo.capital.tec.pet.common.response.PagedResponse;
 import bo.capital.tec.pet.common.util.PaginationUtil;
+import bo.capital.tec.pet.modules.cliente.api.ClienteApi;
+import bo.capital.tec.pet.modules.cliente.entity.Cliente;
 import bo.capital.tec.pet.modules.pago.dto.PagoRequestDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoSummaryDTO;
 import bo.capital.tec.pet.modules.pago.entity.Pago;
+import bo.capital.tec.pet.modules.pago.event.PagoConfirmadoEvent;
+import bo.capital.tec.pet.modules.pago.event.PagoReembolsadoEvent;
 import bo.capital.tec.pet.modules.pago.mapper.PagoMapper;
 import bo.capital.tec.pet.modules.pago.service.PagoService;
+import bo.capital.tec.pet.modules.persona.api.PersonaApi;
+import bo.capital.tec.pet.modules.persona.entity.Persona;
+import bo.capital.tec.pet.modules.reserva.api.ReservaApi;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
-import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +28,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PagoServiceImpl implements PagoService {
 
     private final PagoMapper pagoMapper;
-    private final ReservaMapper reservaMapper;
+    private final ReservaApi reservaApi;
+    private final ClienteApi clienteApi;
+    private final PersonaApi personaApi;
+    private final DomainEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -115,7 +127,38 @@ public class PagoServiceImpl implements PagoService {
         }
         pagoMapper.updateEstadoPago(id, "CONFIRMADO");
         pago.setEstadoPago("CONFIRMADO");
-        return toResponseDTO(pago);
+        PagoResponseDTO response = toResponseDTO(pago);
+        publishPagoConfirmado(pago, response);
+        return response;
+    }
+
+    private void publishPagoConfirmado(Pago pago, PagoResponseDTO response) {
+        try {
+            Reserva reserva = reservaApi.selectById(pago.getReservaId());
+            if (reserva != null) {
+                String clienteNombre = "";
+                String clienteEmail = "";
+                if (reserva.getClienteId() != null) {
+                    Cliente cliente = clienteApi.selectById(reserva.getClienteId());
+                    if (cliente != null && cliente.getPersonaId() != null) {
+                        Persona persona = personaApi.selectById(cliente.getPersonaId());
+                        if (persona != null) {
+                            clienteNombre = (persona.getNombre() != null ? persona.getNombre() : "") + " "
+                                    + (persona.getPrimerApellido() != null ? persona.getPrimerApellido() : "");
+                            clienteNombre = clienteNombre.trim();
+                            clienteEmail = persona.getEmail() != null ? persona.getEmail() : "";
+                        }
+                    }
+                }
+                eventPublisher.publish(new PagoConfirmadoEvent(
+                        pago.getId(), pago.getReservaId(), reserva.getCodigo(),
+                        pago.getMonto(), pago.getMetodoPago(), pago.getReferenciaTransaccion(),
+                        reserva.getClienteId(), clienteNombre, clienteEmail
+                ));
+            }
+        } catch (Exception e) {
+            log.warn("Error publishing PagoConfirmadoEvent: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -127,13 +170,43 @@ public class PagoServiceImpl implements PagoService {
         }
         pagoMapper.updateEstadoPago(id, "REEMBOLSADO");
         pago.setEstadoPago("REEMBOLSADO");
-        return toResponseDTO(pago);
+        PagoResponseDTO response = toResponseDTO(pago);
+        publishPagoReembolsado(pago, response, motivo);
+        return response;
+    }
+
+    private void publishPagoReembolsado(Pago pago, PagoResponseDTO response, String motivo) {
+        try {
+            Reserva reserva = reservaApi.selectById(pago.getReservaId());
+            if (reserva != null) {
+                String clienteNombre = "";
+                String clienteEmail = "";
+                if (reserva.getClienteId() != null) {
+                    Cliente cliente = clienteApi.selectById(reserva.getClienteId());
+                    if (cliente != null && cliente.getPersonaId() != null) {
+                        Persona persona = personaApi.selectById(cliente.getPersonaId());
+                        if (persona != null) {
+                            clienteNombre = (persona.getNombre() != null ? persona.getNombre() : "") + " "
+                                    + (persona.getPrimerApellido() != null ? persona.getPrimerApellido() : "");
+                            clienteNombre = clienteNombre.trim();
+                            clienteEmail = persona.getEmail() != null ? persona.getEmail() : "";
+                        }
+                    }
+                }
+                eventPublisher.publish(new PagoReembolsadoEvent(
+                        pago.getId(), pago.getReservaId(), reserva.getCodigo(),
+                        pago.getMonto(), reserva.getClienteId(), clienteNombre, clienteEmail, motivo
+                ));
+            }
+        } catch (Exception e) {
+            log.warn("Error publishing PagoReembolsadoEvent: {}", e.getMessage());
+        }
     }
 
     private PagoResponseDTO toResponseDTO(Pago pago) {
         String reservaCodigo = "";
         if (pago.getReservaId() != null) {
-            Reserva reserva = reservaMapper.selectById(pago.getReservaId());
+            Reserva reserva = reservaApi.selectById(pago.getReservaId());
             if (reserva != null) {
                 reservaCodigo = reserva.getCodigo();
             }
@@ -155,7 +228,7 @@ public class PagoServiceImpl implements PagoService {
     private PagoSummaryDTO toSummaryDTO(Pago pago) {
         String reservaCodigo = "";
         if (pago.getReservaId() != null) {
-            Reserva reserva = reservaMapper.selectById(pago.getReservaId());
+            Reserva reserva = reservaApi.selectById(pago.getReservaId());
             if (reserva != null) {
                 reservaCodigo = reserva.getCodigo();
             }

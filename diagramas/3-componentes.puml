@@ -1,119 +1,131 @@
 @startuml
-skinparam componentStyle uml2
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
 skinparam rectangle {
-  BackgroundColor #F9F9F9
+  BackgroundColor #F8F9FA
   BorderColor #444444
 }
 skinparam component {
   BackgroundColor #FFFFFF
   BorderColor #2F4F4F
 }
+skinparam database {
+  BackgroundColor #EAF4FF
+  BorderColor #2B6CB0
+}
 skinparam cloud {
   BackgroundColor #FFF7E6
   BorderColor #CFA13B
 }
+skinparam queue {
+  BackgroundColor #FDECEC
+  BorderColor #C53030
+}
 
-Title Diagrama de componentes de PetCare
+title Arquitectura de componentes actual - PetCare
 
 actor Cliente as Cliente
 actor Administrador as Administrador
 actor Proveedor as Proveedor
 
-rectangle "Frontend Angular" as Frontend {
-  component "SPA Angular" as AngularSPA
-  note right of AngularSPA
-    - Presentación de la aplicación
-    - Servicios HTTP a /api/v1
-    - Maneja login, registro, reservas,
-      pagos, upload de fotos y mapas
-  end note
+package "Frontend" {
+  component "Angular SPA" as AngularSPA
+  component "Guards / Interceptors / Servicios UI" as FrontendServices
 }
 
-rectangle "Backend Spring Boot Monolito" as Backend {
-  component "API REST Gateway" as ApiGateway
-  component "Módulo auth" as AuthModule
-  component "Módulo persona" as PersonaModule
-  component "Módulo cliente" as ClienteModule
-  component "Módulo usuario" as UsuarioModule
-  component "Módulo mascota" as MascotaModule
-  component "Módulo dirección" as DireccionModule
-  component "Módulo proveedor" as ProveedorModule
-  component "Módulo reserva" as ReservaModule
-  component "Módulo pago" as PagoModule
-  component "Módulo promoción" as PromocionModule
-  component "Módulo notificación" as NotificacionModule
-  component "Módulo menu/rol" as MenuRolModule
-  component "Módulo sucursal" as SucursalModule
-  component "Módulo bitácora" as BitacoraModule
-  component "Módulo vacuna" as VacunaModule
-  component "Infraestructura y soporte" as InfraModule
-  note right of Backend
-    - Backend monolítico con división funcional por paquetes.
-    - Cada módulo contiene controlador, servicio y mapper.
-    - MyBatis maneja la persistencia con mappers XML.
-    - Seguridad basada en JWT y Spring Security.
-  end note
+package "Backend - Spring Boot (Monolito)" {
+  component "Controllers REST" as Controllers
+
+  package "Módulos de negocio" {
+    component "Auth" as AuthModule
+    component "Persona / Cliente / Usuario" as IdentityModule
+    component "Mascota" as MascotaModule
+    component "Proveedor / Servicio" as ProveedorModule
+    component "Reserva" as ReservaModule
+    component "Pago" as PagoModule
+    component "Promoción" as PromocionModule
+    component "Notificación" as NotificacionModule
+    component "Menu / Rol / Permiso" as MenuRolModule
+    component "Sucursal / Bitácora / Vacuna" as OpsModule
+  }
+
+  package "Infraestructura compartida" {
+    component "Security / JWT" as Security
+    component "MyBatis + Mappers" as MyBatis
+    component "Domain Events" as DomainEvents
+    component "Publisher in-process / Kafka" as EventPublisher
+    component "Outbox + Scheduler" as Outbox
+    component "Consumers Kafka" as EventConsumers
+    component "Handlers de eventos" as EventHandlers
+    component "Observabilidad / Métricas" as Observability
+  }
 }
 
 database "PostgreSQL" as Database
-storage "Uploads locales" as FileStorage
+queue "Kafka Topics" as Kafka
+storage "Almacenamiento local de archivos" as FileStorage
 cloud "SMTP Gmail" as EmailService
 cloud "Google Maps API" as MapsAPI
+component "Prometheus / Grafana" as Monitoring
 
-Cliente --> AngularSPA : Usa UI web
-Administrador --> AngularSPA : Administra sistema
-Proveedor --> AngularSPA : Gestiona su oferta
-AngularSPA --> ApiGateway : Consume API REST (/api/v1/*)
-ApiGateway --> AuthModule : /auth/login, /auth/register, /auth/refresh, /auth/forgot-password, /auth/reset-password
-ApiGateway --> PersonaModule : /personas
-ApiGateway --> ClienteModule : /clientes
-ApiGateway --> UsuarioModule : /usuarios
-ApiGateway --> MascotaModule : /mascotas, /especies, /razas
-ApiGateway --> DireccionModule : /direcciones, /ciudades
-ApiGateway --> ProveedorModule : /proveedores, /disponibilidades
-ApiGateway --> ReservaModule : /reservas
-ApiGateway --> PagoModule : /pagos
-ApiGateway --> PromocionModule : /promociones
-ApiGateway --> NotificacionModule : /notificaciones
-ApiGateway --> MenuRolModule : /menus, /permisos, /roles
-ApiGateway --> SucursalModule : /sucursales
-ApiGateway --> BitacoraModule : /bitacoras
-ApiGateway --> VacunaModule : /vacunas, /registros-vacunacion
-ApiGateway --> InfraModule : Uploads, emails, seguridad, config
+Cliente --> AngularSPA : usa la aplicación
+Administrador --> AngularSPA : administra operaciones
+Proveedor --> AngularSPA : gestiona servicios
+AngularSPA --> FrontendServices
+FrontendServices --> Controllers : HTTP /api/v1
 
-AuthModule --> Database : Usuarios / credenciales / tokens
-PersonaModule --> Database : Personas
-ClienteModule --> Database : Clientes
-UsuarioModule --> Database : Usuarios y roles
-MascotaModule --> Database : Mascotas / especies / razas
-DireccionModule --> Database : Direcciones / ciudades / estados
-ProveedorModule --> Database : Proveedores / disponibilidades / especialidades
-ReservaModule --> Database : Reservas / estados de reserva
-PagoModule --> Database : Pagos
-PromocionModule --> Database : Promociones / promociones locales
-NotificacionModule --> Database : Notificaciones
-MenuRolModule --> Database : Menús / permisos / roles
-SucursalModule --> Database : Sucursales
-BitacoraModule --> Database : Bitácora de eventos
-VacunaModule --> Database : Vacunas / registros de vacunación
+Controllers --> AuthModule
+Controllers --> IdentityModule
+Controllers --> MascotaModule
+Controllers --> ProveedorModule
+Controllers --> ReservaModule
+Controllers --> PagoModule
+Controllers --> PromocionModule
+Controllers --> NotificacionModule
+Controllers --> MenuRolModule
+Controllers --> OpsModule
+Controllers --> Security
 
-InfraModule --> FileStorage : Guarda fotos y archivos de mascotas
-InfraModule --> EmailService : Envía correos de registro y recuperación
-AngularSPA --> MapsAPI : Solicita mapas y geocoding
+AuthModule --> Security
+AuthModule --> Database : usuarios, roles, credenciales
+IdentityModule --> Database : personas, clientes, usuarios
+MascotaModule --> Database : mascotas, especies, razas
+ProveedorModule --> Database : proveedores, disponibilidades, servicios
+ReservaModule --> Database : reservas, estados, asignaciones
+PagoModule --> Database : pagos
+PromocionModule --> Database : promociones
+NotificacionModule --> Database : notificaciones
+MenuRolModule --> Database : menús, permisos, roles
+OpsModule --> Database : sucursales, bitácoras, vacunas
 
-note left of ApiGateway
-  - Enrutamiento por Spring MVC
-  - Uso de @RestController en cada módulo
-  - Filtros y seguridad globales
+ReservaModule --> DomainEvents : publica eventos de reserva
+PagoModule --> DomainEvents : publica eventos de pago
+MascotaModule --> DomainEvents : publica eventos de mascota
+AuthModule --> DomainEvents : publica eventos de usuario
+
+DomainEvents --> EventPublisher
+EventPublisher --> Outbox : registra evento
+Outbox --> Kafka : petcare.reserva.event.v1, petcare.pago.event.v1, petcare.usuario.event.v1
+Kafka --> EventConsumers
+EventConsumers --> EventHandlers
+EventHandlers --> EmailService : correos transaccionales
+EventHandlers --> Database : actualiza reacciones / notificaciones
+EventHandlers --> FileStorage : archivos adjuntos
+
+MyBatis --> Database : persistencia SQL
+Observability --> Monitoring : logs, métricas, trazas
+Security --> Database : validación de JWT / sesiones
+AngularSPA --> MapsAPI : mapas y geolocalización
+AngularSPA --> FileStorage : carga de fotos / archivos
+
+note bottom of Controllers
+  API REST expuesta por Spring MVC
+  y organizada por módulos de negocio.
 end note
 
-note left of InfraModule
-  - UploadController
-  - EmailServiceImpl
-  - GlobalExceptionHandler
-  - SecurityConfig
-  - MyBatisConfig
-  - OpenApiConfig
+note bottom of Outbox
+  Patrón outbox para garantizar
+  entrega confiable de eventos a Kafka.
 end note
 
 @enduml
