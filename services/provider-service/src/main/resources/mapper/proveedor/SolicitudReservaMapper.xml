@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.proveedor.mapper.SolicitudReservaMapper">
+
+    <sql id="baseColumns">
+        s.id, s.reserva_id AS reservaId, s.codigo, s.cliente_id AS clienteId, s.cliente_nombre AS clienteNombre,
+        s.proveedor_id AS proveedorId, s.proveedor_empresa AS proveedorEmpresa,
+        s.servicio_id AS servicioId, s.servicio_nombre AS servicioNombre,
+        s.mascota_id AS mascotaId, s.mascota_nombre AS mascotaNombre,
+        s.fecha_inicio AS fechaInicio, s.hora_inicio AS horaInicio,
+        s.precio_total AS precioTotal, s.estado, s.motivo_rechazo AS motivoRechazo,
+        s.creada_en AS creadaEn, s.respondida_en AS respondidaEn
+    </sql>
+    <sql id="table">solicitud_reserva s</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva">
+        INSERT INTO solicitud_reserva (reserva_id, codigo, cliente_id, cliente_nombre, proveedor_id,
+            proveedor_empresa, servicio_id, servicio_nombre, mascota_id, mascota_nombre,
+            fecha_inicio, hora_inicio, precio_total, estado, motivo_rechazo)
+        VALUES (#{reservaId}, #{codigo}, #{clienteId}, #{clienteNombre}, #{proveedorId},
+            #{proveedorEmpresa}, #{servicioId}, #{servicioNombre}, #{mascotaId}, #{mascotaNombre},
+            #{fechaInicio}, #{horaInicio}, #{precioTotal}, #{estado}, #{motivoRechazo})
+    </insert>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE s.id = #{id}
+    </select>
+
+    <select id="selectByReservaId" resultType="bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE s.reserva_id = #{reservaId}
+    </select>
+
+    <select id="existsByReservaYProveedor" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+        FROM solicitud_reserva s
+        WHERE s.reserva_id = #{reservaId} AND s.proveedor_id = #{proveedorId}
+    </select>
+
+    <select id="selectByProveedor" resultType="bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE s.proveedor_id = #{proveedorId}
+        <if test="estado != null and estado != ''">
+            AND s.estado = #{estado}
+        </if>
+        ORDER BY s.creada_en DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByProveedor" resultType="long">
+        SELECT COUNT(*) FROM solicitud_reserva s
+        WHERE s.proveedor_id = #{proveedorId}
+        <if test="estado != null and estado != ''">
+            AND s.estado = #{estado}
+        </if>
+    </select>
+
+    <update id="updateEstado">
+        UPDATE solicitud_reserva
+        SET estado = #{estado},
+            motivo_rechazo = #{motivoRechazo},
+            respondida_en = NOW()
+        WHERE id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.ReservaCatalogMapper">
+
+    <select id="selectCliente" resultType="bo.capital.tec.pet.modules.reserva.dto.ClienteInfoDTO">
+        SELECT c.id,
+               p.nombre,
+               p.telefono,
+               p.email
+        FROM cliente c
+        JOIN persona p ON p.id = c.persona_id
+        WHERE c.id = #{clienteId} AND c.deleted = FALSE AND p.deleted = FALSE
+    </select>
+
+    <select id="selectProveedor" resultType="bo.capital.tec.pet.modules.reserva.dto.ProveedorInfoDTO">
+        SELECT pr.id,
+               CONCAT_WS(' ', p.nombre, p.primer_apellido) AS nombre,
+               p.telefono,
+               pr.empresa
+        FROM proveedor pr
+        JOIN persona p ON p.id = pr.persona_id
+        WHERE pr.id = #{proveedorId} AND pr.deleted = FALSE AND p.deleted = FALSE
+    </select>
+
+    <select id="selectServicio" resultType="bo.capital.tec.pet.modules.reserva.dto.ServicioInfoDTO">
+        SELECT id, nombre, duracion_minutos AS duracionMinutos, precio_base AS precioBase
+        FROM servicio
+        WHERE id = #{servicioId} AND deleted = FALSE
+    </select>
+
+    <select id="selectMascota" resultType="bo.capital.tec.pet.modules.reserva.dto.MascotaInfoDTO">
+        SELECT m.id,
+               m.nombre,
+               m.cliente_id AS clienteId,
+               e.nombre     AS especie
+        FROM mascota m
+        LEFT JOIN especie e ON e.id = m.especie_id AND e.deleted = FALSE
+        WHERE m.id = #{mascotaId} AND m.deleted = FALSE
+    </select>
+</mapper>

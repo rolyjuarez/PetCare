@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.common.kafka.IdempotencyMapper">
+
+    <insert id="insertEventoProcesado" parameterType="bo.capital.tec.pet.common.kafka.EventoProcesado">
+        INSERT INTO evento_procesado (event_id, event_type, service, aggregate_id, payload, procesado_en)
+        VALUES (#{eventId}, #{eventType}, #{service}, #{aggregateId}, #{payload}, #{procesadoEn})
+    </insert>
+
+    <select id="existsEventoProcesado" resultType="java.lang.Long">
+        SELECT 1 FROM evento_procesado WHERE event_id = #{eventId}
+    </select>
+
+</mapper>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper">
+
+    <resultMap id="reservaResultMap" type="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+        <id property="id" column="id"/>
+        <result property="codigo" column="codigo"/>
+        <result property="clienteId" column="cliente_id"/>
+        <result property="proveedorId" column="proveedor_id"/>
+        <result property="servicioId" column="servicio_id"/>
+        <result property="mascotaId" column="mascota_id"/>
+        <result property="estadoReservaId" column="estado_reserva_id"/>
+        <result property="fechaReserva" column="fecha_reserva"/>
+        <result property="fechaInicio" column="fecha_inicio"/>
+        <result property="fechaFin" column="fecha_fin"/>
+        <result property="horaInicio" column="hora_inicio"/>
+        <result property="horaFin" column="hora_fin"/>
+        <result property="latitud" column="latitud"/>
+        <result property="longitud" column="longitud"/>
+        <result property="direccionReferencia" column="direccion_referencia"/>
+        <result property="notas" column="notas"/>
+        <result property="precioTotal" column="precio_total"/>
+        <result property="motivoRechazo" column="motivo_rechazo"/>
+        <result property="respuestaEn" column="respuesta_en"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <sql id="baseColumns">
+        r.id, r.codigo, r.cliente_id, r.proveedor_id, r.servicio_id, r.mascota_id,
+        r.estado_reserva_id, r.fecha_reserva, r.fecha_inicio, r.fecha_fin,
+        r.hora_inicio, r.hora_fin, r.latitud, r.longitud,
+        r.direccion_referencia, r.notas, r.precio_total,
+        r.motivo_rechazo, r.respuesta_en,
+        r.created_at, r.updated_at, r.deleted, r.version
+    </sql>
+    <sql id="table">reserva r</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+        INSERT INTO reserva (codigo, cliente_id, proveedor_id, servicio_id, mascota_id,
+            estado_reserva_id, fecha_reserva, fecha_inicio, fecha_fin, hora_inicio, hora_fin,
+            latitud, longitud, direccion_referencia, notas, precio_total)
+        VALUES (#{codigo}, #{clienteId}, #{proveedorId}, #{servicioId}, #{mascotaId},
+            #{estadoReservaId}, #{fechaReserva}, #{fechaInicio}, #{fechaFin}, #{horaInicio}, #{horaFin},
+            #{latitud}, #{longitud}, #{direccionReferencia}, #{notas}, #{precioTotal})
+    </insert>
+
+    <select id="selectById" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE r.id = #{id} AND r.deleted = FALSE
+    </select>
+
+    <select id="selectByCodigo" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE r.codigo = #{codigo} AND r.deleted = FALSE
+    </select>
+
+    <select id="selectAll" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE r.deleted = FALSE
+        ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM reserva r WHERE r.deleted = FALSE
+    </select>
+
+    <select id="selectByClienteId" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE r.cliente_id = #{clienteId} AND r.deleted = FALSE
+        ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByClienteId" resultType="long">
+        SELECT COUNT(*) FROM reserva r
+        WHERE r.cliente_id = #{clienteId} AND r.deleted = FALSE
+    </select>
+
+    <select id="selectByProveedorId" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE r.proveedor_id = #{proveedorId} AND r.deleted = FALSE
+        ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByProveedorId" resultType="long">
+        SELECT COUNT(*) FROM reserva r
+        WHERE r.proveedor_id = #{proveedorId} AND r.deleted = FALSE
+    </select>
+
+    <select id="selectByEstado" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
+        ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByEstado" resultType="long">
+        SELECT COUNT(*) FROM reserva r
+        WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+        UPDATE reserva
+        SET codigo = #{codigo}, cliente_id = #{clienteId}, proveedor_id = #{proveedorId},
+            servicio_id = #{servicioId}, mascota_id = #{mascotaId}, estado_reserva_id = #{estadoReservaId},
+            fecha_reserva = #{fechaReserva}, fecha_inicio = #{fechaInicio}, fecha_fin = #{fechaFin},
+            hora_inicio = #{horaInicio}, hora_fin = #{horaFin},
+            latitud = #{latitud}, longitud = #{longitud},
+            direccion_referencia = #{direccionReferencia}, notas = #{notas}, precio_total = #{precioTotal},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="updateEstado">
+        UPDATE reserva
+        SET estado_reserva_id = #{estadoReservaId}, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="updateProveedor">
+        UPDATE reserva
+        SET proveedor_id = #{proveedorId}, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="updateRespuesta">
+        UPDATE reserva
+        SET proveedor_id = #{proveedorId},
+            estado_reserva_id = #{estadoReservaId},
+            motivo_rechazo = #{motivoRechazo},
+            respuesta_en = NOW(),
+            updated_at = NOW(),
+            version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE reserva SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
+    </update>
+
+    <update id="softDeleteByMascotaId">
+        UPDATE reserva SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE mascota_id = #{mascotaId} AND deleted = FALSE
+    </update>
+</mapper>

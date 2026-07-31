@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.proveedor.mapper.ProveedorCatalogMapper">
+
+    <select id="selectProveedorByUsuarioId" resultType="bo.capital.tec.pet.modules.proveedor.dto.ProveedorInfoDTO">
+        SELECT pr.id,
+               pr.persona_id AS personaId,
+               pr.empresa,
+               CONCAT_WS(' ', p.nombre, p.primer_apellido) AS nombre,
+               p.telefono
+        FROM proveedor pr
+        JOIN persona p ON p.id = pr.persona_id
+        WHERE pr.usuario_id = #{usuarioId}
+          AND pr.deleted = FALSE
+          AND p.deleted = FALSE
+    </select>
+
+    <select id="selectProveedoresByServicioId" resultType="java.lang.Long">
+        SELECT pe.proveedor_id
+        FROM proveedor_especialidad pe
+        JOIN proveedor pr ON pr.id = pe.proveedor_id AND pr.deleted = FALSE
+        WHERE pe.servicio_id = #{servicioId}
+          AND pe.deleted = FALSE
+    </select>
+</mapper>

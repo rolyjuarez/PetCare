@@ -1,0 +1,17 @@
+package bo.capital.tec.pet.modules.proveedor.service;
+
+import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.modules.proveedor.dto.ResponderSolicitudRequestDTO;
+import bo.capital.tec.pet.modules.proveedor.dto.SolicitudReservaResponseDTO;
+import bo.capital.tec.pet.modules.proveedor.event.ReservaCreadaEvent;
+
+public interface ProveedorService {
+
+    PagedResponse<SolicitudReservaResponseDTO> listarSolicitudes(Long proveedorId, String estado, int page, int size);
+
+    SolicitudReservaResponseDTO aceptar(Long proveedorId, Long solicitudId);
+
+    SolicitudReservaResponseDTO rechazar(Long proveedorId, Long solicitudId, ResponderSolicitudRequestDTO request);
+
+    void procesarReservaCreada(ReservaCreadaEvent event);
+}

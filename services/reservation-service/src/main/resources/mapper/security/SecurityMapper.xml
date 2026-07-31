@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.common.security.SecurityMapper">
+
+    <select id="selectUsuarioByUsername" resultType="bo.capital.tec.pet.common.security.UsuarioAuth">
+        SELECT u.id,
+               u.username,
+               u.password,
+               u.persona_id     AS personaId,
+               u.activo,
+               u.bloqueado,
+               p.nombre         AS personaNombre,
+               p.primer_apellido AS personaPrimerApellido,
+               p.email
+        FROM usuario u
+        LEFT JOIN persona p ON p.id = u.persona_id
+        WHERE u.username = #{username}
+          AND u.deleted = FALSE
+    </select>
+
+    <select id="selectRolesByUsuarioId" resultType="java.lang.String">
+        SELECT r.nombre
+        FROM rol r
+        INNER JOIN usuario_rol ur ON ur.rol_id = r.id
+        WHERE ur.usuario_id = #{usuarioId}
+          AND ur.deleted = FALSE
+          AND r.deleted = FALSE
+          AND r.activo = TRUE
+    </select>
+
+</mapper>
