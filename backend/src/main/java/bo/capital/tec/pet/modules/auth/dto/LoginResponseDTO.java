@@ -1,7 +1,6 @@
 package bo.capital.tec.pet.modules.auth.dto;
 
 import lombok.*;
-import java.util.List;
 
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class LoginResponseDTO {

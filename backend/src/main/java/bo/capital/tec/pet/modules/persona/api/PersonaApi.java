@@ -1,6 +1,6 @@
 package bo.capital.tec.pet.modules.persona.api;
 
-import bo.capital.tec.pet.modules.persona.entity.Persona;
+import bo.capital.tec.pet.modules.persona.domain.model.Persona;
 
 public interface PersonaApi {
     Persona selectById(Long id);

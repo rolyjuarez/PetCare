@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.pago.mapper.PagoMapper">
+<mapper namespace="bo.capital.tec.pet.modules.pago.infrastructure.persistence.PagoMapper">
     <sql id="baseColumns">
         pg.id, pg.reserva_id, pg.monto, pg.metodo_pago, pg.estado_pago,
         pg.referencia_transaccion, pg.fecha_pago, pg.comprobante_url,
@@ -8,7 +8,7 @@
     </sql>
     <sql id="table">pago pg</sql>
 
-    <resultMap id="pagoCompletoResultMap" type="bo.capital.tec.pet.modules.pago.entity.Pago">
+    <resultMap id="pagoCompletoResultMap" type="bo.capital.tec.pet.modules.pago.domain.model.Pago">
         <id property="id" column="id"/>
         <result property="reservaId" column="reserva_id"/>
         <result property="monto" column="monto"/>
@@ -23,7 +23,7 @@
         <result property="version" column="version"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.pago.entity.Pago">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.pago.domain.model.Pago">
         INSERT INTO pago (reserva_id, monto, metodo_pago, estado_pago, referencia_transaccion, fecha_pago, comprobante_url)
         VALUES (#{reservaId}, #{monto}, #{metodoPago}, #{estadoPago}, #{referenciaTransaccion}, #{fechaPago}, #{comprobanteUrl})
     </insert>
@@ -68,7 +68,7 @@
         ORDER BY pg.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.pago.entity.Pago">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.pago.domain.model.Pago">
         UPDATE pago
         SET reserva_id = #{reservaId}, monto = #{monto}, metodo_pago = #{metodoPago},
             estado_pago = #{estadoPago}, referencia_transaccion = #{referenciaTransaccion},

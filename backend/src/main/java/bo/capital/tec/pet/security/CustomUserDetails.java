@@ -1,6 +1,6 @@
 package bo.capital.tec.pet.security;
 
-import bo.capital.tec.pet.modules.usuario.entity.Usuario;
+import bo.capital.tec.pet.modules.usuario.domain.model.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +8,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Data
 @NoArgsConstructor

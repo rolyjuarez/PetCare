@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper">
+<mapper namespace="bo.capital.tec.pet.modules.reserva.infrastructure.persistence.ReservaMapper">
     <sql id="baseColumns">
         r.id, r.codigo, r.cliente_id, r.proveedor_id, r.servicio_id, r.mascota_id,
         r.estado_reserva_id, r.fecha_reserva, r.fecha_inicio, r.fecha_fin,
@@ -10,7 +10,7 @@
     </sql>
     <sql id="table">reserva r</sql>
 
-    <resultMap id="reservaCompletoResultMap" type="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+    <resultMap id="reservaCompletoResultMap" type="bo.capital.tec.pet.modules.reserva.domain.model.Reserva">
         <id property="id" column="id"/>
         <result property="codigo" column="codigo"/>
         <result property="clienteId" column="cliente_id"/>
@@ -34,7 +34,7 @@
         <result property="version" column="version"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.reserva.domain.model.Reserva">
         INSERT INTO reserva (codigo, cliente_id, proveedor_id, servicio_id, mascota_id,
             estado_reserva_id, fecha_reserva, fecha_inicio, fecha_fin, hora_inicio, hora_fin,
             latitud, longitud, direccion_referencia, notas, precio_total)
@@ -146,7 +146,7 @@
         WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.reserva.domain.model.Reserva">
         UPDATE reserva
         SET codigo = #{codigo}, cliente_id = #{clienteId}, proveedor_id = #{proveedorId},
             servicio_id = #{servicioId}, mascota_id = #{mascotaId}, estado_reserva_id = #{estadoReservaId},

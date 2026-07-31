@@ -1,0 +1,15 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+LAYOUT_WITH_LEGEND()
+
+Container(spa, "SPA Angular", "Angular 21", "Aplicación web principal")
+
+Component(ui, "Interfaz de usuario", "Angular UI", "Vistas de login, dashboard, mascotas, reservas y pagos")
+Component(router, "Navegación", "Angular Router", "Controla las rutas de la aplicación")
+Component(auth_ui, "Autenticación", "Guards / Interceptors", "Gestiona login, tokens y acceso a rutas")
+Component(api_client, "Cliente HTTP", "HttpClient", "Consume endpoints del backend")
+
+Rel(ui, router, "Usa navegación")
+Rel(ui, auth_ui, "Solicita acceso autenticado")
+Rel(ui, api_client, "Invoca servicios REST")
+@enduml

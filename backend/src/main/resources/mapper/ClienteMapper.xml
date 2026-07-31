@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.cliente.mapper.ClienteMapper">
+<mapper namespace="bo.capital.tec.pet.modules.cliente.infrastructure.persistence.ClienteMapper">
     <sql id="baseColumns">
         c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
     </sql>
     <sql id="table">cliente c</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.cliente.entity.Cliente">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.cliente.domain.model.Cliente">
         INSERT INTO cliente (persona_id, usuario_id, notas)
         VALUES (#{personaId}, #{usuarioId}, #{notas})
     </insert>
 
-    <resultMap id="clienteResultMap" type="bo.capital.tec.pet.modules.cliente.entity.Cliente">
+    <resultMap id="clienteResultMap" type="bo.capital.tec.pet.modules.cliente.domain.model.Cliente">
         <id property="id" column="id"/>
         <result property="personaId" column="persona_id"/>
         <result property="usuarioId" column="usuario_id"/>
@@ -74,7 +74,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.cliente.entity.Cliente">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.cliente.domain.model.Cliente">
         UPDATE cliente
         SET persona_id = #{personaId}, usuario_id = #{usuarioId}, notas = #{notas},
             updated_at = NOW(), version = version + 1

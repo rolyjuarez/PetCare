@@ -1,0 +1,16 @@
+package bo.capital.tec.pet.modules.menu.domain.port;
+
+import bo.capital.tec.pet.modules.menu.domain.model.Menu;
+import org.apache.ibatis.annotations.Param;
+import java.util.List;
+
+public interface MenuRepository {
+Long insert(Menu menu);
+    Menu selectById(@Param("id") Long id);
+    List<Menu> selectAll(@Param("offset") int offset, @Param("limit") int limit);
+    long countAll();
+    void update(Menu menu);
+    void softDelete(@Param("id") Long id);
+    List<Menu> findByRolId(@Param("rolId") Long rolId);
+    List<Menu> findByUsername(@Param("username") String username);
+}

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.persona.mapper.PersonaMapper">
+<mapper namespace="bo.capital.tec.pet.modules.persona.infrastructure.persistence.PersonaMapper">
     <sql id="baseColumns">
         id, nombre, primer_apellido, segundo_apellido, ci, telefono, email,
         fecha_nacimiento, genero, direccion_id, created_at, updated_at, deleted, version
     </sql>
     <sql id="table">persona</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.persona.entity.Persona">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.persona.domain.model.Persona">
         INSERT INTO <include refid="table"/> (nombre, primer_apellido, segundo_apellido, ci, telefono, email, fecha_nacimiento, genero, direccion_id)
         VALUES (#{nombre}, #{primerApellido}, #{segundoApellido}, #{ci}, #{telefono}, #{email}, #{fechaNacimiento}, #{genero}, #{direccionId})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.modules.persona.entity.Persona">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.persona.domain.model.Persona">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.modules.persona.entity.Persona">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.persona.domain.model.Persona">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         <where>
             deleted = FALSE
@@ -38,7 +38,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.persona.entity.Persona">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.persona.domain.model.Persona">
         UPDATE <include refid="table"/>
         SET nombre = #{nombre}, primer_apellido = #{primerApellido}, segundo_apellido = #{segundoApellido},
             ci = #{ci}, telefono = #{telefono}, email = #{email}, fecha_nacimiento = #{fechaNacimiento},
@@ -50,11 +50,11 @@
         UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 
-    <select id="selectByCi" resultType="bo.capital.tec.pet.modules.persona.entity.Persona">
+    <select id="selectByCi" resultType="bo.capital.tec.pet.modules.persona.domain.model.Persona">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/> WHERE ci = #{ci} AND deleted = FALSE
     </select>
 
-    <select id="selectByEmail" resultType="bo.capital.tec.pet.modules.persona.entity.Persona">
+    <select id="selectByEmail" resultType="bo.capital.tec.pet.modules.persona.domain.model.Persona">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/> WHERE email = #{email} AND deleted = FALSE
     </select>
 </mapper>

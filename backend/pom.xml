@@ -19,6 +19,8 @@
         <mybatis.version>3.0.3</mybatis.version>
         <jjwt.version>0.12.6</jjwt.version>
         <springdoc.version>2.8.6</springdoc.version>
+        <mockito.version>5.16.1</mockito.version>
+        <byte-buddy.version>1.17.2</byte-buddy.version>
     </properties>
     <dependencies>
         <!-- Spring Boot Starters -->

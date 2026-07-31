@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.servicio.mapper.ServicioMapper">
+<mapper namespace="bo.capital.tec.pet.modules.servicio.infrastructure.persistence.ServicioMapper">
     <sql id="baseColumns">
         id, nombre, descripcion, duracion_minutos, precio_base, imagen_url, activo, categoria,
         created_at, updated_at, deleted, version
     </sql>
     <sql id="table">servicio</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.servicio.entity.Servicio">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.servicio.domain.model.Servicio">
         INSERT INTO <include refid="table"/> (nombre, descripcion, duracion_minutos, precio_base, imagen_url, activo, categoria)
         VALUES (#{nombre}, #{descripcion}, #{duracionMinutos}, #{precioBase}, #{imagenUrl}, #{activo}, #{categoria})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.modules.servicio.entity.Servicio">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.servicio.domain.model.Servicio">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.modules.servicio.entity.Servicio">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.servicio.domain.model.Servicio">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         <where>
             deleted = FALSE
@@ -34,7 +34,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.servicio.entity.Servicio">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.servicio.domain.model.Servicio">
         UPDATE <include refid="table"/>
         SET nombre = #{nombre}, descripcion = #{descripcion}, duracion_minutos = #{duracionMinutos},
             precio_base = #{precioBase}, imagen_url = #{imagenUrl}, activo = #{activo}, categoria = #{categoria},
@@ -46,7 +46,7 @@
         UPDATE <include refid="table"/> SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
 
-    <select id="selectActive" resultType="bo.capital.tec.pet.modules.servicio.entity.Servicio">
+    <select id="selectActive" resultType="bo.capital.tec.pet.modules.servicio.domain.model.Servicio">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE activo = TRUE AND deleted = FALSE
         ORDER BY nombre ASC

@@ -1,7 +1,7 @@
 package bo.capital.tec.pet.security;
 
 import bo.capital.tec.pet.modules.usuario.api.UsuarioApi;
-import bo.capital.tec.pet.modules.usuario.entity.Usuario;
+import bo.capital.tec.pet.modules.usuario.domain.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

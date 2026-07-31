@@ -1,0 +1,29 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+Person(cliente, "Cliente", "Usuario que usa la plataforma")
+Person(administrador, "Administrador", "Gestiona operaciones y configuración")
+Person(proveedor, "Proveedor", "Gestiona servicios y reservas")
+
+System_Boundary(frontend_boundary, "Frontend Angular") {
+  Container(spa, "SPA Angular", "Angular 21 + Tailwind", "Aplicación web principal para usuarios, administradores y proveedores")
+  Container(router, "Router / Navegación", "Angular Router", "Controla la navegación entre vistas")
+  Container(auth, "Autenticación de usuarios", "Guards / Interceptors", "Gestiona login, tokens y rutas protegidas")
+  Container(api_client, "Cliente HTTP", "HttpClient", "Consume la API REST del backend")
+}
+
+Container(api, "API REST", "Spring Boot 3.4.1", "Backend con endpoints para autenticación, reservas, pagos, mascotas y notificaciones")
+System_Ext(maps, "Google Maps API", "Geolocalización y mapas")
+System_Ext(storage, "Almacenamiento local", "Fotos y archivos subidos por usuarios")
+
+Rel(cliente, spa, "Usa la aplicación web")
+Rel(administrador, spa, "Administra módulos")
+Rel(proveedor, spa, "Gestiona servicios y reservas")
+Rel(spa, router, "Navega entre vistas")
+Rel(spa, auth, "Gestiona sesión y acceso")
+Rel(spa, api_client, "Consume la API REST")
+Rel(api_client, api, "Envía peticiones HTTP /api/v1")
+Rel(api_client, maps, "Solicita mapas y geolocalización")
+Rel(api_client, storage, "Sube recursos y archivos")
+@enduml

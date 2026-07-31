@@ -1,6 +1,6 @@
 package bo.capital.tec.pet.modules.direccion.api;
 
-import bo.capital.tec.pet.modules.direccion.entity.Direccion;
+import bo.capital.tec.pet.modules.direccion.domain.model.Direccion;
 
 public interface DireccionApi {
     Long insert(Direccion direccion);

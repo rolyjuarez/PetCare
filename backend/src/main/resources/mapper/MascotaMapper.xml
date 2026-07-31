@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.mascota.mapper.MascotaMapper">
+<mapper namespace="bo.capital.tec.pet.modules.mascota.infrastructure.persistence.MascotaMapper">
     <sql id="baseColumns">
         m.id, m.nombre, m.fecha_nacimiento, m.genero, m.peso, m.color,
         m.imagen_url, m.especie_id, m.raza_id, m.cliente_id,
@@ -8,12 +8,12 @@
     </sql>
     <sql id="table">mascota m</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.mascota.entity.Mascota">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.mascota.domain.model.Mascota">
         INSERT INTO mascota (nombre, fecha_nacimiento, genero, peso, color, imagen_url, especie_id, raza_id, cliente_id)
         VALUES (#{nombre}, #{fechaNacimiento}, #{genero}, #{peso}, #{color}, #{imagenUrl}, #{especieId}, #{razaId}, #{clienteId})
     </insert>
 
-    <resultMap id="mascotaCompletoResultMap" type="bo.capital.tec.pet.modules.mascota.entity.Mascota">
+    <resultMap id="mascotaCompletoResultMap" type="bo.capital.tec.pet.modules.mascota.domain.model.Mascota">
         <id property="id" column="id"/>
         <result property="nombre" column="nombre"/>
         <result property="fechaNacimiento" column="fecha_nacimiento"/>
@@ -103,7 +103,7 @@
         WHERE m.cliente_id = #{clienteId} AND m.deleted = FALSE
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.mascota.entity.Mascota">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.mascota.domain.model.Mascota">
         UPDATE mascota
         SET nombre = #{nombre}, fecha_nacimiento = #{fechaNacimiento}, genero = #{genero},
             peso = #{peso}, color = #{color}, imagen_url = #{imagenUrl},

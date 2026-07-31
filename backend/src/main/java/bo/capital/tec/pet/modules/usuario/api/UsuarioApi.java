@@ -1,12 +1,13 @@
 package bo.capital.tec.pet.modules.usuario.api;
 
-import bo.capital.tec.pet.modules.usuario.entity.Usuario;
-import bo.capital.tec.pet.modules.usuario.entity.UsuarioRol;
+import bo.capital.tec.pet.modules.usuario.domain.model.Usuario;
+import bo.capital.tec.pet.modules.usuario.domain.model.UsuarioRol;
 
 import java.util.List;
 
 public interface UsuarioApi {
     Usuario findByUsername(String username);
+    Usuario selectById(Long id);
     Usuario selectByPersonaId(Long personaId);
     Long insert(Usuario usuario);
     void update(Usuario usuario);

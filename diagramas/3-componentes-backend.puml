@@ -1,0 +1,78 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+LAYOUT_WITH_LEGEND()
+
+Container(api, "API REST", "Spring Boot 3.4.1", "Backend monolítico modular de PETCare")
+
+Container_Boundary(backend_boundary, "Backend PETCare") {
+  Component(api_layer, "API REST", "Spring MVC", "Controladores que exponen los endpoints del sistema")
+  Component(security_layer, "Seguridad", "Spring Security + JWT", "Autenticación, autorización, filtros JWT y CORS")
+  Component(app_layer, "Aplicación", "Spring Services", "Casos de uso de negocio por módulo")
+  Component(domain_layer, "Dominio", "Modelos e interfaces", "Reglas de negocio, puertos y contratos de repositorios")
+  Component(persistence_layer, "Persistencia", "MyBatis + Mappers", "Mapeos SQL/XML y acceso a PostgreSQL")
+  Component(shared_layer, "Infraestructura compartida", "Spring Components", "Email, uploads, excepciones, logging y health checks")
+}
+
+Boundary(auth_mod, "Módulo Auth") {
+  Component(auth_controller, "AuthController", "REST Controller", "Login, registro, refresh y recuperación de contraseña")
+  Component(auth_service, "AuthService", "Application Service", "Gestión de usuarios, roles y tokens JWT")
+}
+
+Boundary(cliente_mod, "Módulo Cliente") {
+  Component(cliente_controller, "ClienteController", "REST Controller", "Gestión de clientes")
+  Component(cliente_service, "ClienteService", "Application Service", "Registro y mantenimiento de clientes")
+}
+
+Boundary(mascota_mod, "Módulo Mascota") {
+  Component(mascota_controller, "MascotaController", "REST Controller", "Gestión de mascotas, razas y especies")
+  Component(mascota_service, "MascotaService", "Application Service", "Lógica de mascotas y vacunación")
+}
+
+Boundary(reserva_mod, "Módulo Reserva") {
+  Component(reserva_controller, "ReservaController", "REST Controller", "Creación y seguimiento de reservas")
+  Component(reserva_service, "ReservaService", "Application Service", "Planificación de servicios y estados de reserva")
+}
+
+Boundary(proveedor_mod, "Módulo Proveedor") {
+  Component(proveedor_controller, "ProveedorController", "REST Controller", "Gestión de proveedores y disponibilidades")
+  Component(proveedor_service, "ProveedorService", "Application Service", "Administración de proveedores y especialidades")
+}
+
+Boundary(admin_mod, "Módulo Administración") {
+  Component(menu_controller, "MenuController", "REST Controller", "Gestión de menús y permisos")
+  Component(promocion_controller, "PromocionController", "REST Controller", "Administración de promociones")
+  Component(bitacora_controller, "BitacoraController", "REST Controller", "Registro de auditoría y trazabilidad")
+}
+
+System_Ext(db, "PostgreSQL", "Base de datos relacional")
+System_Ext(email, "SMTP Gmail", "Envío de correos")
+System_Ext(storage, "Almacenamiento local", "Archivos y fotos subidos")
+
+Rel(api_layer, security_layer, "Valida JWT y permisos")
+Rel(api_layer, auth_controller, "Expone /auth")
+Rel(api_layer, cliente_controller, "Expone /clientes")
+Rel(api_layer, mascota_controller, "Expone /mascotas")
+Rel(api_layer, reserva_controller, "Expone /reservas")
+Rel(api_layer, proveedor_controller, "Expone /proveedores")
+Rel(api_layer, menu_controller, "Expone /menu")
+Rel(api_layer, promocion_controller, "Expone /promociones")
+Rel(api_layer, bitacora_controller, "Expone /bitacora")
+
+Rel(auth_controller, auth_service, "Invoca autenticación")
+Rel(cliente_controller, cliente_service, "Invoca gestión de clientes")
+Rel(mascota_controller, mascota_service, "Invoca gestión de mascotas")
+Rel(reserva_controller, reserva_service, "Invoca reservas")
+Rel(proveedor_controller, proveedor_service, "Invoca proveedores")
+
+Rel(auth_service, domain_layer, "Usa modelos y contratos")
+Rel(cliente_service, domain_layer, "Usa modelos y contratos")
+Rel(mascota_service, domain_layer, "Usa modelos y contratos")
+Rel(reserva_service, domain_layer, "Usa modelos y contratos")
+Rel(proveedor_service, domain_layer, "Usa modelos y contratos")
+
+Rel(app_layer, persistence_layer, "Consulta y almacena datos")
+Rel(app_layer, shared_layer, "Usa email, archivos y manejo de errores")
+Rel(shared_layer, email, "Envía correos")
+Rel(shared_layer, storage, "Guarda archivos y fotos")
+Rel(persistence_layer, db, "Lee y escribe datos")
+@enduml

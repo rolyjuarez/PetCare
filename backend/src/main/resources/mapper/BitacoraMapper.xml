@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.bitacora.mapper.BitacoraMapper">
+<mapper namespace="bo.capital.tec.pet.modules.bitacora.infrastructure.persistence.BitacoraMapper">
     <sql id="baseColumns">
         id, usuario_id, accion, entidad, entidad_id, datos_anteriores, datos_nuevos,
         ip_address, user_agent, created_at
     </sql>
     <sql id="table">bitacora</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.bitacora.entity.Bitacora">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.bitacora.domain.model.Bitacora">
         INSERT INTO <include refid="table"/> (usuario_id, accion, entidad, entidad_id, datos_anteriores, datos_nuevos,
             ip_address, user_agent)
         VALUES (#{usuarioId}, #{accion}, #{entidad}, #{entidadId}, #{datosAnteriores}, #{datosNuevos},
             #{ipAddress}, #{userAgent})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.modules.bitacora.entity.Bitacora">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.bitacora.domain.model.Bitacora">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id}
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.modules.bitacora.entity.Bitacora">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.bitacora.domain.model.Bitacora">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -28,19 +28,19 @@
         SELECT COUNT(*) FROM <include refid="table"/>
     </select>
 
-    <select id="selectByUsuarioId" resultType="bo.capital.tec.pet.modules.bitacora.entity.Bitacora">
+    <select id="selectByUsuarioId" resultType="bo.capital.tec.pet.modules.bitacora.domain.model.Bitacora">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE usuario_id = #{usuarioId}
         ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
-    <select id="selectByEntidad" resultType="bo.capital.tec.pet.modules.bitacora.entity.Bitacora">
+    <select id="selectByEntidad" resultType="bo.capital.tec.pet.modules.bitacora.domain.model.Bitacora">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE entidad = #{entidad}
         ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
-    <select id="selectByFilters" resultType="bo.capital.tec.pet.modules.bitacora.entity.Bitacora">
+    <select id="selectByFilters" resultType="bo.capital.tec.pet.modules.bitacora.domain.model.Bitacora">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         <where>
             <if test="accion != null and accion != ''">AND accion ILIKE '%' || #{accion} '%'</if>

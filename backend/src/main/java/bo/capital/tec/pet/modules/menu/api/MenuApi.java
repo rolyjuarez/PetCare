@@ -1,6 +1,6 @@
 package bo.capital.tec.pet.modules.menu.api;
 
-import bo.capital.tec.pet.modules.menu.entity.Menu;
+import bo.capital.tec.pet.modules.menu.domain.model.Menu;
 
 import java.util.List;
 

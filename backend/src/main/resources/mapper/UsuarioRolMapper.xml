@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.usuario.mapper.UsuarioRolMapper">
+<mapper namespace="bo.capital.tec.pet.modules.usuario.infrastructure.persistence.UsuarioRolMapper">
     <sql id="baseColumns">
         id, usuario_id, rol_id, created_at, updated_at, deleted, version
     </sql>
     <sql id="table">usuario_rol</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.usuario.entity.UsuarioRol">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.usuario.domain.model.UsuarioRol">
         INSERT INTO <include refid="table"/> (usuario_id, rol_id)
         VALUES (#{usuarioId}, #{rolId})
     </insert>
 
-    <select id="selectByUsuarioId" resultType="bo.capital.tec.pet.modules.usuario.entity.UsuarioRol">
+    <select id="selectByUsuarioId" resultType="bo.capital.tec.pet.modules.usuario.domain.model.UsuarioRol">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE usuario_id = #{usuarioId} AND deleted = FALSE
     </select>

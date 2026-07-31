@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.notificacion.mapper.NotificacionMapper">
+<mapper namespace="bo.capital.tec.pet.modules.notificacion.infrastructure.persistence.NotificacionMapper">
     <sql id="baseColumns">
         id, usuario_id, titulo, mensaje, tipo, leida, fecha_lectura,
         created_at, updated_at, deleted, version
     </sql>
     <sql id="table">notificacion</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.notificacion.entity.Notificacion">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.notificacion.domain.model.Notificacion">
         INSERT INTO <include refid="table"/> (titulo, mensaje, tipo, leida, usuario_id)
         VALUES (#{titulo}, #{mensaje}, #{tipo}, #{leida}, #{usuarioId})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.modules.notificacion.entity.Notificacion">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.notificacion.domain.model.Notificacion">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.modules.notificacion.entity.Notificacion">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.notificacion.domain.model.Notificacion">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE deleted = FALSE
         ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
@@ -28,7 +28,7 @@
         WHERE deleted = FALSE
     </select>
 
-    <select id="selectByUsuarioId" resultType="bo.capital.tec.pet.modules.notificacion.entity.Notificacion">
+    <select id="selectByUsuarioId" resultType="bo.capital.tec.pet.modules.notificacion.domain.model.Notificacion">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE usuario_id = #{usuarioId} AND deleted = FALSE
         ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.vacuna.mapper.RegistroVacunacionMapper">
+<mapper namespace="bo.capital.tec.pet.modules.vacuna.infrastructure.persistence.RegistroVacunacionMapper">
     <sql id="baseColumns">
         rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
         rv.lote, rv.veterinario, rv.observaciones,
@@ -8,7 +8,7 @@
     </sql>
     <sql id="table">registro_vacunacion rv</sql>
 
-    <resultMap id="registroCompletoResultMap" type="bo.capital.tec.pet.modules.vacuna.entity.RegistroVacunacion">
+    <resultMap id="registroCompletoResultMap" type="bo.capital.tec.pet.modules.vacuna.domain.model.RegistroVacunacion">
         <id property="id" column="id"/>
         <result property="mascotaId" column="mascota_id"/>
         <result property="vacunaId" column="vacuna_id"/>
@@ -23,7 +23,7 @@
         <result property="version" column="version"/>
     </resultMap>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.vacuna.entity.RegistroVacunacion">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.vacuna.domain.model.RegistroVacunacion">
         INSERT INTO registro_vacunacion (mascota_id, vacuna_id, fecha_aplicacion, fecha_vencimiento, lote, veterinario, observaciones)
         VALUES (#{mascotaId}, #{vacunaId}, #{fechaAplicacion}, #{fechaVencimiento}, #{lote}, #{veterinario}, #{observaciones})
     </insert>
@@ -71,7 +71,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.vacuna.entity.RegistroVacunacion">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.vacuna.domain.model.RegistroVacunacion">
         UPDATE registro_vacunacion
         SET mascota_id = #{mascotaId}, vacuna_id = #{vacunaId},
             fecha_aplicacion = #{fechaAplicacion}, fecha_vencimiento = #{fechaVencimiento},

@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.mascota.mapper.RazaMapper">
+<mapper namespace="bo.capital.tec.pet.modules.mascota.infrastructure.persistence.RazaMapper">
     <sql id="baseColumns">
         id, nombre, especie_id, descripcion, created_at, updated_at, deleted, version
     </sql>
     <sql id="table">raza</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.mascota.entity.Raza">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.mascota.domain.model.Raza">
         INSERT INTO <include refid="table"/> (nombre, especie_id)
         VALUES (#{nombre}, #{especieId})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.modules.mascota.entity.Raza">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.mascota.domain.model.Raza">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectByEspecieId" resultType="bo.capital.tec.pet.modules.mascota.entity.Raza">
+    <select id="selectByEspecieId" resultType="bo.capital.tec.pet.modules.mascota.domain.model.Raza">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE especie_id = #{especieId} AND deleted = FALSE
         ORDER BY nombre ASC
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.modules.mascota.entity.Raza">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.mascota.domain.model.Raza">
         SELECT r.id, r.nombre, r.especie_id, r.descripcion, r.created_at, r.updated_at, r.deleted, r.version,
                e.nombre AS especie_nombre
         FROM raza r
@@ -37,7 +37,7 @@
         WHERE deleted = FALSE
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.mascota.entity.Raza">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.mascota.domain.model.Raza">
         UPDATE <include refid="table"/>
         SET nombre = #{nombre}, especie_id = #{especieId}, updated_at = NOW(), version = version + 1
         WHERE id = #{id} AND deleted = FALSE

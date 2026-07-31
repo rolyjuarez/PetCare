@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.menu.mapper.PermisoMapper">
+<mapper namespace="bo.capital.tec.pet.modules.menu.infrastructure.persistence.PermisoMapper">
     <sql id="baseColumns">
         p.id, p.nombre, p.descripcion, p.rol_id, p.menu_id, p.submenu_id,
         p.crear, p.leer, p.actualizar, p.eliminar,
@@ -8,24 +8,24 @@
     </sql>
     <sql id="table">permiso p</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.menu.entity.Permiso">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.menu.domain.model.Permiso">
         INSERT INTO permiso (nombre, descripcion, rol_id, menu_id, submenu_id,
             crear, leer, actualizar, eliminar)
         VALUES (#{nombre}, #{descripcion}, #{rolId}, #{menuId}, #{submenuId},
             #{crear}, #{leer}, #{actualizar}, #{eliminar})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.modules.menu.entity.Permiso">
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.menu.domain.model.Permiso">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE p.id = #{id} AND p.deleted = FALSE
     </select>
 
-    <select id="selectByRolId" resultType="bo.capital.tec.pet.modules.menu.entity.Permiso">
+    <select id="selectByRolId" resultType="bo.capital.tec.pet.modules.menu.domain.model.Permiso">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE p.rol_id = #{rolId} AND p.deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.modules.menu.entity.Permiso">
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.menu.domain.model.Permiso">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         <where>
             p.deleted = FALSE
@@ -42,7 +42,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.menu.entity.Permiso">
+    <update id="update" parameterType="bo.capital.tec.pet.modules.menu.domain.model.Permiso">
         UPDATE permiso
         SET nombre = #{nombre}, descripcion = #{descripcion}, rol_id = #{rolId},
             menu_id = #{menuId}, submenu_id = #{submenuId},
