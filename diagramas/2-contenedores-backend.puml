@@ -1,0 +1,14 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+Container(api, "API REST", "Spring Boot 3.4.1", "Lógica de negocio, seguridad, controladores y servicios")
+ContainerDb(db, "Base de datos", "PostgreSQL", "Persistencia relacional del sistema")
+Container(storage, "Almacenamiento de archivos", "Uploads locales", "Archivos subidos por usuarios y comprobantes")
+System_Ext(email, "SMTP Gmail", "Envío de correos transaccionales")
+
+
+Rel(api, db, "Lee y escribe datos")
+Rel(api, storage, "Sube y consulta archivos")
+Rel(api, email, "Envía correos")
+@enduml

@@ -1,0 +1,24 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+LAYOUT_WITH_LEGEND()
+
+Container(api, "API REST", "Spring Boot 3.4.1", "Lógica de negocio, seguridad y acceso a datos")
+
+Component(controller_component, "Controllers", "Spring MVC", "Expone endpoints REST para módulos del sistema")
+Component(auth_component, "Auth Component", "Spring Security + JWT", "Login, registro, refresh token y control de accesos")
+Component(service_component, "Domain Services", "Spring Services", "Implementan operaciones de negocio para personas, clientes, mascotas, reservas y pagos")
+Component(common_component, "Common Services", "Spring Components", "Manejo de archivos, email, excepciones y configuración")
+Component(persistence_component, "Persistence Layer", "MyBatis + Mappers", "Acceso a datos relacionales")
+
+System_Ext(db, "PostgreSQL", "Base de datos relacional")
+System_Ext(email, "SMTP Gmail", "Envio de correos")
+System_Ext(storage, "Almacenamiento local", "Archivos subidos por usuarios")
+
+Rel(controller_component, auth_component, "Valida autenticación y JWT")
+Rel(controller_component, service_component, "Invoca lógica de negocio")
+Rel(service_component, persistence_component, "Consulta y guarda datos")
+Rel(common_component, db, "Accede a configuraciones y logs")
+Rel(common_component, storage, "Guarda archivos y fotos")
+Rel(common_component, email, "Envía correos transaccionales")
+Rel(persistence_component, db, "Lee y escribe datos")
+@enduml

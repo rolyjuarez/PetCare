@@ -1,0 +1,11 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+LAYOUT_WITH_LEGEND()
+
+Container(spa, "SPA Angular", "Angular 21 + Tailwind", "Aplicación web para usuarios, administradores y proveedores")
+Container(api, "API REST", "Spring Boot 3.4.1", "Endpoints REST para autenticación, personas, clientes, mascotas, reservas, pagos y notificaciones")
+System_Ext(maps, "Google Maps API", "Geolocalización y mapas")
+
+Rel(spa, api, "Consume la API REST /api/v1")
+Rel(spa, maps, "Solicita mapas y geolocalización")
+@enduml

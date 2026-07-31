@@ -1,25 +1,28 @@
 @startuml
-skinparam rectangle {
-  BackgroundColor #F7F7F7
-  BorderColor #333333
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+LAYOUT_WITH_LEGEND()
+
+Person(cliente, "Cliente", "Usuario que reserva servicios para mascotas")
+Person(administrador, "Administrador", "Gestiona usuarios, módulos y operaciones del sistema")
+Person(proveedor, "Proveedor", "Prestador de servicios veterinarios y de cuidado")
+
+System_Boundary(petcare_boundary, "PETCare") {
+  System(webapp, "Frontend Angular", "SPA web para gestionar reservas, mascotas, pagos y usuarios")
+  System(api, "Backend Spring Boot", "API REST con la lógica de negocio y acceso a datos")
 }
 
-Title Diagrama de contexto del sistema PetCare
+System_Ext(db, "PostgreSQL", "Base de datos relacional principal del sistema")
+System_Ext(email, "SMTP Gmail", "Envío de correos transaccionales")
+System_Ext(maps, "Google Maps API", "Geolocalización y mapas")
+System_Ext(storage, "Almacenamiento local", "Archivos de mascotas, comprobantes y recursos subidos")
 
-actor Cliente as "Cliente"
-actor Administrador as "Administrador"
-actor Proveedor as "Proveedor de servicios veterinarios"
+Rel(cliente, webapp, "Reserva servicios y gestiona mascotas")
+Rel(administrador, webapp, "Administra operaciones y configuraciones")
+Rel(proveedor, webapp, "Recibe reservas y gestiona sus servicios")
+Rel(webapp, api, "Consume la API REST")
+Rel(api, db, "Guarda y consulta datos de negocio")
+Rel(api, email, "Envía correos de registro, recuperación y notificaciones")
+Rel(api, maps, "Consulta mapas y geolocalización")
+Rel(api, storage, "Sube y consulta archivos")
 
-package "PetCare" {
-  rectangle "Frontend Angular" as Frontend
-  rectangle "Backend Spring Boot" as Backend
-  rectangle "PostgreSQL" as Database
-}
-
-Cliente --> Frontend : Usa la aplicación web
-Administrador --> Frontend : Gestiona el sistema
-Proveedor --> Frontend : Presta servicios
-Frontend --> Backend : Consume API REST
-Backend --> Database : Guarda/recupera datos
-
-@enduml 
+@enduml

@@ -1,0 +1,14 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+LAYOUT_WITH_LEGEND()
+
+Container(spa, "SPA Angular", "Angular 21", "Aplicación web para usuarios, administradores y proveedores")
+
+Component(ui_component, "UI Components", "Angular Components", "Vistas y formularios de la aplicación")
+Component(service_component, "Services / Guards", "Angular Services", "Consume la API REST y gestiona sesión y navegación")
+Component(api_client, "API Client", "HttpClient", "Realiza llamadas a los endpoints del backend")
+
+Rel(ui_component, service_component, "Usa servicios y guards")
+Rel(service_component, api_client, "Invoca endpoints REST")
+Rel(api_client, spa, "Se integra dentro del contenedor frontend")
+@enduml
