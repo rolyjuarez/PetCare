@@ -11,4 +11,10 @@ export class UploadService {
     formData.append('file', file);
     return this.http.post<{ url: string; filename: string }>('/api/v1/uploads/mascotas', formData);
   }
+
+  uploadCertificado(file: File): Observable<{ url: string; filename: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string; filename: string }>('/api/v1/uploads/certificados', formData);
+  }
 }

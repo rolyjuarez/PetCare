@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ResponderSolicitudRequestDTO {
     private String motivoRechazo;
+    private String comentario;
 }

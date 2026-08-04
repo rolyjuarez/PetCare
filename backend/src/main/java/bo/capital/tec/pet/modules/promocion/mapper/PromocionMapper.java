@@ -12,8 +12,10 @@ public interface PromocionMapper {
     Promocion selectByCodigo(@Param("codigo") String codigo);
     List<Promocion> selectAll(@Param("offset") int offset, @Param("limit") int limit);
     List<Promocion> selectActive(@Param("offset") int offset, @Param("limit") int limit);
+    List<Promocion> selectByProveedorId(@Param("proveedorId") Long proveedorId, @Param("offset") int offset, @Param("limit") int limit);
     long countAll();
     long countActive();
+    long countByProveedorId(@Param("proveedorId") Long proveedorId);
     void update(Promocion promocion);
     void softDelete(@Param("id") Long id);
     void incrementUsos(@Param("id") Long id);

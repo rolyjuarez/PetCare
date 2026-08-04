@@ -13,6 +13,7 @@ import bo.capital.tec.pet.modules.proveedor.event.ReservaCreadaEvent;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaRechazadaEvent;
 import bo.capital.tec.pet.modules.proveedor.mapper.ProveedorCatalogMapper;
 import bo.capital.tec.pet.modules.proveedor.mapper.SolicitudReservaMapper;
+import bo.capital.tec.pet.modules.proveedor.mapper.VacunaCatalogMapper;
 import bo.capital.tec.pet.modules.proveedor.service.ProveedorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,7 @@ public class ProveedorServiceImpl implements ProveedorService {
 
     private final SolicitudReservaMapper solicitudReservaMapper;
     private final ProveedorCatalogMapper proveedorCatalogMapper;
+    private final VacunaCatalogMapper vacunaCatalogMapper;
     private final DomainEventPublisher eventPublisher;
 
     @Override
@@ -58,14 +60,16 @@ public class ProveedorServiceImpl implements ProveedorService {
 
     @Override
     @Transactional
-    public SolicitudReservaResponseDTO aceptar(Long proveedorId, Long solicitudId) {
+    public SolicitudReservaResponseDTO aceptar(Long proveedorId, Long solicitudId,
+                                               ResponderSolicitudRequestDTO request) {
         SolicitudReserva solicitud = requireSolicitud(solicitudId);
         verificarPertenencia(solicitud, proveedorId);
         verificarPendiente(solicitud);
+        String comentario = request != null ? request.getComentario() : null;
         solicitudReservaMapper.updateEstado(solicitudId, ESTADO_ACEPTADA, null);
         solicitud.setEstado(ESTADO_ACEPTADA);
         solicitud.setRespondidaEn(java.time.LocalDateTime.now());
-        publishAceptada(solicitud);
+        publishAceptada(solicitud, comentario);
         log.info("Solicitud {} aceptada por proveedor {}", solicitud.getCodigo(), proveedorId);
         return toDTO(solicitud);
     }
@@ -121,6 +125,8 @@ public class ProveedorServiceImpl implements ProveedorService {
                     .fechaInicio(event.getFechaInicio())
                     .horaInicio(event.getHoraInicio())
                     .precioTotal(event.getPrecioTotal())
+                    .modalidadEntrega(event.getModalidadEntrega())
+                    .registroVacunacionId(event.getRegistroVacunacionId())
                     .estado(ESTADO_PENDIENTE)
                     .build();
             solicitudReservaMapper.insert(solicitud);
@@ -128,11 +134,11 @@ public class ProveedorServiceImpl implements ProveedorService {
         }
     }
 
-    private void publishAceptada(SolicitudReserva solicitud) {
+    private void publishAceptada(SolicitudReserva solicitud, String comentario) {
         eventPublisher.publish(new ReservaAceptadaEvent(
                 solicitud.getReservaId(), solicitud.getCodigo(),
                 solicitud.getProveedorId(), null, solicitud.getProveedorEmpresa(),
-                solicitud.getServicioNombre(), Instant.now()));
+                solicitud.getServicioNombre(), Instant.now(), comentario));
     }
 
     private void publishRechazada(SolicitudReserva solicitud, String motivo) {
@@ -163,6 +169,9 @@ public class ProveedorServiceImpl implements ProveedorService {
     }
 
     private SolicitudReservaResponseDTO toDTO(SolicitudReserva s) {
+        bo.capital.tec.pet.modules.proveedor.dto.VacunaInfoDTO vacunaInfo =
+                s.getRegistroVacunacionId() != null
+                        ? vacunaCatalogMapper.selectRegistroVacunacion(s.getRegistroVacunacionId()) : null;
         return SolicitudReservaResponseDTO.builder()
                 .id(s.getId())
                 .reservaId(s.getReservaId())
@@ -178,8 +187,11 @@ public class ProveedorServiceImpl implements ProveedorService {
                 .fechaInicio(s.getFechaInicio())
                 .horaInicio(s.getHoraInicio())
                 .precioTotal(s.getPrecioTotal())
+                .modalidadEntrega(s.getModalidadEntrega())
                 .estado(s.getEstado())
                 .motivoRechazo(s.getMotivoRechazo())
+                .registroVacunacionId(s.getRegistroVacunacionId())
+                .vacunaInfo(vacunaInfo)
                 .creadaEn(s.getCreadaEn())
                 .respondidaEn(s.getRespondidaEn())
                 .build();

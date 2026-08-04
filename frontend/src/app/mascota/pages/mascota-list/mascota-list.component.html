@@ -75,10 +75,17 @@
                               <button type="button" (click)="openEditReservaModal(item, r); $event.stopPropagation()"
                                       class="text-blue-500 hover:text-blue-600 text-[10px] font-medium ml-1">Editar</button>
                             }
+                            @if (r.estadoReservaNombre === 'CONFIRMADA') {
+                              <button type="button" (click)="abrirPago(item, r); $event.stopPropagation()"
+                                      class="text-green-600 hover:text-green-700 text-[10px] font-medium ml-1">Pagar</button>
+                            }
                           </span>
                         </div>
                         <p class="text-gray-500 dark:text-gray-400">{{ r.servicioNombre }}</p>
                         <p class="text-gray-500 dark:text-gray-400">{{ formatDate(r.fechaReserva) }} | {{ formatTimeShort(r.horaInicio) }} - {{ formatTimeShort(r.horaFin) }}</p>
+                        @if (r.modalidadEntrega) {
+                          <p class="text-gray-500 dark:text-gray-400">Modalidad: {{ modalidadLabel(r.modalidadEntrega) }}</p>
+                        }
                         @if (r.proveedorEmpresa) {
                           <p class="text-gray-500 dark:text-gray-400">Proveedor: {{ r.proveedorEmpresa }}</p>
                         } @else if (r.proveedorNombre) {
@@ -335,10 +342,20 @@
             }
 
             <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Proveedor *</label>
+              <select [(ngModel)]="reservaForm.proveedorId" name="proveedorId" (ngModelChange)="onProveedorChangeReserva()" required class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                <option [ngValue]="null" disabled>Seleccionar proveedor...</option>
+                @for (p of proveedores(); track p.id) {
+                  <option [ngValue]="p.id">{{ p.empresa }} - {{ p.personaNombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div>
               <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Servicio *</label>
-              <select [(ngModel)]="reservaForm.servicioId" name="servicioId" (ngModelChange)="onServicioChangeReserva()" required class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+              <select [(ngModel)]="reservaForm.servicioId" name="servicioId" (ngModelChange)="onServicioChangeReserva()" required [disabled]="!reservaForm.proveedorId" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600 disabled:opacity-50">
                 <option [ngValue]="null" disabled>Seleccionar servicio...</option>
-                @for (s of servicios(); track s.id) {
+                @for (s of serviciosDeProveedor(); track s.id) {
                   <option [ngValue]="s.id">{{ s.nombre }} - Bs. {{ s.precioBase }}</option>
                 }
               </select>
@@ -357,30 +374,45 @@
               </div>
             }
 
-            <div>
-              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Fecha *</label>
-              <input type="date" [(ngModel)]="reservaForm.fechaReserva" name="fechaReserva" (ngModelChange)="onDateChange()" required [disabled]="!reservaForm.servicioId" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600 disabled:opacity-50" />
-            </div>
-
-            @if (filteredDisponibilidades().length > 0) {
-              <div>
-                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Horarios disponibles</label>
-                <div class="grid grid-cols-2 gap-2">
-                  @for (d of filteredDisponibilidades(); track d.id) {
-                    <button type="button" (click)="selectDisponibilidad(d)"
-                            [class]="selectedDisponibilidad()?.id === d.id ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20 border-primary-500' : 'border-gray-200 dark:border-gray-600 hover:border-primary-300'"
-                            class="p-3 border rounded-lg text-left transition-all">
-                      <p class="text-sm font-medium dark:text-white">{{ formatTimeShort(d.horaInicio) }} - {{ formatTimeShort(d.horaFin) }}</p>
-                      <p class="text-xs text-gray-500">{{ d.diaSemanaNombre }}</p>
-                    </button>
-                  }
+            @if (reservaForm.proveedorId && reservaForm.servicioId) {
+              @if (availableFechas().length > 0) {
+                <div>
+                  <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Fechas disponibles *</label>
+                  <div class="grid grid-cols-3 gap-2">
+                    @for (fecha of availableFechas(); track fecha) {
+                      <button type="button" (click)="selectFecha(fecha)"
+                              [class]="selectedFecha() === fecha ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20 border-primary-500' : 'border-gray-200 dark:border-gray-600 hover:border-primary-300'"
+                              class="p-2 border rounded-lg text-sm text-center transition-all dark:text-gray-200">
+                        {{ formatFechaCorta(fecha) }}
+                      </button>
+                    }
+                  </div>
                 </div>
-              </div>
-            } @else if (reservaForm.servicioId && reservaForm.fechaReserva) {
-              <p class="text-sm text-gray-500 text-center py-2">No hay horarios disponibles para esta fecha</p>
+
+                @if (selectedFecha()) {
+                  @if (slotsDeFecha().length > 0) {
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Horarios disponibles *</label>
+                      <div class="grid grid-cols-2 gap-2">
+                        @for (slot of slotsDeFecha(); track slot.horaInicio) {
+                          <button type="button" (click)="selectSlot(slot)"
+                                  [class]="selectedSlot()?.horaInicio === slot.horaInicio ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20 border-primary-500' : 'border-gray-200 dark:border-gray-600 hover:border-primary-300'"
+                                  class="p-3 border rounded-lg text-left transition-all">
+                            <p class="text-sm font-medium dark:text-white">{{ formatTimeShort(slot.horaInicio) }} - {{ formatTimeShort(slot.horaFin) }}</p>
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <p class="text-sm text-gray-500 text-center py-2">No hay horarios libres para esta fecha</p>
+                  }
+                }
+              } @else {
+                <p class="text-sm text-gray-500 text-center py-2">No hay fechas disponibles para este proveedor y servicio</p>
+              }
             }
 
-            @if (selectedDisponibilidad() || editReservaId()) {
+            @if (selectedSlot() || editReservaId()) {
               <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                 <div class="flex items-center justify-between">
                   <div>
@@ -398,8 +430,152 @@
                     </button>
                   }
                 </div>
-                @if (editReservaId() && filteredDisponibilidades().length > 0) {
-                  <p class="text-xs text-blue-500 mt-1">Selecciona un horario disponible para cambiarlo</p>
+              </div>
+            }
+
+            @if (modalidadesDisponibles().length > 0) {
+              <div>
+                <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Modalidad de entrega *</label>
+                <div class="space-y-2">
+                  @for (m of modalidadesDisponibles(); track m.modalidad) {
+                    <button type="button" (click)="selectModalidad(m)"
+                            [class]="selectedModalidad()?.modalidad === m.modalidad ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20 border-primary-500' : 'border-gray-200 dark:border-gray-600 hover:border-primary-300'"
+                            class="w-full p-3 border rounded-lg text-left transition-all">
+                      <div class="flex items-center justify-between">
+                        <div>
+                          <p class="text-sm font-medium dark:text-white">{{ modalidadLabel(m.modalidad) }}</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-400">
+                            @if (m.costoAdicional > 0) {
+                              Costo adicional: Bs. {{ m.costoAdicional }}
+                            } @else {
+                              Sin costo adicional
+                            }
+                          </p>
+                        </div>
+                        @if (selectedModalidad()?.modalidad === m.modalidad) {
+                          <span class="material-icons text-primary-500">check_circle</span>
+                        }
+                      </div>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+
+            @if (requiereCoordenadas() && (selectedSlot() || editReservaId())) {
+              <div class="bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3 space-y-3">
+                <p class="text-xs font-semibold text-gray-600 dark:text-gray-300">
+                  @if (reservaForm.modalidadEntrega === 'DOMICILIO') {
+                    Indique la ubicación de entrega a domicilio
+                  } @else {
+                    Indique la ubicación de recogida o entrega
+                  }
+                </p>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Latitud *</label>
+                    <input type="number" step="0.000001" [(ngModel)]="reservaForm.latitud" name="latitud"
+                           class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Longitud *</label>
+                    <input type="number" step="0.000001" [(ngModel)]="reservaForm.longitud" name="longitud"
+                           class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dirección o referencia</label>
+                  <input type="text" [(ngModel)]="reservaForm.direccionReferencia" name="direccionReferencia"
+                         class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                         placeholder="Ej. Av. principal #123, frente a la plaza">
+                </div>
+              </div>
+            }
+
+            @if (requiereCertificado()) {
+              <div class="border-t dark:border-gray-700 pt-4">
+                <div class="flex items-center gap-2 mb-3">
+                  <span class="material-icons text-amber-500 text-lg">verified</span>
+                  <p class="text-sm font-semibold text-amber-600 dark:text-amber-400">Este servicio exige certificado de vacunación</p>
+                </div>
+
+                @if (!modoNuevoRegistro()) {
+                  @if (registrosMascota().length > 0) {
+                    <div class="space-y-2">
+                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Seleccione un registro de vacunación con certificado</label>
+                      @for (vac of registrosMascota(); track vac.id) {
+                        <button type="button" (click)="seleccionarRegistro(vac.id)"
+                                [class]="registroSeleccionado(vac) ? 'ring-2 ring-green-500 border-green-500' : 'border-gray-200 dark:border-gray-600 hover:border-green-300'"
+                                class="w-full p-3 border rounded-lg text-left transition-all dark:text-gray-200">
+                          <div class="flex items-center justify-between">
+                            <div>
+                              <p class="text-sm font-medium">{{ vac.vacunaNombre }} <span class="text-xs text-gray-500">({{ formatDate(vac.fechaAplicacion) }})</span></p>
+                              <p class="text-xs text-green-600 dark:text-green-400">Certificado adjunto</p>
+                            </div>
+                            @if (registroSeleccionado(vac)) {
+                              <span class="material-icons text-green-500">check_circle</span>
+                            }
+                          </div>
+                        </button>
+                      }
+                    </div>
+                  } @else {
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">No hay registros de vacunación con certificado para esta mascota.</p>
+                  }
+                  <button type="button" (click)="activarNuevoRegistro()" class="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+                    <span class="material-icons text-base">add_circle</span> Registrar un nuevo certificado
+                  </button>
+                }
+
+                @if (modoNuevoRegistro()) {
+                  <div class="space-y-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3">
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Vacuna *</label>
+                      <select [(ngModel)]="nuevoRegistroForm.vacunaId" name="nuevoVacunaId" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                        <option [ngValue]="null" disabled>Seleccionar vacuna...</option>
+                        @for (v of vacunasCatalog(); track v.id) {
+                          <option [ngValue]="v.id">{{ v.nombre }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Fecha de aplicación *</label>
+                        <input type="date" [(ngModel)]="nuevoRegistroForm.fechaAplicacion" name="nuevaFechaAplicacion" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Vencimiento *</label>
+                        <input type="date" [(ngModel)]="nuevoRegistroForm.fechaVencimiento" name="nuevaFechaVencimiento" class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Certificado (PDF o imagen) *</label>
+                      @if (certificadoPreview()) {
+                        <div class="flex items-center justify-between gap-2 p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
+                          <span class="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                            <span class="material-icons text-base">description</span> Certificado adjunto
+                          </span>
+                          <button type="button" (click)="quitarCertificado()" class="text-red-500 hover:text-red-600 text-xs">Quitar</button>
+                        </div>
+                      } @else {
+                        <input #certificadoInput type="file" (change)="onCertificadoFileSelected($event)" accept=".pdf,image/*"
+                               class="w-full text-sm dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-500 file:text-white hover:file:bg-amber-600">
+                      }
+                    </div>
+                    <div class="flex justify-end">
+                      <button type="button" (click)="crearRegistroConCertificado()" [disabled]="loading()"
+                              class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 disabled:opacity-50 text-sm flex items-center gap-2">
+                        @if (loading()) {
+                          <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        }
+                        Guardar certificado
+                      </button>
+                    </div>
+                  </div>
+                }
+
+                @if (reservaForm.registroVacunacionId && !modoNuevoRegistro()) {
+                  <p class="text-xs text-green-600 dark:text-green-400 mt-2">Certificado seleccionado y listo para la reserva.</p>
                 }
               </div>
             }
@@ -410,7 +586,7 @@
             </div>
             <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
               <button type="button" (click)="closeReservaModal()" class="px-4 py-2 border rounded-lg text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Cancelar</button>
-               <button type="submit" [disabled]="loading() || (!selectedDisponibilidad() && !editReservaId())" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2">
+               <button type="submit" [disabled]="loading() || (!selectedSlot() && !editReservaId()) || (requiereCertificado() && !reservaForm.registroVacunacionId)" class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 flex items-center gap-2">
                  @if (loading()) {
                    <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                  }
@@ -418,6 +594,118 @@
                </button>
             </div>
           </form>
+        </div>
+      </div>
+    }
+
+    <!-- Pago Modal -->
+    @if (showPagoModal() && pagoReserva()) {
+      <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+          <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Pago de reserva</h2>
+            <button (click)="closePagoModal()" class="text-gray-400 hover:text-gray-600">
+              <span class="material-icons">close</span>
+            </button>
+          </div>
+
+          <div class="p-6 space-y-4">
+            @if (pagoReserva(); as r) {
+              <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-3 text-sm space-y-1">
+                <p class="font-medium text-gray-900 dark:text-white">{{ r.codigo }} - {{ r.servicioNombre }}</p>
+                <p class="text-gray-500 dark:text-gray-400">{{ formatDate(r.fechaReserva) }} | {{ formatTimeShort(r.horaInicio) }} - {{ formatTimeShort(r.horaFin) }}</p>
+                @if (r.modalidadEntrega) {
+                  <p class="text-gray-500 dark:text-gray-400">Modalidad: {{ modalidadLabel(r.modalidadEntrega) }}</p>
+                }
+              </div>
+            }
+
+            @if (pagoLoading()) {
+              <div class="p-8 text-center text-gray-500">Cargando información del pago...</div>
+            } @else if (pago(); as p) {
+              <div class="space-y-3">
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                  <div class="flex justify-between text-sm">
+                    <span class="text-blue-600 dark:text-blue-300">Monto original</span>
+                    <span class="text-blue-600 dark:text-blue-300">Bs. {{ formatMonto(p.montoOriginal) }}</span>
+                  </div>
+                  @if (p.descuentosAplicados && p.descuentosAplicados.length > 0) {
+                    @for (d of p.descuentosAplicados; track $index) {
+                      <div class="flex justify-between text-xs text-green-600 dark:text-green-400">
+                        <span>{{ d.nombre }}</span>
+                        <span>- Bs. {{ formatMonto(d.monto) }}</span>
+                      </div>
+                    }
+                  }
+                  @if (p.descuentoTotal > 0) {
+                    <div class="flex justify-between text-sm text-green-600 dark:text-green-400">
+                      <span>Descuento total</span>
+                      <span>- Bs. {{ formatMonto(p.descuentoTotal) }}</span>
+                    </div>
+                  }
+                  <div class="flex justify-between text-lg font-bold mt-2 pt-2 border-t border-blue-200 dark:border-blue-800 text-blue-900 dark:text-blue-100">
+                    <span>Total a pagar</span>
+                    <span>Bs. {{ formatMonto(p.monto) }}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span [class]="p.estadoPago === 'PAGADO'
+                      ? 'px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                      : p.estadoPago === 'PENDIENTE'
+                        ? 'px-2 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'
+                        : 'px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'">
+                    Estado: {{ p.estadoPago }}
+                  </span>
+                  @if (p.referenciaTransaccion) {
+                    <span class="text-xs text-gray-500 dark:text-gray-400 ml-2">Ref: {{ p.referenciaTransaccion }}</span>
+                  }
+                </div>
+
+                @if (p.estadoPago === 'PENDIENTE') {
+                  <div class="space-y-3 border-t dark:border-gray-700 pt-4">
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Datos de la tarjeta</p>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Número de tarjeta *</label>
+                      <input type="text" [(ngModel)]="tarjetaForm.numero" placeholder="4111 1111 1111 1111"
+                             class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Simulación: las tarjetas terminadas en 0000 son rechazadas.</p>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Titular *</label>
+                      <input type="text" [(ngModel)]="tarjetaForm.titular"
+                             class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Expiración (MM/AA) *</label>
+                        <input type="text" [(ngModel)]="tarjetaForm.expira" placeholder="12/28"
+                               class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">CVV *</label>
+                        <input type="password" [(ngModel)]="tarjetaForm.cvv" maxlength="4"
+                               class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                      </div>
+                    </div>
+                    <button (click)="procesarPago()" [disabled]="pagoLoading()"
+                            class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium">
+                      {{ pagoLoading() ? 'Procesando...' : 'Pagar ahora' }}
+                    </button>
+                  </div>
+                }
+
+                @if (p.estadoPago === 'PAGADO') {
+                  <div class="flex justify-end">
+                    <button (click)="reembolsarPago()"
+                            class="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 dark:border-red-700 dark:hover:bg-red-900/30 text-sm">
+                      Reembolsar pago
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
         </div>
       </div>
     }

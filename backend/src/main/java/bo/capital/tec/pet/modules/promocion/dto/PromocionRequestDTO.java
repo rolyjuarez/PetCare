@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class PromocionRequestDTO {
     @NotBlank @Size(max = 20)
     private String codigo;
+    private Long proveedorId;
     @NotBlank @Size(max = 100)
     private String nombre;
     @Size(max = 500)

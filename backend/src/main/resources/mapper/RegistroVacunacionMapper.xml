@@ -3,7 +3,7 @@
 <mapper namespace="bo.capital.tec.pet.modules.vacuna.mapper.RegistroVacunacionMapper">
     <sql id="baseColumns">
         rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
-        rv.lote, rv.veterinario, rv.observaciones,
+        rv.lote, rv.veterinario, rv.observaciones, rv.certificado_url,
         rv.created_at, rv.updated_at, rv.deleted, rv.version
     </sql>
     <sql id="table">registro_vacunacion rv</sql>
@@ -17,6 +17,7 @@
         <result property="lote" column="lote"/>
         <result property="veterinario" column="veterinario"/>
         <result property="observaciones" column="observaciones"/>
+        <result property="certificadoUrl" column="certificado_url"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
         <result property="deleted" column="deleted"/>
@@ -24,13 +25,13 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.vacuna.entity.RegistroVacunacion">
-        INSERT INTO registro_vacunacion (mascota_id, vacuna_id, fecha_aplicacion, fecha_vencimiento, lote, veterinario, observaciones)
-        VALUES (#{mascotaId}, #{vacunaId}, #{fechaAplicacion}, #{fechaVencimiento}, #{lote}, #{veterinario}, #{observaciones})
+        INSERT INTO registro_vacunacion (mascota_id, vacuna_id, fecha_aplicacion, fecha_vencimiento, lote, veterinario, observaciones, certificado_url)
+        VALUES (#{mascotaId}, #{vacunaId}, #{fechaAplicacion}, #{fechaVencimiento}, #{lote}, #{veterinario}, #{observaciones}, #{certificadoUrl})
     </insert>
 
     <select id="selectById" resultMap="registroCompletoResultMap">
         SELECT rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
-               rv.lote, rv.veterinario, rv.observaciones,
+               rv.lote, rv.veterinario, rv.observaciones, rv.certificado_url,
                rv.created_at, rv.updated_at, rv.deleted, rv.version
         FROM registro_vacunacion rv
         WHERE rv.id = #{id} AND rv.deleted = FALSE
@@ -38,7 +39,7 @@
 
     <select id="selectByMascotaId" resultMap="registroCompletoResultMap">
         SELECT rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
-               rv.lote, rv.veterinario, rv.observaciones,
+               rv.lote, rv.veterinario, rv.observaciones, rv.certificado_url,
                rv.created_at, rv.updated_at, rv.deleted, rv.version
         FROM registro_vacunacion rv
         WHERE rv.mascota_id = #{mascotaId} AND rv.deleted = FALSE
@@ -53,7 +54,7 @@
 
     <select id="selectAll" resultMap="registroCompletoResultMap">
         SELECT rv.id, rv.mascota_id, rv.vacuna_id, rv.fecha_aplicacion, rv.fecha_vencimiento,
-               rv.lote, rv.veterinario, rv.observaciones,
+               rv.lote, rv.veterinario, rv.observaciones, rv.certificado_url,
                rv.created_at, rv.updated_at, rv.deleted, rv.version
         FROM registro_vacunacion rv
         <where>
@@ -76,6 +77,7 @@
         SET mascota_id = #{mascotaId}, vacuna_id = #{vacunaId},
             fecha_aplicacion = #{fechaAplicacion}, fecha_vencimiento = #{fechaVencimiento},
             lote = #{lote}, veterinario = #{veterinario}, observaciones = #{observaciones},
+            certificado_url = #{certificadoUrl},
             updated_at = NOW(), version = version + 1
         WHERE id = #{id} AND deleted = FALSE
     </update>

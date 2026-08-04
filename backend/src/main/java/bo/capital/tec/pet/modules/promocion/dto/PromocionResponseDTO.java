@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class PromocionResponseDTO {
     private Long id;
+    private Long proveedorId;
     private String codigo;
     private String nombre;
     private String descripcion;

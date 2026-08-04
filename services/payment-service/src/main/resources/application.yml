@@ -1,0 +1,66 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /api/v1
+
+spring:
+  application:
+    name: payment-service
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/petcaredb
+    username: postgres
+    password: 123qwe
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: America/La_Paz
+    serialization:
+      write-dates-as-timestamps: false
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: bo.capital.tec.pet.modules.pago.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+jwt:
+  secret: ${JWT_SECRET:PETCareSecretKeyForJWTTokenGeneration2024VeryLongAndSecureKeyMustBe256Bits}
+  expiration: 3600000
+  refresh-expiration: 604800000
+
+app:
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    group-id: payment-service
+    topic:
+      reserva-creada: reserva.creada
+      reserva-aceptada: reserva.aceptada
+      reserva-rechazada: reserva.rechazada
+      reserva-confirmada: reserva.confirmada
+      pago-completado: pago.completado
+      dlt: reserva.dlt.v1
+    partitions: 3
+    replication-factor: 1
+    retention-ms: 604800000
+  pasarela:
+    prefijo-referencia: PTC
+
+logging:
+  level:
+    bo.capital.tec.pet: DEBUG
+    org.springframework.kafka: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

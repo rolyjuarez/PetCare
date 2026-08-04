@@ -16,6 +16,8 @@ spring:
       - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration
 
 app:
+  email:
+    enabled: false
   kafka:
     bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
     group-id: reservation-service-test

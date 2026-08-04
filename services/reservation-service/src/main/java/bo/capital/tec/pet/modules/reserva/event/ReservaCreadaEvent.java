@@ -27,12 +27,15 @@ public class ReservaCreadaEvent extends DomainEvent {
     private LocalDate fechaInicio;
     private LocalTime horaInicio;
     private BigDecimal precioTotal;
+    private Long registroVacunacionId;
+    private String modalidadEntrega;
 
     public ReservaCreadaEvent(Long reservaId, String codigo, Long clienteId, String clienteNombre,
                               String clienteEmail, Long proveedorId, String proveedorEmpresa,
                               Long servicioId, String servicioNombre, Long mascotaId,
                               String mascotaNombre, LocalDate fechaInicio, LocalTime horaInicio,
-                              BigDecimal precioTotal) {
+                              BigDecimal precioTotal, Long registroVacunacionId,
+                              String modalidadEntrega) {
         super("RESERVA", reservaId);
         this.reservaId = reservaId;
         this.codigo = codigo;
@@ -48,5 +51,7 @@ public class ReservaCreadaEvent extends DomainEvent {
         this.fechaInicio = fechaInicio;
         this.horaInicio = horaInicio;
         this.precioTotal = precioTotal;
+        this.registroVacunacionId = registroVacunacionId;
+        this.modalidadEntrega = modalidadEntrega;
     }
 }

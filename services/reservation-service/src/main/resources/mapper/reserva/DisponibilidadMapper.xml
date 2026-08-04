@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.DisponibilidadMapper">
+
+    <resultMap id="disponibilidadResultMap" type="bo.capital.tec.pet.modules.reserva.entity.Disponibilidad">
+        <id property="id" column="id"/>
+        <result property="proveedorId" column="proveedor_id"/>
+        <result property="servicioId" column="servicio_id"/>
+        <result property="diaSemana" column="dia_semana"/>
+        <result property="horaInicio" column="hora_inicio"/>
+        <result property="horaFin" column="hora_fin"/>
+        <result property="activo" column="activo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <sql id="baseColumns">
+        d.id, d.proveedor_id, d.servicio_id, d.dia_semana, d.hora_inicio, d.hora_fin,
+        d.activo, d.created_at, d.updated_at, d.deleted, d.version
+    </sql>
+    <sql id="table">disponibilidad d</sql>
+
+    <select id="selectByProveedorServicio" resultMap="disponibilidadResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE d.proveedor_id = #{proveedorId}
+          AND d.servicio_id = #{servicioId}
+          AND d.activo = TRUE
+          AND d.deleted = FALSE
+        ORDER BY d.dia_semana, d.hora_inicio
+    </select>
+</mapper>

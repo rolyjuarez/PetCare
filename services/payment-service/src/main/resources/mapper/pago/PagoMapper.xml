@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.pago.mapper.PagoMapper">
+
+    <sql id="baseColumns">
+        p.id, p.reserva_id AS reservaId, p.monto, p.metodo_pago AS metodoPago,
+        p.estado_pago AS estadoPago, p.referencia_transaccion AS referenciaTransaccion,
+        p.fecha_pago AS fechaPago, p.comprobante_url AS comprobanteUrl,
+        p.modalidad_pago AS modalidadPago, p.intencion_id AS intencionId,
+        p.monto_original AS montoOriginal, p.descuento_total AS descuentoTotal,
+        p.estado_sync AS estadoSync, p.created_at AS createdAt, p.updated_at AS updatedAt,
+        p.deleted, p.version
+    </sql>
+    <sql id="table">pago p</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="bo.capital.tec.pet.modules.pago.entity.Pago">
+        INSERT INTO pago (reserva_id, monto, metodo_pago, estado_pago, referencia_transaccion,
+            fecha_pago, comprobante_url, modalidad_pago, intencion_id, monto_original,
+            descuento_total, estado_sync)
+        VALUES (#{reservaId}, #{monto}, #{metodoPago}, #{estadoPago}, #{referenciaTransaccion},
+            #{fechaPago}, #{comprobanteUrl}, #{modalidadPago}, #{intencionId}, #{montoOriginal},
+            #{descuentoTotal}, #{estadoSync})
+    </insert>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.pago.entity.Pago">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.id = #{id} AND p.deleted = FALSE
+    </select>
+
+    <select id="selectByReservaId" resultType="bo.capital.tec.pet.modules.pago.entity.Pago">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.reserva_id = #{reservaId} AND p.deleted = FALSE
+    </select>
+
+    <select id="selectByReservaIds" resultType="bo.capital.tec.pet.modules.pago.entity.Pago">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.reserva_id = #{reservaId} AND p.deleted = FALSE
+        ORDER BY p.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByReservaId" resultType="long">
+        SELECT COUNT(*) FROM pago p
+        WHERE p.reserva_id = #{reservaId} AND p.deleted = FALSE
+    </select>
+
+    <update id="updateEstado">
+        UPDATE pago
+        SET estado_pago = #{estadoPago},
+            estado_sync = #{estadoSync},
+            referencia_transaccion = #{referenciaTransaccion},
+            intencion_id = #{intencionId},
+            fecha_pago = #{fechaPago},
+            metodo_pago = #{metodoPago},
+            updated_at = NOW(),
+            version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="updateDescuentos">
+        UPDATE pago
+        SET monto = #{monto},
+            monto_original = #{montoOriginal},
+            descuento_total = #{descuentoTotal},
+            updated_at = NOW(),
+            version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+</mapper>

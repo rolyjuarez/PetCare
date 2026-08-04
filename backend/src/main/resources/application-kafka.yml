@@ -20,6 +20,7 @@ app:
       pago-event: petcare.pago.event.v1
       usuario-event: petcare.usuario.event.v1
       mascota-event: petcare.mascota.event.v1
+      promocion-event: petcare.promocion.event.v1
       dlt: petcare.internal.dlt.v1
   outbox:
     poll-interval-ms: 5000

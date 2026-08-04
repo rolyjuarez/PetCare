@@ -40,11 +40,13 @@ public class ProveedorSolicitudesController {
     }
 
     @PutMapping("/{id}/aceptar")
-    public ResponseEntity<ApiResponse<SolicitudReservaResponseDTO>> aceptar(@PathVariable Long id,
-                                                                            Authentication authentication) {
+    public ResponseEntity<ApiResponse<SolicitudReservaResponseDTO>> aceptar(
+            @PathVariable Long id,
+            @RequestBody(required = false) ResponderSolicitudRequestDTO request,
+            Authentication authentication) {
         Long proveedorId = requireProveedor(authentication);
         return ResponseEntity.ok(ApiResponse.success(
-                proveedorService.aceptar(proveedorId, id), "Solicitud aceptada"));
+                proveedorService.aceptar(proveedorId, id, request), "Solicitud aceptada"));
     }
 
     @PutMapping("/{id}/rechazar")

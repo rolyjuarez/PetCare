@@ -96,4 +96,11 @@
         FROM cliente c
         WHERE c.usuario_id = #{usuarioId} AND c.deleted = FALSE
     </select>
+
+    <select id="selectAllEmails" resultType="string">
+        SELECT DISTINCT p.email
+        FROM cliente c
+        JOIN persona p ON p.id = c.persona_id
+        WHERE c.deleted = FALSE AND p.deleted = FALSE AND p.email IS NOT NULL AND p.email &lt;&gt; ''
+    </select>
 </mapper>

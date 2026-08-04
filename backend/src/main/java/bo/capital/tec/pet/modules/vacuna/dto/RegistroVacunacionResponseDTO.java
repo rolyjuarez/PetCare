@@ -16,5 +16,6 @@ public class RegistroVacunacionResponseDTO {
     private String lote;
     private String veterinario;
     private String observaciones;
+    private String certificadoUrl;
     private LocalDateTime createdAt;
 }

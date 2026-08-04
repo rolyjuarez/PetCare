@@ -16,4 +16,5 @@ public interface ClienteMapper {
     void softDelete(@Param("id") Long id);
     Cliente findByPersonaId(@Param("personaId") Long personaId);
     Cliente findByUsuarioId(@Param("usuarioId") Long usuarioId);
+    List<String> selectAllEmails();
 }

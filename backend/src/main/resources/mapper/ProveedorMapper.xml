@@ -76,9 +76,9 @@
     <select id="findByServicioId" resultMap="proveedorServicioResultMap">
         SELECT <include refid="baseColumns"/>
         FROM proveedor pr
-        INNER JOIN proveedor_especialidad pe ON pe.proveedor_id = pr.id AND pe.deleted = FALSE
-        INNER JOIN servicio s ON s.id = pe.servicio_id AND s.deleted = FALSE
-        WHERE pe.servicio_id = #{servicioId} AND pr.deleted = FALSE
+        INNER JOIN proveedor_servicio ps ON ps.proveedor_id = pr.id
+            AND ps.deleted = FALSE AND ps.activo = TRUE
+        WHERE ps.id = #{servicioId} AND pr.deleted = FALSE
         ORDER BY pr.created_at ASC
     </select>
 

@@ -19,4 +19,6 @@ public class RegistroVacunacionRequestDTO {
     @Size(max = 200)
     private String veterinario;
     private String observaciones;
+    @Size(max = 500)
+    private String certificadoUrl;
 }

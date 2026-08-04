@@ -25,6 +25,25 @@ public class UploadController {
 
     @PostMapping("/mascotas")
     public ResponseEntity<Map<String, String>> uploadMascotaFoto(@RequestParam("file") MultipartFile file) throws IOException {
+        return saveFile("mascotas", file);
+    }
+
+    @GetMapping("/mascotas/{filename:.+}")
+    public ResponseEntity<Resource> getMascotaFoto(@PathVariable String filename) {
+        return serveFile("mascotas", filename);
+    }
+
+    @PostMapping("/certificados")
+    public ResponseEntity<Map<String, String>> uploadCertificado(@RequestParam("file") MultipartFile file) throws IOException {
+        return saveFile("certificados", file);
+    }
+
+    @GetMapping("/certificados/{filename:.+}")
+    public ResponseEntity<Resource> getCertificado(@PathVariable String filename) {
+        return serveFile("certificados", filename);
+    }
+
+    private ResponseEntity<Map<String, String>> saveFile(String subdir, MultipartFile file) throws IOException {
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
@@ -32,19 +51,18 @@ public class UploadController {
         }
         String filename = UUID.randomUUID() + extension;
 
-        Path uploadPath = Paths.get(uploadDir, "mascotas");
+        Path uploadPath = Paths.get(uploadDir, subdir);
         Files.createDirectories(uploadPath);
 
         Path filePath = uploadPath.resolve(filename);
         Files.copy(file.getInputStream(), filePath);
 
-        String url = "/uploads/mascotas/" + filename;
+        String url = "/uploads/" + subdir + "/" + filename;
         return ResponseEntity.ok(Map.of("url", url, "filename", filename));
     }
 
-    @GetMapping("/mascotas/{filename:.+}")
-    public ResponseEntity<Resource> getMascotaFoto(@PathVariable String filename) {
-        Path filePath = Paths.get(uploadDir, "mascotas", filename);
+    private ResponseEntity<Resource> serveFile(String subdir, String filename) {
+        Path filePath = Paths.get(uploadDir, subdir, filename);
         Resource resource = new FileSystemResource(filePath.toFile());
 
         if (!resource.exists()) {

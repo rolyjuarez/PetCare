@@ -2,16 +2,16 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="bo.capital.tec.pet.modules.promocion.mapper.PromocionMapper">
     <sql id="baseColumns">
-        id, codigo, nombre, descripcion, tipo_descuento, valor_descuento,
+        id, proveedor_id, codigo, nombre, descripcion, tipo_descuento, valor_descuento,
         fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales,
         created_at, updated_at, deleted, version
     </sql>
     <sql id="table">promocion</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
-        INSERT INTO <include refid="table"/> (codigo, nombre, descripcion, tipo_descuento, valor_descuento,
+        INSERT INTO <include refid="table"/> (proveedor_id, codigo, nombre, descripcion, tipo_descuento, valor_descuento,
             fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales)
-        VALUES (#{codigo}, #{nombre}, #{descripcion}, #{tipoDescuento}, #{valorDescuento},
+        VALUES (#{proveedorId}, #{codigo}, #{nombre}, #{descripcion}, #{tipoDescuento}, #{valorDescuento},
             #{fechaInicio}, #{fechaFin}, #{activa}, #{limiteUsos}, #{usosActuales})
     </insert>
 
@@ -53,9 +53,20 @@
           AND deleted = FALSE
     </select>
 
+    <select id="selectByProveedorId" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE proveedor_id = #{proveedorId} AND deleted = FALSE
+        ORDER BY created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByProveedorId" resultType="long">
+        SELECT COUNT(*) FROM <include refid="table"/>
+        WHERE proveedor_id = #{proveedorId} AND deleted = FALSE
+    </select>
+
     <update id="update" parameterType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
         UPDATE <include refid="table"/>
-        SET codigo = #{codigo}, nombre = #{nombre}, descripcion = #{descripcion},
+        SET proveedor_id = #{proveedorId}, codigo = #{codigo}, nombre = #{nombre}, descripcion = #{descripcion},
             tipo_descuento = #{tipoDescuento}, valor_descuento = #{valorDescuento},
             fecha_inicio = #{fechaInicio}, fecha_fin = #{fechaFin},
             activa = #{activa}, limite_usos = #{limiteUsos}, usos_actuales = #{usosActuales},

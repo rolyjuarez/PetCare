@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.proveedorservicio.mapper.ProveedorServicioMapper">
+
+    <sql id="baseColumns">
+        ps.id, ps.proveedor_id, ps.nombre, ps.descripcion, ps.categoria,
+        ps.duracion_minutos, ps.precio_base, ps.requiere_certificado, ps.activo,
+        ps.created_at, ps.updated_at, ps.deleted, ps.version
+    </sql>
+    <sql id="table">proveedor_servicio ps</sql>
+
+    <resultMap id="servicioResultMap" type="bo.capital.tec.pet.modules.proveedorservicio.entity.ProveedorServicio">
+        <id property="id" column="id"/>
+        <result property="proveedorId" column="proveedor_id"/>
+        <result property="nombre" column="nombre"/>
+        <result property="descripcion" column="descripcion"/>
+        <result property="categoria" column="categoria"/>
+        <result property="duracionMinutos" column="duracion_minutos"/>
+        <result property="precioBase" column="precio_base"/>
+        <result property="requiereCertificado" column="requiere_certificado"/>
+        <result property="activo" column="activo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="bo.capital.tec.pet.modules.proveedorservicio.entity.ProveedorServicio">
+        INSERT INTO proveedor_servicio (proveedor_id, nombre, descripcion, categoria,
+            duracion_minutos, precio_base, requiere_certificado, activo)
+        VALUES (#{proveedorId}, #{nombre}, #{descripcion}, #{categoria},
+            #{duracionMinutos}, #{precioBase}, #{requiereCertificado}, #{activo})
+    </insert>
+
+    <select id="selectById" resultMap="servicioResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE ps.id = #{id} AND ps.deleted = FALSE
+    </select>
+
+    <select id="selectByProveedorId" resultMap="servicioResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE ps.proveedor_id = #{proveedorId} AND ps.deleted = FALSE
+        ORDER BY ps.categoria, ps.nombre
+    </select>
+
+    <select id="selectActivosByProveedorId" resultMap="servicioResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE ps.proveedor_id = #{proveedorId} AND ps.deleted = FALSE AND ps.activo = TRUE
+        ORDER BY ps.categoria, ps.nombre
+    </select>
+
+    <select id="selectActivosByCategoria" resultMap="servicioResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE ps.categoria = #{categoria} AND ps.deleted = FALSE AND ps.activo = TRUE
+        ORDER BY ps.nombre
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.modules.proveedorservicio.entity.ProveedorServicio">
+        UPDATE proveedor_servicio
+        SET nombre = #{nombre}, descripcion = #{descripcion}, categoria = #{categoria},
+            duracion_minutos = #{duracionMinutos}, precio_base = #{precioBase},
+            requiere_certificado = #{requiereCertificado}, activo = #{activo},
+            updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="updateActivo">
+        UPDATE proveedor_servicio
+        SET activo = #{activo}, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE proveedor_servicio SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+</mapper>

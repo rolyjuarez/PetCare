@@ -13,8 +13,12 @@ import { ToastService } from '../../../core/services/toast.service';
 import { RegistroVacunacionService, RegistroVacunacion, RegistroVacunacionRequest } from '../../../core/services/registro-vacunacion.service';
 import { VacunaCatalogService, Vacuna } from '../../../core/services/vacuna-catalog.service';
 import { ServicioService, Servicio } from '../../../core/services/servicio.service';
-import { DisponibilidadService, Disponibilidad } from '../../../core/services/disponibilidad.service';
-import { ReservaService, Reserva, ReservaRequest } from '../../../core/services/reserva.service';
+import { ProveedorService } from '../../../core/services/proveedor.service';
+import { Proveedor } from '../../../core/models/proveedor.model';
+import { ReservaService, Reserva, ReservaRequest, DisponibilidadSlots, SlotDisponible, ModalidadInfo } from '../../../core/services/reserva.service';
+import { PagoService } from '../../../core/services/pago.service';
+import { PagoResponse, ProcesarPagoRequest } from '../../../core/models/pago.model';
+import { modalidadLabel } from '../../../core/models/proveedor.model';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -25,6 +29,7 @@ import Swal from 'sweetalert2';
 })
 export class MascotaListComponent implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('certificadoInput') certificadoInput!: ElementRef<HTMLInputElement>;
 
   items = signal<Mascota[]>([]);
   isCliente = false;
@@ -72,22 +77,58 @@ export class MascotaListComponent implements OnInit {
   showReservaModal = signal(false);
   reservaMascota = signal<Mascota | null>(null);
   servicios = signal<Servicio[]>([]);
-  disponibilidades = signal<Disponibilidad[]>([]);
-  filteredDisponibilidades = signal<Disponibilidad[]>([]);
-  selectedDisponibilidad = signal<Disponibilidad | null>(null);
+  proveedores = signal<Proveedor[]>([]);
+  slotsPorFecha = signal<DisponibilidadSlots[]>([]);
+  selectedFecha = signal<string | null>(null);
+  selectedSlot = signal<SlotDisponible | null>(null);
+  selectedProveedor = signal<Proveedor | null>(null);
   selectedServicio = signal<Servicio | null>(null);
   reservaForm = {
+    proveedorId: null as number | null,
     servicioId: null as number | null,
     fechaReserva: '',
     horaInicio: '',
     horaFin: '',
-    notas: ''
+    notas: '',
+    registroVacunacionId: null as number | null,
+    modalidadEntrega: '',
+    latitud: null as number | null,
+    longitud: null as number | null,
+    direccionReferencia: ''
+  };
+
+  modalidadesDisponibles = signal<ModalidadInfo[]>([]);
+  selectedModalidad = signal<ModalidadInfo | null>(null);
+
+  // Pago modal
+  showPagoModal = signal(false);
+  pagoReserva = signal<Reserva | null>(null);
+  pago = signal<PagoResponse | null>(null);
+  pagoLoading = signal(false);
+  tarjetaForm = {
+    numero: '',
+    titular: '',
+    expira: '',
+    cvv: ''
   };
 
   reservasPorMascota = signal<Map<number, Reserva[]>>(new Map());
 
   editReservaId = signal<number | null>(null);
   editReserva = signal<Reserva | null>(null);
+
+  // Certificado de vacunación en la reserva
+  requiereCertificado = signal(false);
+  registrosMascota = signal<RegistroVacunacion[]>([]);
+  certificadoRegistroId = signal<number | null>(null);
+  modoNuevoRegistro = signal(false);
+  nuevoRegistroForm = {
+    vacunaId: null as number | null,
+    fechaAplicacion: '',
+    fechaVencimiento: ''
+  };
+  certificadoFile = signal<File | null>(null);
+  certificadoPreview = signal<string | null>(null);
 
   constructor(
     private mascotaService: MascotaService,
@@ -100,8 +141,9 @@ export class MascotaListComponent implements OnInit {
     private registroVacService: RegistroVacunacionService,
     private vacunaCatalogService: VacunaCatalogService,
     private servicioService: ServicioService,
-    private disponibilidadService: DisponibilidadService,
-    private reservaService: ReservaService
+    private proveedorService: ProveedorService,
+    private reservaService: ReservaService,
+    private pagoService: PagoService
   ) {}
 
   ngOnInit(): void {
@@ -115,6 +157,9 @@ export class MascotaListComponent implements OnInit {
     });
     this.servicioService.getActive().subscribe({
       next: (res) => { if (res.success) this.servicios.set(res.data); }
+    });
+    this.proveedorService.getAll({ size: 100 }).subscribe({
+      next: (res) => { if (res.success) this.proveedores.set(res.data.content.filter(p => p.verificado !== false)); }
     });
     if (this.isCliente) {
       this.clienteService.getMe().subscribe({
@@ -437,25 +482,22 @@ export class MascotaListComponent implements OnInit {
     this.editReserva.set(reserva);
     this.reservaMascota.set(mascota);
     this.resetReservaForm();
+    this.reservaForm.proveedorId = reserva.proveedorId ?? null;
     this.reservaForm.servicioId = reserva.servicioId;
     this.reservaForm.fechaReserva = typeof reserva.fechaReserva === 'string' ? reserva.fechaReserva.substring(0, 10) : (reserva.fechaReserva || '');
     this.reservaForm.horaInicio = reserva.horaInicio || '';
     this.reservaForm.horaFin = reserva.horaFin || '';
     this.reservaForm.notas = reserva.notas || '';
+    this.reservaForm.modalidadEntrega = reserva.modalidadEntrega || '';
+    this.reservaForm.latitud = reserva.latitud ?? null;
+    this.reservaForm.longitud = reserva.longitud ?? null;
+    this.reservaForm.direccionReferencia = reserva.direccionReferencia || '';
+    const prov = this.proveedores().find(p => p.id === reserva.proveedorId);
+    if (prov) this.selectedProveedor.set(prov);
     const svc = this.servicios().find(s => s.id === reserva.servicioId);
     if (svc) this.selectedServicio.set(svc);
+    this.selectedFecha.set(this.reservaForm.fechaReserva || null);
     this.showReservaModal.set(true);
-    this.disponibilidadService.getByServicio(reserva.servicioId).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.disponibilidades.set(res.data);
-          if (reserva.fechaReserva) {
-            const dayOfWeek = new Date(this.reservaForm.fechaReserva).getDay();
-            this.filteredDisponibilidades.set(res.data.filter(d => d.diaSemana === dayOfWeek));
-          }
-        }
-      }
-    });
     this.reservaService.getById(reserva.id).subscribe({
       next: (res) => {
         if (res.success) {
@@ -465,7 +507,17 @@ export class MascotaListComponent implements OnInit {
           this.reservaForm.horaInicio = r.horaInicio || '';
           this.reservaForm.horaFin = r.horaFin || '';
           this.reservaForm.notas = r.notas || '';
+          this.reservaForm.registroVacunacionId = r.registroVacunacionId ?? null;
+          this.reservaForm.modalidadEntrega = r.modalidadEntrega || '';
+          this.reservaForm.latitud = r.latitud ?? null;
+          this.reservaForm.longitud = r.longitud ?? null;
+          this.reservaForm.direccionReferencia = r.direccionReferencia || '';
           this.editReserva.set(r);
+          if (r.proveedorId) {
+            this.reservaForm.proveedorId = r.proveedorId;
+            this.selectedProveedor.set(this.proveedores().find(p => p.id === r.proveedorId) ?? null);
+            this.loadSlots();
+          }
         }
       }
     });
@@ -476,46 +528,237 @@ export class MascotaListComponent implements OnInit {
     this.reservaMascota.set(null);
     this.editReservaId.set(null);
     this.editReserva.set(null);
-    this.disponibilidades.set([]);
-    this.filteredDisponibilidades.set([]);
-    this.selectedDisponibilidad.set(null);
+    this.slotsPorFecha.set([]);
+    this.selectedFecha.set(null);
+    this.selectedSlot.set(null);
+    this.selectedProveedor.set(null);
     this.selectedServicio.set(null);
+    this.modalidadesDisponibles.set([]);
+    this.selectedModalidad.set(null);
+    this.resetCertificadoState();
+  }
+
+  onProveedorChangeReserva(): void {
+    this.reservaForm.servicioId = null;
+    this.reservaForm.fechaReserva = '';
+    this.reservaForm.horaInicio = '';
+    this.reservaForm.horaFin = '';
+    this.reservaForm.modalidadEntrega = '';
+    this.slotsPorFecha.set([]);
+    this.selectedFecha.set(null);
+    this.selectedSlot.set(null);
+    this.selectedServicio.set(null);
+    this.modalidadesDisponibles.set([]);
+    this.selectedModalidad.set(null);
+    this.selectedProveedor.set(this.proveedores().find(p => p.id === this.reservaForm.proveedorId) ?? null);
+  }
+
+  serviciosDeProveedor(): Servicio[] {
+    const prov = this.proveedores().find(p => p.id === this.reservaForm.proveedorId);
+    if (!prov || !prov.servicioIds || prov.servicioIds.length === 0) {
+      return this.servicios();
+    }
+    return this.servicios().filter(s => prov.servicioIds.includes(s.id));
   }
 
   onServicioChangeReserva(): void {
     this.reservaForm.fechaReserva = '';
     this.reservaForm.horaInicio = '';
     this.reservaForm.horaFin = '';
-    this.disponibilidades.set([]);
-    this.filteredDisponibilidades.set([]);
-    this.selectedDisponibilidad.set(null);
+    this.reservaForm.modalidadEntrega = '';
+    this.slotsPorFecha.set([]);
+    this.selectedFecha.set(null);
+    this.selectedSlot.set(null);
     this.selectedServicio.set(null);
+    this.modalidadesDisponibles.set([]);
+    this.selectedModalidad.set(null);
+    this.resetCertificadoState();
     if (this.reservaForm.servicioId) {
       const svc = this.servicios().find(s => s.id === this.reservaForm.servicioId);
       if (svc) this.selectedServicio.set(svc);
-      this.disponibilidadService.getByServicio(this.reservaForm.servicioId).subscribe({
-        next: (res) => { if (res.success) this.disponibilidades.set(res.data); }
-      });
     }
+    this.loadSlots();
   }
 
-  onDateChange(): void {
+  selectModalidad(m: ModalidadInfo): void {
+    this.selectedModalidad.set(m);
+    this.reservaForm.modalidadEntrega = m.modalidad;
+  }
+
+  requiereCoordenadas(): boolean {
+    return this.reservaForm.modalidadEntrega === 'DOMICILIO' || this.reservaForm.modalidadEntrega === 'RECOGIDA_ENTREGA';
+  }
+
+  loadSlots(): void {
+    const proveedorId = this.reservaForm.proveedorId;
+    const servicioId = this.reservaForm.servicioId;
+    if (!proveedorId || !servicioId) {
+      this.slotsPorFecha.set([]);
+      return;
+    }
+    const desde = this.toDateStr(new Date());
+    const hasta = this.addDaysStr(new Date(), 13);
+    this.reservaService.getSlots(proveedorId, servicioId, desde, hasta, this.editReservaId() ?? undefined).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.slotsPorFecha.set(res.data);
+          this.requiereCertificado.set(res.data.some(s => s.requiereCertificado));
+          const mods = res.data.length > 0 ? res.data[0].modalidades : [];
+          this.modalidadesDisponibles.set(mods || []);
+          if (this.editReservaId() && this.reservaForm.modalidadEntrega) {
+            this.selectedModalidad.set((mods || []).find(m => m.modalidad === this.reservaForm.modalidadEntrega) ?? null);
+          }
+          if (this.requiereCertificado()) {
+            this.loadRegistrosParaCertificado();
+          }
+          if (this.editReservaId() && this.reservaForm.fechaReserva) {
+            this.selectedFecha.set(this.reservaForm.fechaReserva);
+          }
+        }
+      }
+    });
+  }
+
+  availableFechas(): string[] {
+    return this.slotsPorFecha().map(s => s.fecha);
+  }
+
+  slotsDeFecha(): SlotDisponible[] {
+    const fecha = this.selectedFecha();
+    if (!fecha) return [];
+    const item = this.slotsPorFecha().find(s => s.fecha === fecha);
+    return item ? item.slots : [];
+  }
+
+  selectFecha(fecha: string): void {
+    this.reservaForm.fechaReserva = fecha;
+    this.selectedFecha.set(fecha);
     this.reservaForm.horaInicio = '';
     this.reservaForm.horaFin = '';
-    this.selectedDisponibilidad.set(null);
-    if (this.reservaForm.fechaReserva) {
-      const dayOfWeek = new Date(this.reservaForm.fechaReserva).getDay();
-      const filtered = this.disponibilidades().filter(d => d.diaSemana === dayOfWeek);
-      this.filteredDisponibilidades.set(filtered);
-    } else {
-      this.filteredDisponibilidades.set([]);
+    this.selectedSlot.set(null);
+  }
+
+  selectSlot(slot: SlotDisponible): void {
+    this.selectedSlot.set(slot);
+    this.reservaForm.horaInicio = slot.horaInicio;
+    this.reservaForm.horaFin = slot.horaFin;
+  }
+
+  // --- Certificado de vacunación en reserva ---
+  private resetCertificadoState(): void {
+    this.requiereCertificado.set(false);
+    this.registrosMascota.set([]);
+    this.certificadoRegistroId.set(null);
+    this.modoNuevoRegistro.set(false);
+    this.reservaForm.registroVacunacionId = null;
+    this.nuevoRegistroForm = { vacunaId: null, fechaAplicacion: '', fechaVencimiento: '' };
+    this.certificadoFile.set(null);
+    this.certificadoPreview.set(null);
+  }
+
+  private loadRegistrosParaCertificado(): void {
+    const m = this.reservaMascota();
+    if (!m) return;
+    this.registroVacService.getByMascota(m.id).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.registrosMascota.set(res.data.content.filter(r => !!r.certificadoUrl));
+          if (this.reservaForm.registroVacunacionId) {
+            this.certificadoRegistroId.set(this.reservaForm.registroVacunacionId);
+          }
+        }
+      }
+    });
+  }
+
+  seleccionarRegistro(vacId: number): void {
+    this.certificadoRegistroId.set(vacId);
+    this.reservaForm.registroVacunacionId = vacId;
+    this.modoNuevoRegistro.set(false);
+  }
+
+  activarNuevoRegistro(): void {
+    this.modoNuevoRegistro.set(true);
+    this.certificadoRegistroId.set(null);
+    this.reservaForm.registroVacunacionId = null;
+  }
+
+  onCertificadoFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.certificadoFile.set(file);
+      const reader = new FileReader();
+      reader.onload = () => this.certificadoPreview.set(reader.result as string);
+      reader.readAsDataURL(file);
     }
   }
 
-  selectDisponibilidad(d: Disponibilidad): void {
-    this.selectedDisponibilidad.set(d);
-    this.reservaForm.horaInicio = d.horaInicio;
-    this.reservaForm.horaFin = d.horaFin;
+  quitarCertificado(): void {
+    this.certificadoFile.set(null);
+    this.certificadoPreview.set(null);
+    if (this.certificadoInput) this.certificadoInput.nativeElement.value = '';
+  }
+
+  crearRegistroConCertificado(): void {
+    const m = this.reservaMascota();
+    if (!m) {
+      this.toast.error('No se pudo identificar la mascota');
+      return;
+    }
+    if (!this.nuevoRegistroForm.vacunaId || !this.nuevoRegistroForm.fechaAplicacion || !this.nuevoRegistroForm.fechaVencimiento) {
+      this.toast.error('Complete vacuna, fecha de aplicación y vencimiento');
+      return;
+    }
+    const file = this.certificadoFile();
+    if (!file) {
+      this.toast.error('Debe adjuntar el certificado de vacunación');
+      return;
+    }
+    this.loading.set(true);
+    this.uploadService.uploadCertificado(file).subscribe({
+      next: (uploadRes) => {
+        const data: RegistroVacunacionRequest = {
+          mascotaId: m.id,
+          vacunaId: this.nuevoRegistroForm.vacunaId!,
+          fechaAplicacion: this.nuevoRegistroForm.fechaAplicacion,
+          fechaVencimiento: this.nuevoRegistroForm.fechaVencimiento,
+          certificadoUrl: uploadRes.url
+        };
+        this.registroVacService.create(data).subscribe({
+          next: (res) => {
+            this.loading.set(false);
+            if (res.success) {
+              this.toast.success('Certificado registrado');
+              this.seleccionarRegistro(res.data.id);
+              this.loadRegistrosParaCertificado();
+            }
+          },
+          error: (err) => {
+            this.loading.set(false);
+            this.toast.error(err.error?.message || 'Error al guardar el certificado');
+          }
+        });
+      },
+      error: () => {
+        this.loading.set(false);
+        this.toast.error('Error al subir el certificado');
+      }
+    });
+  }
+
+  registroSeleccionado(vac: RegistroVacunacion): boolean {
+    return this.certificadoRegistroId() === vac.id;
+  }
+
+  formatFechaCorta(fecha: string): string {
+    if (!fecha) return '';
+    const parts = fecha.split('-');
+    if (parts.length === 3) {
+      const d = new Date(+parts[0], +parts[1] - 1, +parts[2]);
+      return d.toLocaleDateString('es', { weekday: 'short', day: '2-digit', month: 'short' });
+    }
+    return fecha;
   }
 
   formatTimeShort(time: any): string {
@@ -545,13 +788,31 @@ export class MascotaListComponent implements OnInit {
 
   onSubmitReserva(): void {
     const m = this.reservaMascota();
-    if (!m || !this.reservaForm.servicioId || !this.reservaForm.fechaReserva || !this.reservaForm.horaInicio || !this.reservaForm.horaFin) {
-      this.toast.error('Complete todos los campos obligatorios');
+    if (!m || !this.reservaForm.proveedorId || !this.reservaForm.servicioId || !this.reservaForm.fechaReserva || !this.reservaForm.horaInicio || !this.reservaForm.horaFin) {
+      this.toast.error('Seleccione proveedor, servicio, fecha y horario');
+      return;
+    }
+    if (!this.reservaForm.modalidadEntrega) {
+      this.toast.error('Seleccione una modalidad de entrega');
+      return;
+    }
+    if (this.requiereCoordenadas()) {
+      if (this.reservaForm.latitud == null || this.reservaForm.longitud == null) {
+        this.toast.error('Para esta modalidad debe indicar la latitud y longitud del lugar');
+        return;
+      }
+    }
+    if (this.requiereCertificado() && !this.reservaForm.registroVacunacionId) {
+      this.toast.error('Este servicio requiere un certificado de vacunación');
       return;
     }
     this.loading.set(true);
+    const svc = this.servicios().find(s => s.id === this.reservaForm.servicioId);
+    const mod = this.selectedModalidad();
+    const precioTotal = (svc ? svc.precioBase : 0) + (mod ? mod.costoAdicional : 0);
     const data: ReservaRequest = {
       clienteId: m.clienteId,
+      proveedorId: this.reservaForm.proveedorId,
       servicioId: this.reservaForm.servicioId,
       mascotaId: m.id,
       fechaReserva: this.reservaForm.fechaReserva,
@@ -559,13 +820,15 @@ export class MascotaListComponent implements OnInit {
       horaInicio: this.reservaForm.horaInicio,
       horaFin: this.reservaForm.horaFin,
       notas: this.reservaForm.notas,
-      precioTotal: 0
+      precioTotal,
+      registroVacunacionId: this.reservaForm.registroVacunacionId ?? undefined,
+      modalidadEntrega: this.reservaForm.modalidadEntrega,
+      latitud: this.reservaForm.latitud ?? undefined,
+      longitud: this.reservaForm.longitud ?? undefined,
+      direccionReferencia: this.reservaForm.direccionReferencia || undefined
     };
     const edit = this.editReserva();
-    if (edit) {
-      if (edit.proveedorId) data.proveedorId = edit.proveedorId;
-      if ((edit as any).fechaFin) data.fechaFin = (edit as any).fechaFin;
-    }
+    if (edit && (edit as any).fechaFin) data.fechaFin = (edit as any).fechaFin;
     const editId = this.editReservaId();
     const obs = editId ? this.reservaService.update(editId, data) : this.reservaService.create(data);
     obs.subscribe({
@@ -582,13 +845,39 @@ export class MascotaListComponent implements OnInit {
     });
   }
 
+  private toDateStr(date: Date): string {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  private addDaysStr(date: Date, days: number): string {
+    const copy = new Date(date);
+    copy.setDate(copy.getDate() + days);
+    return this.toDateStr(copy);
+  }
+
   private resetReservaForm(): void {
+    this.reservaForm.proveedorId = null;
     this.reservaForm.servicioId = null;
     this.reservaForm.fechaReserva = '';
     this.reservaForm.horaInicio = '';
     this.reservaForm.horaFin = '';
     this.reservaForm.notas = '';
+    this.reservaForm.registroVacunacionId = null;
+    this.reservaForm.modalidadEntrega = '';
+    this.reservaForm.latitud = null;
+    this.reservaForm.longitud = null;
+    this.reservaForm.direccionReferencia = '';
+    this.slotsPorFecha.set([]);
+    this.selectedFecha.set(null);
+    this.selectedSlot.set(null);
+    this.selectedProveedor.set(null);
     this.selectedServicio.set(null);
+    this.modalidadesDisponibles.set([]);
+    this.selectedModalidad.set(null);
+    this.resetCertificadoState();
   }
 
   cancelReserva(): void {
@@ -616,6 +905,104 @@ export class MascotaListComponent implements OnInit {
         });
       }
     });
+  }
+
+  modalidadLabel(m: string): string {
+    return modalidadLabel(m);
+  }
+
+  // --- Pago modal ---
+  abrirPago(mascota: Mascota, reserva: Reserva): void {
+    this.pagoReserva.set(reserva);
+    this.pago.set(null);
+    this.tarjetaForm = { numero: '', titular: '', expira: '', cvv: '' };
+    this.showPagoModal.set(true);
+    this.cargarPago();
+  }
+
+  cargarPago(): void {
+    const reserva = this.pagoReserva();
+    if (!reserva) return;
+    this.pagoLoading.set(true);
+    this.pagoService.getByReserva(reserva.id).subscribe({
+      next: (res) => {
+        this.pagoLoading.set(false);
+        if (res.success) this.pago.set(res.data);
+      },
+      error: () => this.pagoLoading.set(false)
+    });
+  }
+
+  closePagoModal(): void {
+    this.showPagoModal.set(false);
+    this.pagoReserva.set(null);
+    this.pago.set(null);
+  }
+
+  procesarPago(): void {
+    const pago = this.pago();
+    if (!pago) return;
+    if (!this.tarjetaForm.numero.trim() || !this.tarjetaForm.titular.trim()
+        || !this.tarjetaForm.expira.trim() || !this.tarjetaForm.cvv.trim()) {
+      this.toast.error('Complete los datos de la tarjeta');
+      return;
+    }
+    this.pagoLoading.set(true);
+    const data: ProcesarPagoRequest = {
+      metodoPago: 'TARJETA',
+      tarjeta: {
+        numero: this.tarjetaForm.numero.trim(),
+        titular: this.tarjetaForm.titular.trim(),
+        expira: this.tarjetaForm.expira.trim(),
+        cvv: this.tarjetaForm.cvv.trim()
+      }
+    };
+    this.pagoService.procesar(pago.id, data).subscribe({
+      next: (res) => {
+        this.pagoLoading.set(false);
+        if (res.success) {
+          this.toast.success('Pago procesado exitosamente');
+          this.pago.set(res.data);
+          this.loadReservas();
+        }
+      },
+      error: (err) => {
+        this.pagoLoading.set(false);
+        this.toast.error(err.error?.message || 'Error al procesar el pago');
+      }
+    });
+  }
+
+  reembolsarPago(): void {
+    const pago = this.pago();
+    if (!pago) return;
+    Swal.fire({
+      title: 'Reembolsar pago',
+      text: `¿Estás seguro de reembolsar el pago de la reserva ${pago.codigoReserva}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, reembolsar',
+      cancelButtonText: 'No'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.pagoService.reembolsar(pago.id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.toast.success('Pago reembolsado');
+              this.pago.set(res.data);
+              this.loadReservas();
+            }
+          },
+          error: (err) => this.toast.error(err.error?.message || 'Error al reembolsar el pago')
+        });
+      }
+    });
+  }
+
+  formatMonto(v: number | undefined | null): string {
+    return v == null ? '0' : String(v);
   }
 
   private loadReservas(): void {

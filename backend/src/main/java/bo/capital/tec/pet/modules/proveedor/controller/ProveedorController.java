@@ -2,12 +2,16 @@ package bo.capital.tec.pet.modules.proveedor.controller;
 
 import bo.capital.tec.pet.common.response.ApiResponse;
 import bo.capital.tec.pet.common.response.PagedResponse;
+import bo.capital.tec.pet.modules.proveedor.dto.ProveedorEspecialidadRequestDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.ProveedorFullCreateDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.ProveedorFullUpdateDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.ProveedorRequestDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.ProveedorResponseDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.ProveedorSummaryDTO;
 import bo.capital.tec.pet.modules.proveedor.service.ProveedorService;
+import bo.capital.tec.pet.modules.usuario.api.UsuarioApi;
+import bo.capital.tec.pet.modules.usuario.entity.Usuario;
+import bo.capital.tec.pet.security.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,6 +31,7 @@ import java.util.Map;
 public class ProveedorController {
 
     private final ProveedorService proveedorService;
+    private final UsuarioApi usuarioApi;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -48,6 +53,29 @@ public class ProveedorController {
     @Operation(summary = "Obtener proveedor por ID")
     public ResponseEntity<ApiResponse<ProveedorResponseDTO>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(proveedorService.getById(id)));
+    }
+
+    @GetMapping("/my")
+    @Operation(summary = "Obtener el proveedor del usuario autenticado")
+    public ResponseEntity<ApiResponse<ProveedorResponseDTO>> getMyProveedor() {
+        String username = SecurityUtil.getCurrentUsername();
+        Usuario usuario = usuarioApi.findByUsername(username);
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Usuario no autenticado", 401));
+        }
+        return ResponseEntity.ok(ApiResponse.success(proveedorService.getByUsuarioId(usuario.getId())));
+    }
+
+    @PutMapping("/{id}/especialidad/{servicioId}")
+    @Operation(summary = "Configurar si el servicio exige certificado de vacunacion")
+    public ResponseEntity<ApiResponse<ProveedorResponseDTO>> setRequiereCertificado(
+            @PathVariable Long id,
+            @PathVariable Long servicioId,
+            @RequestBody ProveedorEspecialidadRequestDTO dto) {
+        return ResponseEntity.ok(ApiResponse.success(
+                proveedorService.setRequiereCertificado(id, servicioId, dto.getRequiereCertificado()),
+                "Configuracion actualizada"));
     }
 
     @GetMapping

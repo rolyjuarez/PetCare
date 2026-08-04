@@ -14,6 +14,8 @@ public interface ProveedorService {
     ProveedorResponseDTO create(ProveedorRequestDTO dto);
     ProveedorResponseDTO createFull(ProveedorFullCreateDTO dto);
     ProveedorResponseDTO getById(Long id);
+    ProveedorResponseDTO getByUsuarioId(Long usuarioId);
+    ProveedorResponseDTO setRequiereCertificado(Long proveedorId, Long servicioId, Boolean requiere);
     PagedResponse<ProveedorSummaryDTO> getAll(String nombre, Long especialidadId, boolean activo, int page, int size);
     ProveedorResponseDTO update(Long id, ProveedorRequestDTO dto);
     ProveedorResponseDTO updateFull(Long id, ProveedorFullUpdateDTO dto);

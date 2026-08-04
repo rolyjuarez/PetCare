@@ -31,6 +31,8 @@ public class ReservaRequestDTO {
     private LocalTime horaInicio;
     @NotNull
     private LocalTime horaFin;
+    private Long registroVacunacionId;
+    private String modalidadEntrega;
     private BigDecimal latitud;
     private BigDecimal longitud;
     private String direccionReferencia;

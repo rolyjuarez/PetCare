@@ -9,7 +9,7 @@ public interface ProveedorService {
 
     PagedResponse<SolicitudReservaResponseDTO> listarSolicitudes(Long proveedorId, String estado, int page, int size);
 
-    SolicitudReservaResponseDTO aceptar(Long proveedorId, Long solicitudId);
+    SolicitudReservaResponseDTO aceptar(Long proveedorId, Long solicitudId, ResponderSolicitudRequestDTO request);
 
     SolicitudReservaResponseDTO rechazar(Long proveedorId, Long solicitudId, ResponderSolicitudRequestDTO request);
 

@@ -12,4 +12,6 @@ public class ServicioInfoDTO {
     private String nombre;
     private Integer duracionMinutos;
     private java.math.BigDecimal precioBase;
+    private String categoria;
+    private Boolean requiereCertificado;
 }

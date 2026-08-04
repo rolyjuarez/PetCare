@@ -49,6 +49,7 @@ public class OutboxPublisher {
             case "PAGO" -> "petcare.pago.event.v1";
             case "USUARIO" -> "petcare.usuario.event.v1";
             case "MASCOTA" -> "petcare.mascota.event.v1";
+            case "PROMOCION" -> "petcare.promocion.event.v1";
             default -> "petcare.internal.dlt.v1";
         };
     }

@@ -27,6 +27,8 @@ public class ReservaResponseDTO {
     private Long mascotaId;
     private String mascotaNombre;
     private Long estadoReservaId;
+    private Long registroVacunacionId;
+    private String modalidadEntrega;
     private String estadoReservaNombre;
     private String estadoReservaColor;
     private LocalDate fechaReserva;

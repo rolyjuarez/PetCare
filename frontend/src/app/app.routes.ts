@@ -59,6 +59,8 @@ export const routes: Routes = [
       { path: 'mascotas/:id', loadComponent: () => import('./mascota/pages/mascota-detail/mascota-detail.component').then(m => m.MascotaDetailComponent) },
       { path: 'proveedores', loadComponent: () => import('./proveedor/pages/proveedor-list/proveedor-list.component').then(m => m.ProveedorListComponent) },
       { path: 'proveedor/reservas', loadComponent: () => import('./proveedor/pages/solicitud-list/solicitud-list.component').then(m => m.SolicitudListComponent) },
+      { path: 'proveedor/servicios', loadComponent: () => import('./proveedor/pages/mis-servicios/mis-servicios.component').then(m => m.MisServiciosComponent) },
+      { path: 'proveedor/promociones', loadComponent: () => import('./proveedor/pages/promociones-proveedor/promociones-proveedor.component').then(m => m.PromocionesProveedorComponent) },
       { path: 'servicios', loadComponent: () => import('./servicio/pages/servicio-list/servicio-list.component').then(m => m.ServicioListComponent) },
       { path: 'reservas', loadComponent: () => import('./reserva/pages/reserva-list/reserva-list.component').then(m => m.ReservaListComponent) },
       { path: 'vacunas', loadComponent: () => import('./vacuna/pages/vacuna-list/vacuna-list.component').then(m => m.VacunaListComponent) },

@@ -27,6 +27,9 @@ public class KafkaTopicConfig {
     @Value("${app.kafka.topic.mascota-event:petcare.mascota.event.v1}")
     private String mascotaTopic;
 
+    @Value("${app.kafka.topic.promocion-event:petcare.promocion.event.v1}")
+    private String promocionTopic;
+
     @Value("${app.kafka.topic.dlt:petcare.internal.dlt.v1}")
     private String deadLetterTopic;
 
@@ -67,6 +70,12 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic mascotaEventTopic() {
         return new NewTopic(mascotaTopic, 2, (short) 1)
+                .configs(eventTopicConfig());
+    }
+
+    @Bean
+    public NewTopic promocionEventTopic() {
+        return new NewTopic(promocionTopic, 2, (short) 1)
                 .configs(eventTopicConfig());
     }
 

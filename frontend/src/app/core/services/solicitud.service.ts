@@ -12,8 +12,8 @@ export class SolicitudService {
     return this.api.getPaged('/proveedor/solicitudes', page, size, { estado });
   }
 
-  aceptar(id: number): Observable<ApiResponse<SolicitudReserva>> {
-    return this.api.put(`/proveedor/solicitudes/${id}/aceptar`, {});
+  aceptar(id: number, comentario?: string): Observable<ApiResponse<SolicitudReserva>> {
+    return this.api.put(`/proveedor/solicitudes/${id}/aceptar`, { comentario: comentario || '' });
   }
 
   rechazar(id: number, motivoRechazo: string): Observable<ApiResponse<SolicitudReserva>> {

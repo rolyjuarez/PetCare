@@ -11,6 +11,11 @@ export interface Reserva {
   servicioId: number;
   mascotaId: number;
   estadoReservaId: number;
+  registroVacunacionId?: number;
+  modalidadEntrega?: string;
+  latitud?: number;
+  longitud?: number;
+  direccionReferencia?: string;
   fechaReserva: string;
   fechaInicio: string;
   fechaFin: string;
@@ -39,6 +44,29 @@ export interface ReservaRequest {
   horaFin: string;
   notas?: string;
   precioTotal?: number;
+  registroVacunacionId?: number;
+  modalidadEntrega?: string;
+  latitud?: number;
+  longitud?: number;
+  direccionReferencia?: string;
+}
+
+export interface SlotDisponible {
+  horaInicio: string;
+  horaFin: string;
+}
+
+export interface ModalidadInfo {
+  id: number;
+  modalidad: string;
+  costoAdicional: number;
+}
+
+export interface DisponibilidadSlots {
+  fecha: string;
+  slots: SlotDisponible[];
+  requiereCertificado: boolean;
+  modalidades?: ModalidadInfo[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -63,6 +91,10 @@ export class ReservaService {
 
   getByMascota(mascotaId: number): Observable<ApiResponse<PagedResponse<Reserva>>> {
     return this.api.getPaged('/reservas', 0, 50, { mascotaId });
+  }
+
+  getSlots(proveedorId: number, servicioId: number, desde?: string, hasta?: string, excluirReservaId?: number): Observable<ApiResponse<DisponibilidadSlots[]>> {
+    return this.api.get('/reservas/slots', { proveedorId, servicioId, desde, hasta, excluirReservaId });
   }
 
   update(id: number, data: ReservaRequest): Observable<ApiResponse<Reserva>> {

@@ -26,4 +26,24 @@ export class DisponibilidadService {
   getByServicio(servicioId: number): Observable<ApiResponse<Disponibilidad[]>> {
     return this.api.get(`/disponibilidades/by-servicio/${servicioId}`);
   }
+
+  create(data: DisponibilidadRequest): Observable<ApiResponse<Disponibilidad>> {
+    return this.api.post('/disponibilidades', data);
+  }
+
+  update(id: number, data: DisponibilidadRequest): Observable<ApiResponse<Disponibilidad>> {
+    return this.api.put(`/disponibilidades/${id}`, data);
+  }
+
+  delete(id: number): Observable<ApiResponse<void>> {
+    return this.api.delete(`/disponibilidades/${id}`);
+  }
+}
+
+export interface DisponibilidadRequest {
+  proveedorId: number;
+  servicioId: number;
+  diaSemana: number;
+  horaInicio: string;
+  horaFin: string;
 }

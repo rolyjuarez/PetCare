@@ -63,6 +63,7 @@ class ReservaFlowIntegrationTest {
     void limpiarBase() {
         jdbcTemplate.update("DELETE FROM evento_procesado");
         jdbcTemplate.update("DELETE FROM reserva");
+        jdbcTemplate.update("DELETE FROM notificacion");
         eventCollector.clear();
     }
 
@@ -100,7 +101,7 @@ class ReservaFlowIntegrationTest {
 
         ReservaAceptadaEvent event = new ReservaAceptadaEvent(
                 creada.getId(), creada.getCodigo(), 1L,
-                "Maria Lopez", "VetPet SRL", "Consulta general", Instant.now());
+                "Maria Lopez", "VetPet SRL", "Consulta general", Instant.now(), null);
         kafkaTemplate.send("test.reserva.aceptada", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
 
         Reserva actualizada = awaitReserva(creada.getId(), "CONFIRMADA");
@@ -108,6 +109,10 @@ class ReservaFlowIntegrationTest {
         assertThat(actualizada.getRespuestaEn()).isNotNull();
 
         assertThat(idempotencyService.isProcessed(event.getEventId())).isTrue();
+        Integer notificaciones = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM notificacion WHERE usuario_id = ? AND tipo = 'EXITO'",
+                Integer.class, creada.getClienteId());
+        assertThat(notificaciones).isEqualTo(1);
     }
 
     @Test
@@ -123,6 +128,10 @@ class ReservaFlowIntegrationTest {
         Reserva actualizada = awaitReserva(creada.getId(), "RECHAZADA");
         assertThat(actualizada.getMotivoRechazo()).isEqualTo("Horario no disponible");
         assertThat(actualizada.getProveedorId()).isEqualTo(1L);
+        Integer notificaciones = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM notificacion WHERE usuario_id = ? AND tipo = 'ADVERTENCIA'",
+                Integer.class, creada.getClienteId());
+        assertThat(notificaciones).isEqualTo(1);
     }
 
     @Test
@@ -131,7 +140,7 @@ class ReservaFlowIntegrationTest {
 
         ReservaAceptadaEvent event = new ReservaAceptadaEvent(
                 creada.getId(), creada.getCodigo(), 1L,
-                "Maria Lopez", "VetPet SRL", "Consulta general", Instant.now());
+                "Maria Lopez", "VetPet SRL", "Consulta general", Instant.now(), null);
         kafkaTemplate.send("test.reserva.aceptada", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
 
         awaitReserva(creada.getId(), "CONFIRMADA");

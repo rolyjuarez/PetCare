@@ -24,6 +24,8 @@ public class Reserva {
     private Long servicioId;
     private Long mascotaId;
     private Long estadoReservaId;
+    private Long registroVacunacionId;
+    private String modalidadEntrega;
     private LocalDate fechaReserva;
     private LocalDate fechaInicio;
     private LocalDate fechaFin;

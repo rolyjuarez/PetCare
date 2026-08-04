@@ -21,6 +21,14 @@ spring:
     time-zone: America/La_Paz
     serialization:
       write-dates-as-timestamps: false
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:roly.juarez@gmail.com}
+    password: ${MAIL_PASSWORD:srek cder xteq iqnj}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
@@ -35,6 +43,9 @@ jwt:
   refresh-expiration: 604800000
 
 app:
+  email:
+    enabled: ${APP_EMAIL_ENABLED:true}
+    from: ${MAIL_FROM:roly.juarez@gmail.com}
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
     group-id: reservation-service
@@ -42,6 +53,7 @@ app:
       reserva-creada: reserva.creada
       reserva-aceptada: reserva.aceptada
       reserva-rechazada: reserva.rechazada
+      reserva-confirmada: reserva.confirmada
       dlt: reserva.dlt.v1
     partitions: 3
     replication-factor: 1

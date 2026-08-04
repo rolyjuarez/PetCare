@@ -28,6 +28,15 @@ INSERT INTO servicio (id, nombre, duracion_minutos, precio_base) VALUES
     (1, 'Consulta general', 30, 80.00),
     (2, 'Peluqueria', 60, 150.00);
 
+INSERT INTO proveedor_servicio (id, proveedor_id, nombre, descripcion, categoria, duracion_minutos, precio_base, requiere_certificado, activo) VALUES
+    (1, 1, 'Consulta general', 'Consulta veterinaria general', 'VETERINARIA', 30, 80.00, FALSE, TRUE),
+    (2, 1, 'Peluqueria', 'Baño y corte', 'PELUQUERIA', 60, 150.00, TRUE, TRUE);
+
+INSERT INTO proveedor_servicio_modalidad (proveedor_servicio_id, modalidad, costo_adicional) VALUES
+    (1, 'EN_ESTABLECIMIENTO', 0.00),
+    (1, 'DOMICILIO', 20.00),
+    (2, 'EN_ESTABLECIMIENTO', 0.00);
+
 INSERT INTO especie (id, nombre) VALUES (1, 'Perro'), (2, 'Gato');
 
 INSERT INTO mascota (id, nombre, especie_id, cliente_id) VALUES (1, 'Rex', 1, 1), (2, 'Michi', 2, 1);

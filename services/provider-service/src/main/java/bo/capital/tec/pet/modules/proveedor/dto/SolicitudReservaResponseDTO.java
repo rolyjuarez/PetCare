@@ -29,8 +29,11 @@ public class SolicitudReservaResponseDTO {
     private LocalDate fechaInicio;
     private LocalTime horaInicio;
     private BigDecimal precioTotal;
+    private String modalidadEntrega;
     private String estado;
     private String motivoRechazo;
+    private Long registroVacunacionId;
+    private VacunaInfoDTO vacunaInfo;
     private LocalDateTime creadaEn;
     private LocalDateTime respondidaEn;
 }

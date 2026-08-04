@@ -10,10 +10,15 @@ import java.util.List;
 
 public interface PromocionService {
     PromocionResponseDTO create(PromocionRequestDTO dto);
+    PromocionResponseDTO createForProveedor(Long proveedorId, PromocionRequestDTO dto);
     PromocionResponseDTO getById(Long id);
     PagedResponse<PromocionSummaryDTO> getAll(String nombre, boolean activo, int page, int size);
+    PagedResponse<PromocionSummaryDTO> getByProveedor(Long proveedorId, int page, int size);
     List<PromocionSummaryDTO> getActive();
     List<PromocionSummaryDTO> getActiveByDate(LocalDate fecha);
     PromocionResponseDTO update(Long id, PromocionRequestDTO dto);
+    PromocionResponseDTO updateForProveedor(Long proveedorId, Long id, PromocionRequestDTO dto);
     void delete(Long id);
+    void deleteForProveedor(Long proveedorId, Long id);
+    int notificarClientes(Long promocionId);
 }

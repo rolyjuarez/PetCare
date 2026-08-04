@@ -17,8 +17,10 @@ export class SolicitudListComponent implements OnInit {
   searchTerm = '';
   loading = signal(false);
   showRechazarModal = signal(false);
+  showAceptarModal = signal(false);
   selected = signal<SolicitudReserva | null>(null);
   motivoRechazo = '';
+  comentarioAceptar = '';
   private allItems: SolicitudReserva[] = [];
 
   constructor(
@@ -67,12 +69,23 @@ export class SolicitudListComponent implements OnInit {
   }
 
   aceptar(solicitud: SolicitudReserva): void {
-    if (!confirm(`¿Aceptar la solicitud ${solicitud.codigo} de ${solicitud.clienteNombre}?`)) {
-      return;
-    }
-    this.solicitudService.aceptar(solicitud.id).subscribe({
+    this.selected.set(solicitud);
+    this.comentarioAceptar = '';
+    this.showAceptarModal.set(true);
+  }
+
+  closeAceptar(): void {
+    this.showAceptarModal.set(false);
+    this.selected.set(null);
+  }
+
+  confirmAceptar(): void {
+    const s = this.selected();
+    if (!s) return;
+    this.solicitudService.aceptar(s.id, this.comentarioAceptar.trim()).subscribe({
       next: () => {
         this.toast.success('Solicitud aceptada');
+        this.closeAceptar();
         this.load();
       },
       error: (err) => this.toast.error(err.error?.message || 'Error al aceptar la solicitud')

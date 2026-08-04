@@ -18,10 +18,12 @@ public class ReservaAceptadaEvent extends DomainEvent {
     private String proveedorEmpresa;
     private String servicioNombre;
     private Instant respondidaEn;
+    private String comentarioProveedor;
 
     public ReservaAceptadaEvent(Long reservaId, String codigo, Long proveedorId,
                                 String proveedorNombre, String proveedorEmpresa,
-                                String servicioNombre, Instant respondidaEn) {
+                                String servicioNombre, Instant respondidaEn,
+                                String comentarioProveedor) {
         super("RESERVA", reservaId);
         this.reservaId = reservaId;
         this.codigo = codigo;
@@ -30,5 +32,6 @@ public class ReservaAceptadaEvent extends DomainEvent {
         this.proveedorEmpresa = proveedorEmpresa;
         this.servicioNombre = servicioNombre;
         this.respondidaEn = respondidaEn;
+        this.comentarioProveedor = comentarioProveedor;
     }
 }

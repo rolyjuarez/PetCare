@@ -69,7 +69,8 @@ class ProveedorFlowIntegrationTest {
         return new ReservaCreadaEvent(1L, "RES-20260731-001", 1L, "Ana Gomez",
                 "ana@petcare.bo", proveedorId, "VetPet SRL",
                 1L, "Consulta general", 1L, "Rex",
-                LocalDate.now().plusDays(2), LocalTime.of(10, 0), new BigDecimal("80.00"));
+                LocalDate.now().plusDays(2), LocalTime.of(10, 0), new BigDecimal("80.00"),
+                "EN_ESTABLECIMIENTO", null);
     }
 
     @Test
@@ -92,7 +93,9 @@ class ProveedorFlowIntegrationTest {
         proveedorService.procesarReservaCreada(buildEvent(1L));
         SolicitudReserva solicitud = solicitudReservaMapper.selectByReservaId(1L).get(0);
 
-        SolicitudReservaResponseDTO resultado = proveedorService.aceptar(1L, solicitud.getId());
+        SolicitudReservaResponseDTO resultado =
+                proveedorService.aceptar(1L, solicitud.getId(),
+                        new ResponderSolicitudRequestDTO(null, "Mascota en buen estado"));
 
         assertThat(resultado.getEstado()).isEqualTo("ACEPTADA");
         assertThat(resultado.getRespondidaEn()).isNotNull();
@@ -102,6 +105,7 @@ class ProveedorFlowIntegrationTest {
         assertThat(event.getReservaId()).isEqualTo(1L);
         assertThat(event.getProveedorId()).isEqualTo(1L);
         assertThat(event.getProveedorEmpresa()).isEqualTo("VetPet SRL");
+        assertThat(event.getComentarioProveedor()).isEqualTo("Mascota en buen estado");
 
         SolicitudReserva actual = solicitudReservaMapper.selectById(solicitud.getId());
         assertThat(actual.getEstado()).isEqualTo("ACEPTADA");
@@ -115,9 +119,7 @@ class ProveedorFlowIntegrationTest {
 
         SolicitudReservaResponseDTO resultado =
                 proveedorService.rechazar(1L, solicitud.getId(),
-                        new ResponderSolicitudRequestDTO("Horario no disponible"));
-
-        assertThat(resultado.getEstado()).isEqualTo("RECHAZADA");
+                        new ResponderSolicitudRequestDTO("Horario no disponible", null));        assertThat(resultado.getEstado()).isEqualTo("RECHAZADA");
         assertThat(resultado.getMotivoRechazo()).isEqualTo("Horario no disponible");
 
         ReservaRechazadaEvent event = eventCollector.rechazadas().poll(10, TimeUnit.SECONDS);

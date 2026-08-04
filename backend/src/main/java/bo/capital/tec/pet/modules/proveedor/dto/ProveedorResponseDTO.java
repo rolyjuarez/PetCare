@@ -34,6 +34,8 @@ public class ProveedorResponseDTO {
     private BigDecimal calificacion;
     private List<String> especialidades;
     private List<Long> servicioIds;
+    private List<Long> servicioIdsRequeridos;
+    private List<bo.capital.tec.pet.modules.proveedorservicio.dto.ProveedorServicioResponseDTO> servicios;
     private List<DisponibilidadDTO> disponibilidades;
     private LocalDateTime createdAt;
 

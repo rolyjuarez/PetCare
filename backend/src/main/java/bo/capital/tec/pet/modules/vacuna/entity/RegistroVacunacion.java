@@ -15,6 +15,7 @@ public class RegistroVacunacion {
     private String lote;
     private String veterinario;
     private String observaciones;
+    private String certificadoUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean deleted;

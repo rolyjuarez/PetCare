@@ -15,6 +15,17 @@ export interface SolicitudReserva {
   precioTotal: number;
   estado: string;
   motivoRechazo: string;
+  registroVacunacionId?: number;
+  vacunaInfo?: VacunaInfo;
   creadaEn: string;
   respondidaEn: string;
+}
+
+export interface VacunaInfo {
+  id: number;
+  mascotaId: number;
+  vacunaId: number;
+  vacunaNombre: string;
+  fechaAplicacion: string;
+  certificadoUrl: string;
 }

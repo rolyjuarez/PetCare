@@ -12,4 +12,5 @@ public class RegistroVacunacionSummaryDTO {
     private String vacunaNombre;
     private LocalDate fechaAplicacion;
     private LocalDate fechaVencimiento;
+    private String certificadoUrl;
 }

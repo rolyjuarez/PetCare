@@ -14,6 +14,7 @@ export interface RegistroVacunacion {
   lote: string;
   veterinario: string;
   observaciones: string;
+  certificadoUrl: string;
 }
 
 export interface RegistroVacunacionRequest {
@@ -24,6 +25,7 @@ export interface RegistroVacunacionRequest {
   lote?: string;
   veterinario?: string;
   observaciones?: string;
+  certificadoUrl?: string;
 }
 
 @Injectable({ providedIn: 'root' })

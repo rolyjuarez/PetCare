@@ -7,7 +7,11 @@ import java.time.LocalDateTime;
 @Data @Builder @NoArgsConstructor @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
 public class Promocion {
+    public static final String TIPO_PERCENTAGE = "PERCENTAGE";
+    public static final String TIPO_FIXED = "FIXED";
+
     private Long id;
+    private Long proveedorId;
     private String codigo;
     private String nombre;
     private String descripcion;

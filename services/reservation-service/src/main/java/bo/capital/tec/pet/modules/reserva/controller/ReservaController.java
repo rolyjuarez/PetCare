@@ -2,6 +2,7 @@ package bo.capital.tec.pet.modules.reserva.controller;
 
 import bo.capital.tec.pet.common.api.ApiResponse;
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.modules.reserva.dto.DisponibilidadSlotsDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaRequestDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaResponseDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaSummaryDTO;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/reservas")
@@ -36,6 +38,18 @@ public class ReservaController {
     public ResponseEntity<ApiResponse<ReservaResponseDTO>> create(@Valid @RequestBody ReservaRequestDTO dto) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(reservaService.create(dto), "Reserva creada"));
+    }
+
+    @GetMapping("/slots")
+    public ResponseEntity<ApiResponse<List<DisponibilidadSlotsDTO>>> getSlots(
+            @RequestParam Long proveedorId,
+            @RequestParam Long servicioId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam(required = false) Long excluirReservaId) {
+        return ResponseEntity.ok(ApiResponse.success(
+                reservaService.getSlots(proveedorId, servicioId, desde, hasta, excluirReservaId),
+                "Disponibilidad obtenida"));
     }
 
     @GetMapping("/{id}")

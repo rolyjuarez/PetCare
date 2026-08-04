@@ -10,6 +10,8 @@
         <result property="servicioId" column="servicio_id"/>
         <result property="mascotaId" column="mascota_id"/>
         <result property="estadoReservaId" column="estado_reserva_id"/>
+        <result property="registroVacunacionId" column="registro_vacunacion_id"/>
+        <result property="modalidadEntrega" column="modalidad_entrega"/>
         <result property="fechaReserva" column="fecha_reserva"/>
         <result property="fechaInicio" column="fecha_inicio"/>
         <result property="fechaFin" column="fecha_fin"/>
@@ -30,7 +32,7 @@
 
     <sql id="baseColumns">
         r.id, r.codigo, r.cliente_id, r.proveedor_id, r.servicio_id, r.mascota_id,
-        r.estado_reserva_id, r.fecha_reserva, r.fecha_inicio, r.fecha_fin,
+        r.estado_reserva_id, r.registro_vacunacion_id, r.modalidad_entrega, r.fecha_reserva, r.fecha_inicio, r.fecha_fin,
         r.hora_inicio, r.hora_fin, r.latitud, r.longitud,
         r.direccion_referencia, r.notas, r.precio_total,
         r.motivo_rechazo, r.respuesta_en,
@@ -40,10 +42,10 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.reserva.entity.Reserva">
         INSERT INTO reserva (codigo, cliente_id, proveedor_id, servicio_id, mascota_id,
-            estado_reserva_id, fecha_reserva, fecha_inicio, fecha_fin, hora_inicio, hora_fin,
+            estado_reserva_id, registro_vacunacion_id, modalidad_entrega, fecha_reserva, fecha_inicio, fecha_fin, hora_inicio, hora_fin,
             latitud, longitud, direccion_referencia, notas, precio_total)
         VALUES (#{codigo}, #{clienteId}, #{proveedorId}, #{servicioId}, #{mascotaId},
-            #{estadoReservaId}, #{fechaReserva}, #{fechaInicio}, #{fechaFin}, #{horaInicio}, #{horaFin},
+            #{estadoReservaId}, #{registroVacunacionId}, #{modalidadEntrega}, #{fechaReserva}, #{fechaInicio}, #{fechaFin}, #{horaInicio}, #{horaFin},
             #{latitud}, #{longitud}, #{direccionReferencia}, #{notas}, #{precioTotal})
     </insert>
 
@@ -110,6 +112,7 @@
         UPDATE reserva
         SET codigo = #{codigo}, cliente_id = #{clienteId}, proveedor_id = #{proveedorId},
             servicio_id = #{servicioId}, mascota_id = #{mascotaId}, estado_reserva_id = #{estadoReservaId},
+            registro_vacunacion_id = #{registroVacunacionId}, modalidad_entrega = #{modalidadEntrega},
             fecha_reserva = #{fechaReserva}, fecha_inicio = #{fechaInicio}, fecha_fin = #{fechaFin},
             hora_inicio = #{horaInicio}, hora_fin = #{horaFin},
             latitud = #{latitud}, longitud = #{longitud},
@@ -144,6 +147,20 @@
     <update id="softDelete">
         UPDATE reserva SET deleted = TRUE, updated_at = NOW(), version = version + 1 WHERE id = #{id}
     </update>
+
+    <select id="selectBooked" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE r.proveedor_id = #{proveedorId}
+          AND r.servicio_id = #{servicioId}
+          AND r.fecha_inicio BETWEEN #{desde} AND #{hasta}
+          AND r.deleted = FALSE
+          AND r.estado_reserva_id NOT IN (5, 6)
+          <if test="excluirId != null">
+            AND r.id &lt;&gt; #{excluirId}
+          </if>
+        ORDER BY r.fecha_inicio, r.hora_inicio
+    </select>
 
     <update id="softDeleteByMascotaId">
         UPDATE reserva SET deleted = TRUE, updated_at = NOW(), version = version + 1

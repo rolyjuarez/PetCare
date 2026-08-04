@@ -31,6 +31,7 @@
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Cliente</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Servicio</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Mascota</th>
+            <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Vacunación</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Fecha</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Hora</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Precio</th>
@@ -45,6 +46,23 @@
               <td class="px-6 py-4 dark:text-gray-300">{{ item.clienteNombre }}</td>
               <td class="px-6 py-4 dark:text-gray-300">{{ item.servicioNombre }}</td>
               <td class="px-6 py-4 dark:text-gray-300">{{ item.mascotaNombre }}</td>
+              <td class="px-6 py-4">
+                @if (item.vacunaInfo) {
+                  <div class="space-y-1">
+                    <p class="text-xs font-medium text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <span class="material-icons text-sm">verified</span>{{ item.vacunaInfo.vacunaNombre }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Aplicada: {{ item.vacunaInfo.fechaAplicacion }}</p>
+                    @if (item.vacunaInfo.certificadoUrl) {
+                      <a [href]="item.vacunaInfo.certificadoUrl" target="_blank" class="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+                        <span class="material-icons text-sm">description</span> Ver certificado
+                      </a>
+                    }
+                  </div>
+                } @else {
+                  <span class="text-xs text-gray-400">No aplica</span>
+                }
+              </td>
               <td class="px-6 py-4 dark:text-gray-300">{{ item.fechaInicio }}</td>
               <td class="px-6 py-4 dark:text-gray-300">{{ item.horaInicio }}</td>
               <td class="px-6 py-4 dark:text-gray-300 font-semibold">${{ item.precioTotal }}</td>
@@ -69,13 +87,56 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="9" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay solicitudes de reserva</td>
+              <td colspan="10" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay solicitudes de reserva</td>
             </tr>
           }
         </tbody>
       </table>
     }
   </div>
+
+  <!-- Aceptar Modal -->
+  @if (showAceptarModal() && selected()) {
+    <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-lg">
+        <div class="flex items-center justify-between p-6 border-b dark:border-gray-700">
+          <h2 class="text-xl font-bold dark:text-white">Aceptar Solicitud</h2>
+          <button (click)="closeAceptar()" class="text-gray-400 hover:text-gray-600">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-1">
+            <p class="text-sm"><span class="font-medium">Reserva:</span> {{ selected()!.codigo }}</p>
+            <p class="text-sm"><span class="font-medium">Cliente:</span> {{ selected()!.clienteNombre }}</p>
+            <p class="text-sm"><span class="font-medium">Servicio:</span> {{ selected()!.servicioNombre }}</p>
+            <p class="text-sm"><span class="font-medium">Fecha:</span> {{ selected()!.fechaInicio }} {{ selected()!.horaInicio }}</p>
+            @if (selected()!.vacunaInfo) {
+              <div class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <p class="text-sm text-green-700 dark:text-green-300 flex items-center gap-1">
+                  <span class="material-icons text-sm">verified</span> Vacuna: {{ selected()!.vacunaInfo!.vacunaNombre }} ({{ selected()!.vacunaInfo!.fechaAplicacion }})
+                </p>
+                @if (selected()!.vacunaInfo!.certificadoUrl) {
+                  <a [href]="selected()!.vacunaInfo!.certificadoUrl" target="_blank" class="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1 mt-1">
+                    <span class="material-icons text-sm">description</span> Ver certificado
+                  </a>
+                }
+              </div>
+            }
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Comentario para el cliente (opcional)</label>
+            <textarea [(ngModel)]="comentarioAceptar" rows="3" placeholder="Este comentario se enviará al cliente por correo..."
+                      class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"></textarea>
+          </div>
+          <div class="flex justify-end gap-3 pt-4 border-t dark:border-gray-700">
+            <button type="button" (click)="closeAceptar()" class="px-4 py-2 border rounded-lg text-gray-600 dark:text-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">Cancelar</button>
+            <button type="button" (click)="confirmAceptar()" class="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">Aceptar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 
   <!-- Rechazar Modal -->
   @if (showRechazarModal() && selected()) {
@@ -93,6 +154,18 @@
             <p class="text-sm"><span class="font-medium">Cliente:</span> {{ selected()!.clienteNombre }}</p>
             <p class="text-sm"><span class="font-medium">Servicio:</span> {{ selected()!.servicioNombre }}</p>
             <p class="text-sm"><span class="font-medium">Fecha:</span> {{ selected()!.fechaInicio }} {{ selected()!.horaInicio }}</p>
+            @if (selected()!.vacunaInfo) {
+              <div class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <p class="text-sm text-green-700 dark:text-green-300 flex items-center gap-1">
+                  <span class="material-icons text-sm">verified</span> Vacuna: {{ selected()!.vacunaInfo!.vacunaNombre }} ({{ selected()!.vacunaInfo!.fechaAplicacion }})
+                </p>
+                @if (selected()!.vacunaInfo!.certificadoUrl) {
+                  <a [href]="selected()!.vacunaInfo!.certificadoUrl" target="_blank" class="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1 mt-1">
+                    <span class="material-icons text-sm">description</span> Ver certificado
+                  </a>
+                }
+              </div>
+            }
           </div>
           <div>
             <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Motivo de rechazo *</label>

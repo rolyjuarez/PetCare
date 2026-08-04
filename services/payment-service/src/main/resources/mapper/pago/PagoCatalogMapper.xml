@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.pago.mapper.PagoCatalogMapper">
+
+    <select id="selectReservaInfo" resultType="bo.capital.tec.pet.modules.pago.dto.ReservaInfoDTO">
+        SELECT r.id AS reservaId, r.codigo, r.cliente_id AS clienteId, r.proveedor_id AS proveedorId,
+               r.servicio_id AS servicioId, r.modalidad_entrega AS modalidadEntrega,
+               r.precio_total AS precioTotal, r.fecha_inicio AS fechaInicio, r.hora_inicio AS horaInicio
+        FROM reserva r
+        WHERE r.id = #{reservaId} AND r.deleted = FALSE
+    </select>
+
+    <select id="selectPromocionActivaByProveedor" resultType="bo.capital.tec.pet.modules.pago.dto.PromocionInfoDTO">
+        SELECT p.id, p.nombre, p.descripcion, p.tipo_descuento AS tipo, p.valor_descuento AS valor,
+               p.fecha_inicio AS fechaInicio, p.fecha_fin AS fechaFin
+        FROM promocion p
+        WHERE p.proveedor_id = #{proveedorId}
+          AND p.deleted = FALSE AND p.activa = TRUE
+          AND NOW() BETWEEN p.fecha_inicio AND p.fecha_fin
+          AND (p.limite_usos IS NULL OR p.usos_actuales &lt; p.limite_usos)
+        ORDER BY p.fecha_fin ASC
+        LIMIT 1
+    </select>
+
+    <select id="selectModalidadCostoAdicional" resultType="java.math.BigDecimal">
+        SELECT COALESCE(m.costo_adicional, 0.00)
+        FROM proveedor_servicio_modalidad m
+        JOIN proveedor_servicio ps ON ps.id = m.proveedor_servicio_id
+            AND ps.deleted = FALSE AND ps.activo = TRUE
+        WHERE m.proveedor_servicio_id = #{servicioId}
+          AND m.modalidad = #{modalidad}
+          AND m.deleted = FALSE AND m.activo = TRUE
+        LIMIT 1
+    </select>
+</mapper>

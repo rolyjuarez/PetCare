@@ -9,6 +9,7 @@ public class ProveedorEspecialidad {
     private Long id;
     private Long proveedorId;
     private Long servicioId;
+    private Boolean requiereCertificado;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean deleted;

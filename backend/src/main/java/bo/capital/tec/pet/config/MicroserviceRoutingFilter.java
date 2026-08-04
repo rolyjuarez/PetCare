@@ -26,17 +26,22 @@ import java.util.List;
 public class MicroserviceRoutingFilter extends OncePerRequestFilter {
 
     private static final String CONTEXT_PATH = "/api/v1";
-    private static final List<String> ROUTED_HEADERS =
-            List.of("Authorization", "Content-Type", "Accept", "Accept-Language", "Origin", "X-Requested-With");
+    private static final List<String> SKIPPED_HEADERS = List.of(
+            "host", "content-length", "connection", "accept-encoding",
+            "transfer-encoding", "upgrade", "keep-alive", "trailer", "te",
+            "expect", "proxy-connection", "origin");
 
     private final String reservationBase;
     private final String providerBase;
+    private final String paymentBase;
 
     public MicroserviceRoutingFilter(
             @Value("${app.microservices.reservation:http://localhost:8081}") String reservationBase,
-            @Value("${app.microservices.provider:http://localhost:8082}") String providerBase) {
+            @Value("${app.microservices.provider:http://localhost:8082}") String providerBase,
+            @Value("${app.microservices.payment:http://localhost:8083}") String paymentBase) {
         this.reservationBase = reservationBase;
         this.providerBase = providerBase;
+        this.paymentBase = paymentBase;
     }
 
     @Override
@@ -66,7 +71,20 @@ public class MicroserviceRoutingFilter extends OncePerRequestFilter {
         if (uri.startsWith(CONTEXT_PATH + "/proveedor")) {
             return providerBase + uri;
         }
+        if (isPaymentPath(uri)) {
+            return paymentBase + uri;
+        }
         return null;
+    }
+
+    private boolean isPaymentPath(String uri) {
+        if (!uri.startsWith(CONTEXT_PATH + "/pagos")) {
+            return false;
+        }
+        if (uri.startsWith(CONTEXT_PATH + "/pagos/reserva")) {
+            return true;
+        }
+        return uri.endsWith("/procesar") || uri.endsWith("/reembolsar");
     }
 
     private void proxy(HttpServletRequest request, HttpServletResponse response, String target) throws IOException {
@@ -81,8 +99,12 @@ public class MicroserviceRoutingFilter extends OncePerRequestFilter {
             Enumeration<String> names = request.getHeaderNames();
             while (names.hasMoreElements()) {
                 String name = names.nextElement();
-                if (ROUTED_HEADERS.contains(name)) {
-                    conn.setRequestProperty(name, request.getHeader(name));
+                if (!SKIPPED_HEADERS.contains(name.toLowerCase())) {
+                    try {
+                        conn.setRequestProperty(name, request.getHeader(name));
+                    } catch (IllegalArgumentException e) {
+                        log.debug("Header no reenviado: {}", name);
+                    }
                 }
             }
 

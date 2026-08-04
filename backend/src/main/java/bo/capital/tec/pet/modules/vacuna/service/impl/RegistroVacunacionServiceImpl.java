@@ -40,6 +40,7 @@ public class RegistroVacunacionServiceImpl implements RegistroVacunacionService 
                 .lote(dto.getLote())
                 .veterinario(dto.getVeterinario())
                 .observaciones(dto.getObservaciones())
+                .certificadoUrl(dto.getCertificadoUrl())
                 .build();
         registroVacunacionMapper.insert(rv);
         return toResponseDTO(rv);
@@ -99,6 +100,7 @@ public class RegistroVacunacionServiceImpl implements RegistroVacunacionService 
         rv.setLote(dto.getLote());
         rv.setVeterinario(dto.getVeterinario());
         rv.setObservaciones(dto.getObservaciones());
+        rv.setCertificadoUrl(dto.getCertificadoUrl());
         registroVacunacionMapper.update(rv);
         return toResponseDTO(rv);
     }
@@ -139,6 +141,7 @@ public class RegistroVacunacionServiceImpl implements RegistroVacunacionService 
                 .lote(rv.getLote())
                 .veterinario(rv.getVeterinario())
                 .observaciones(rv.getObservaciones())
+                .certificadoUrl(rv.getCertificadoUrl())
                 .createdAt(rv.getCreatedAt())
                 .build();
     }
@@ -166,6 +169,7 @@ public class RegistroVacunacionServiceImpl implements RegistroVacunacionService 
                 .vacunaNombre(vacunaNombre)
                 .fechaAplicacion(rv.getFechaAplicacion())
                 .fechaVencimiento(rv.getFechaVencimiento())
+                .certificadoUrl(rv.getCertificadoUrl())
                 .build();
     }
 }

@@ -33,6 +33,13 @@ public interface ReservaMapper {
 
     long countByEstado(@Param("estadoReservaId") Long estadoReservaId);
 
+    List<bo.capital.tec.pet.modules.reserva.entity.Reserva> selectBooked(
+            @Param("proveedorId") Long proveedorId,
+            @Param("servicioId") Long servicioId,
+            @Param("desde") java.time.LocalDate desde,
+            @Param("hasta") java.time.LocalDate hasta,
+            @Param("excluirId") Long excluirId);
+
     void update(bo.capital.tec.pet.modules.reserva.entity.Reserva reserva);
 
     void updateEstado(@Param("id") Long id, @Param("estadoReservaId") Long estadoReservaId);

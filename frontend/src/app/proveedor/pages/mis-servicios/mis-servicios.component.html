@@ -1,0 +1,173 @@
+<div class="space-y-6">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold dark:text-white">Mis Servicios</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Cree y gestione sus servicios propios con sus categorías y modalidades de entrega.</p>
+    </div>
+    <button (click)="openCreate()"
+            class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm flex items-center gap-1">
+      <span class="material-icons text-base">add</span> Nuevo servicio
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="p-8 text-center text-gray-500">Cargando...</div>
+  } @else if (servicios().length === 0) {
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center text-gray-500 dark:text-gray-400">
+      Aún no tiene servicios creados. Pulse "Nuevo servicio" para ofrecer sus servicios en la plataforma.
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      @for (svc of servicios(); track svc.id) {
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden"
+             [class.opacity-60]="!svc.activo">
+          <div class="p-5 border-b dark:border-gray-700 flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-lg font-semibold dark:text-white">{{ svc.nombre }}</h3>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300">
+                  {{ categoriaLabel(svc.categoria) }}
+                </span>
+              </div>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {{ svc.duracionMinutos }} min · Bs. {{ svc.precioBase }}
+                @if (svc.descripcion) { · {{ svc.descripcion }} }
+              </p>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              @if (!svc.activo) {
+                <span class="text-xs text-gray-500 mr-1">Inactivo</span>
+              }
+              <button (click)="openEdit(svc)" title="Editar"
+                      class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <span class="material-icons text-lg">edit</span>
+              </button>
+              <button (click)="toggleActivo(svc)" [title]="svc.activo ? 'Desactivar' : 'Activar'"
+                      class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                <span class="material-icons text-lg">{{ svc.activo ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+              <button (click)="eliminar(svc)" title="Eliminar"
+                      class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30">
+                <span class="material-icons text-lg">delete_outline</span>
+              </button>
+            </div>
+          </div>
+          <div class="p-5">
+            <div class="flex items-center justify-between mb-3">
+              <p class="text-sm font-semibold text-gray-600 dark:text-gray-300">Modalidades de entrega</p>
+              <label class="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                <span class="material-icons text-amber-500 text-base">verified</span>
+                @if (svc.requiereCertificado) { Requiere certificado } @else { Sin certificado }
+              </label>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              @for (m of svc.modalidades; track m.modalidad) {
+                <div class="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-1.5 text-sm dark:text-gray-200">
+                  <span>{{ modalidadLabel(m.modalidad) }}</span>
+                  @if (m.costoAdicional > 0) {
+                    <span class="text-xs text-gray-500 dark:text-gray-400">+Bs. {{ m.costoAdicional }}</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (showForm()) {
+    <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" (click.self)="closeForm()">
+      <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b dark:border-gray-700 flex items-center justify-between">
+          <h2 class="text-xl font-bold dark:text-white">{{ editId() ? 'Editar servicio' : 'Nuevo servicio' }}</h2>
+          <button (click)="closeForm()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Nombre *</label>
+            <input type="text" [(ngModel)]="form.nombre" placeholder="Ej. Baño y corte para mascotas"
+                   class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Descripción</label>
+            <textarea [(ngModel)]="form.descripcion" rows="2" placeholder="Describa el servicio"
+                      class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600"></textarea>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Categoría *</label>
+              <select [(ngModel)]="form.categoria"
+                      class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                @for (c of categorias; track c) {
+                  <option [ngValue]="c">{{ categoriaLabel(c) }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Duración (min) *</label>
+              <input type="number" [(ngModel)]="form.duracionMinutos" min="15"
+                     class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Precio base (Bs.) *</label>
+              <input type="number" [(ngModel)]="form.precioBase" min="0" step="0.01"
+                     class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Estado</label>
+              <select [(ngModel)]="form.activo"
+                      class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                <option [ngValue]="true">Activo</option>
+                <option [ngValue]="false">Inactivo</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+              <input type="checkbox" [(ngModel)]="form.requiereCertificado"
+                     class="w-5 h-5 text-amber-500 rounded border-gray-300 focus:ring-amber-500">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                <span class="material-icons text-amber-500 text-lg">verified</span>
+                Requiere certificado de vacunación
+              </span>
+            </label>
+          </div>
+
+          <div>
+            <p class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Modalidades de entrega *</p>
+            <div class="space-y-2">
+              @for (m of modalidadesForm; track m.modalidad; let i = $index) {
+                <div class="flex items-center gap-3 bg-gray-50 dark:bg-gray-700/40 rounded-lg p-3">
+                  <input type="checkbox" [checked]="m.checked" (change)="toggleModalidad(i, $any($event.target).checked)"
+                         class="w-5 h-5 text-primary-600 rounded border-gray-300 focus:ring-primary-500">
+                  <span class="text-sm font-medium text-gray-700 dark:text-gray-300 flex-1">{{ modalidadLabel(m.modalidad) }}</span>
+                  <div class="w-40">
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Costo adicional (Bs.)</label>
+                    <input type="number" [(ngModel)]="m.costoAdicional" min="0" step="0.01"
+                           class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 border-t dark:border-gray-700 flex justify-end gap-3">
+          <button (click)="closeForm()"
+                  class="px-4 py-2 border rounded-lg text-sm dark:border-gray-600 dark:text-gray-300">Cancelar</button>
+          <button (click)="guardar()" [disabled]="submitting()"
+                  class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm disabled:opacity-50">
+            {{ submitting() ? 'Guardando...' : 'Guardar servicio' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

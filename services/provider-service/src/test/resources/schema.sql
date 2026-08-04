@@ -116,8 +116,10 @@ CREATE TABLE IF NOT EXISTS solicitud_reserva (
     fecha_inicio      TIMESTAMP,
     hora_inicio       TIME,
     precio_total      NUMERIC(10, 2),
+    modalidad_entrega VARCHAR(30),
     estado            VARCHAR(20)     NOT NULL DEFAULT 'PENDIENTE',
     motivo_rechazo    TEXT,
+    registro_vacunacion_id BIGINT,
     creada_en         TIMESTAMP       NOT NULL DEFAULT NOW(),
     respondida_en     TIMESTAMP,
     CONSTRAINT uk_solicitud_reserva_reserva_proveedor UNIQUE (reserva_id, proveedor_id)

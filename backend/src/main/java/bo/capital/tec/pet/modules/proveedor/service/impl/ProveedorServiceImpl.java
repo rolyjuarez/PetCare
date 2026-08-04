@@ -55,6 +55,7 @@ public class ProveedorServiceImpl implements ProveedorService {
     private final RolApi rolApi;
     private final ReservaApi reservaApi;
     private final PasswordEncoder passwordEncoder;
+    private final bo.capital.tec.pet.modules.proveedorservicio.service.ProveedorServicioService proveedorServicioService;
 
     @Override
     @Transactional
@@ -185,6 +186,38 @@ public class ProveedorServiceImpl implements ProveedorService {
         Proveedor proveedor = proveedorMapper.selectById(id);
         if (proveedor == null) {
             throw new EntityNotFoundException("Proveedor", id);
+        }
+        return toResponseDTO(proveedor);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProveedorResponseDTO getByUsuarioId(Long usuarioId) {
+        Proveedor proveedor = proveedorMapper.findByUsuarioId(usuarioId);
+        if (proveedor == null) {
+            throw new EntityNotFoundException("Proveedor", "usuarioId", usuarioId);
+        }
+        return toResponseDTO(proveedor);
+    }
+
+    @Override
+    @Transactional
+    public ProveedorResponseDTO setRequiereCertificado(Long proveedorId, Long servicioId, Boolean requiere) {
+        Proveedor proveedor = proveedorMapper.selectById(proveedorId);
+        if (proveedor == null) {
+            throw new EntityNotFoundException("Proveedor", proveedorId);
+        }
+        boolean requiereFlag = Boolean.TRUE.equals(requiere);
+        ProveedorEspecialidad existing = proveedorEspecialidadMapper.selectByProveedorYServicio(proveedorId, servicioId);
+        if (existing == null) {
+            ProveedorEspecialidad pe = ProveedorEspecialidad.builder()
+                    .proveedorId(proveedorId)
+                    .servicioId(servicioId)
+                    .requiereCertificado(requiereFlag)
+                    .build();
+            proveedorEspecialidadMapper.insert(pe);
+        } else {
+            proveedorEspecialidadMapper.updateRequiereCertificado(proveedorId, servicioId, requiereFlag);
         }
         return toResponseDTO(proveedor);
     }
@@ -412,8 +445,12 @@ public class ProveedorServiceImpl implements ProveedorService {
         List<ProveedorEspecialidad> especialidades = proveedorEspecialidadMapper.selectByProveedorId(proveedor.getId());
         List<String> especialidadNombres = new ArrayList<>();
         List<Long> servicioIds = new ArrayList<>();
+        List<Long> servicioIdsRequeridos = new ArrayList<>();
         for (ProveedorEspecialidad pe : especialidades) {
             servicioIds.add(pe.getServicioId());
+            if (Boolean.TRUE.equals(pe.getRequiereCertificado())) {
+                servicioIdsRequeridos.add(pe.getServicioId());
+            }
             var servicio = servicioApi.selectById(pe.getServicioId());
             if (servicio != null) {
                 especialidadNombres.add(servicio.getNombre());
@@ -468,6 +505,8 @@ public class ProveedorServiceImpl implements ProveedorService {
                 .calificacion(proveedor.getCalificacion())
                 .especialidades(especialidadNombres)
                 .servicioIds(servicioIds)
+                .servicioIdsRequeridos(servicioIdsRequeridos)
+                .servicios(proveedorServicioService.listActivosByProveedor(proveedor.getId()))
                 .disponibilidades(dispDTOs)
                 .createdAt(proveedor.getCreatedAt())
                 .build();
