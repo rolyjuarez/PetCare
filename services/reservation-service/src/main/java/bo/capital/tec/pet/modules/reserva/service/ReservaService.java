@@ -5,6 +5,7 @@ import bo.capital.tec.pet.modules.reserva.dto.DisponibilidadSlotsDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaRequestDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaResponseDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaSummaryDTO;
+import bo.capital.tec.pet.modules.reserva.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaAceptadaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaRechazadaEvent;
 
@@ -37,4 +38,6 @@ public interface ReservaService {
     ReservaResponseDTO aplicarAceptacion(ReservaAceptadaEvent event);
 
     ReservaResponseDTO aplicarRechazo(ReservaRechazadaEvent event);
+
+    ReservaResponseDTO compensarPorPagoFallido(PagoFallidoEvent event);
 }

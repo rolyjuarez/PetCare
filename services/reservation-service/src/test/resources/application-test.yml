@@ -25,6 +25,8 @@ app:
       reserva-creada: test.reserva.creada
       reserva-aceptada: test.reserva.aceptada
       reserva-rechazada: test.reserva.rechazada
+      reserva-cancelada: test.reserva.cancelada
+      pago-fallido: test.pago.fallido
       dlt: test.reserva.dlt
 
 jwt:

@@ -27,6 +27,9 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
     @Value("${app.kafka.topic.reserva-rechazada:reserva.rechazada}")
     private String reservaRechazadaTopic;
 
+    @Value("${app.kafka.topic.reserva-cancelada:reserva.cancelada}")
+    private String reservaCanceladaTopic;
+
     @Value("${app.kafka.topic.reserva-confirmada:reserva.confirmada}")
     private String reservaConfirmadaTopic;
 
@@ -54,6 +57,7 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
                 case "ReservaAceptadaEvent" -> reservaAceptadaTopic;
                 case "ReservaRechazadaEvent" -> reservaRechazadaTopic;
                 case "ReservaConfirmadaEvent" -> reservaConfirmadaTopic;
+                case "ReservaCanceladaEvent" -> reservaCanceladaTopic;
                 default -> deadLetterTopic;
             };
             default -> deadLetterTopic;

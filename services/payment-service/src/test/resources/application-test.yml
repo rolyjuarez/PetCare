@@ -25,6 +25,8 @@ app:
       reserva-rechazada: test.reserva.rechazada
       reserva-confirmada: test.reserva.confirmada
       pago-completado: test.pago.completado
+      pago-fallido: test.pago.fallido
+      pago-reembolsado: test.pago.reembolsado
       dlt: test.reserva.dlt
   pasarela:
     prefijo-referencia: PTC-TEST

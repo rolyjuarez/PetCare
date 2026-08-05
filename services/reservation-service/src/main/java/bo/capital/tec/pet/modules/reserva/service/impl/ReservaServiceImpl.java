@@ -22,6 +22,7 @@ import bo.capital.tec.pet.modules.reserva.dto.SlotDTO;
 import bo.capital.tec.pet.modules.reserva.entity.Disponibilidad;
 import bo.capital.tec.pet.modules.reserva.entity.EstadoReserva;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
+import bo.capital.tec.pet.modules.reserva.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaAceptadaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaConfirmadaEvent;
@@ -376,7 +377,41 @@ public class ReservaServiceImpl implements ReservaService {
         reservaMapper.updateEstado(id, estadoId);
         reserva.setEstadoReservaId(estadoId);
         ReservaResponseDTO response = toResponseDTO(reserva);
+        publicarCancelada(reserva, motivo);
+        return response;
+    }
+
+    @Override
+    @Transactional
+    public ReservaResponseDTO compensarPorPagoFallido(PagoFallidoEvent event) {
+        Reserva reserva = requireReserva(event.getReservaId());
+        Long estadoCancelada = estadoIdPorNombre(ESTADO_CANCELADA);
+        if (estadoCancelada.equals(reserva.getEstadoReservaId())) {
+            log.debug("Reserva {} ya cancelada, compensación omitida", reserva.getCodigo());
+            return toResponseDTO(reserva);
+        }
+        reservaMapper.updateEstado(reserva.getId(), estadoCancelada);
+        reserva.setEstadoReservaId(estadoCancelada);
+        String motivo = event.getMotivo() != null && !event.getMotivo().isBlank()
+                ? event.getMotivo() : "El pago no pudo completarse";
+        log.info("Reserva {} compensada por pago fallido (pago {}): {}", reserva.getCodigo(),
+                event.getPagoId(), motivo);
+        notificarCliente(reserva, "Reserva cancelada por pago fallido",
+                "Su reserva " + reserva.getCodigo()
+                        + " fue cancelada porque el pago no pudo completarse. Motivo: " + motivo + ".",
+                "ADVERTENCIA");
+        enviarEmailCliente(reserva, "Reserva Cancelada - PETCare",
+                "<h2>Reserva cancelada</h2>"
+                        + "<p>Su reserva <strong>" + reserva.getCodigo()
+                        + "</strong> fue cancelada porque el pago no pudo completarse.</p>"
+                        + "<p><strong>Motivo:</strong> " + motivo + "</p>");
+        publicarCancelada(reserva, "Pago fallido: " + motivo);
+        return toResponseDTO(reserva);
+    }
+
+    private void publicarCancelada(Reserva reserva, String motivo) {
         try {
+            ReservaResponseDTO response = toResponseDTO(reserva);
             ClienteInfoDTO cliente = reserva.getClienteId() != null
                     ? catalogMapper.selectCliente(reserva.getClienteId()) : null;
             eventPublisher.publish(new ReservaCanceladaEvent(
@@ -389,7 +424,6 @@ public class ReservaServiceImpl implements ReservaService {
         } catch (Exception e) {
             log.warn("Error publicando ReservaCanceladaEvent: {}", e.getMessage());
         }
-        return response;
     }
 
     @Override

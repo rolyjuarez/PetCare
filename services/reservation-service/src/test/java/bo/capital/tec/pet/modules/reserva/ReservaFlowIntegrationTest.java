@@ -4,7 +4,9 @@ import bo.capital.tec.pet.common.kafka.IdempotencyService;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaRequestDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaResponseDTO;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
+import bo.capital.tec.pet.modules.reserva.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaAceptadaEvent;
+import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCreadaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaRechazadaEvent;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
@@ -35,7 +37,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EmbeddedKafka(partitions = 1, topics = {
         "test.reserva.creada",
         "test.reserva.aceptada",
-        "test.reserva.rechazada"})
+        "test.reserva.rechazada",
+        "test.reserva.cancelada",
+        "test.pago.fallido"})
 class ReservaFlowIntegrationTest {
 
     @Autowired
@@ -154,6 +158,30 @@ class ReservaFlowIntegrationTest {
         assertThat(trasSegundo.getVersion()).isEqualTo(versionTrasPrimero);
     }
 
+    @Test
+    void pagoFallidoCancelaReservaYPublicaCompensacion() throws Exception {
+        ReservaResponseDTO creada = reservaService.create(buildRequest());
+
+        PagoFallidoEvent event = new PagoFallidoEvent(
+                creada.getId(), creada.getId(), new BigDecimal("80.00"),
+                "INT-FALLIDO000001", "La transacción fue rechazada por la entidad emisora");
+        kafkaTemplate.send("test.pago.fallido", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
+
+        Reserva cancelada = awaitReservaCancelada(creada.getId());
+        assertThat(cancelada.getEstadoReservaId()).isEqualTo(4L);
+        assertThat(idempotencyService.isProcessed(event.getEventId())).isTrue();
+
+        Integer notificaciones = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM notificacion WHERE usuario_id = ? AND tipo = 'ADVERTENCIA'",
+                Integer.class, creada.getClienteId());
+        assertThat(notificaciones).isEqualTo(1);
+
+        ReservaCanceladaEvent compensacion = eventCollector.canceladas().poll(10, TimeUnit.SECONDS);
+        assertThat(compensacion).isNotNull();
+        assertThat(compensacion.getReservaId()).isEqualTo(creada.getId());
+        assertThat(compensacion.getMotivoCancelacion()).startsWith("Pago fallido");
+    }
+
     private Reserva awaitReserva(Long id, String estadoNombre) throws InterruptedException {
         Reserva reserva = null;
         for (int i = 0; i < 50; i++) {
@@ -161,6 +189,20 @@ class ReservaFlowIntegrationTest {
             String estado = actual.getEstadoReservaId() == 2 ? "CONFIRMADA"
                     : actual.getEstadoReservaId() == 3 ? "RECHAZADA" : "PENDIENTE";
             if (estadoNombre.equals(estado)) {
+                reserva = actual;
+                break;
+            }
+            TimeUnit.MILLISECONDS.sleep(200);
+        }
+        assertThat(reserva).isNotNull();
+        return reserva;
+    }
+
+    private Reserva awaitReservaCancelada(Long id) throws InterruptedException {
+        Reserva reserva = null;
+        for (int i = 0; i < 50; i++) {
+            Reserva actual = reservaMapper.selectById(id);
+            if (actual.getEstadoReservaId() != null && actual.getEstadoReservaId() == 4L) {
                 reserva = actual;
                 break;
             }
@@ -182,6 +224,7 @@ class ReservaFlowIntegrationTest {
     static class TestEventCollector {
 
         private final BlockingQueue<ReservaCreadaEvent> creadas = new LinkedBlockingQueue<>();
+        private final BlockingQueue<ReservaCanceladaEvent> canceladas = new LinkedBlockingQueue<>();
 
         @KafkaListener(topics = "test.reserva.creada",
                 groupId = "reservation-service-test-collector",
@@ -191,12 +234,25 @@ class ReservaFlowIntegrationTest {
             ack.acknowledge();
         }
 
+        @KafkaListener(topics = "test.reserva.cancelada",
+                groupId = "reservation-service-test-collector",
+                containerFactory = "kafkaListenerContainerFactory")
+        public void onCancelada(ReservaCanceladaEvent event, org.springframework.kafka.support.Acknowledgment ack) {
+            canceladas.offer(event);
+            ack.acknowledge();
+        }
+
         BlockingQueue<ReservaCreadaEvent> creadas() {
             return creadas;
         }
 
+        BlockingQueue<ReservaCanceladaEvent> canceladas() {
+            return canceladas;
+        }
+
         void clear() {
             creadas.clear();
+            canceladas.clear();
         }
     }
 }

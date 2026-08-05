@@ -5,7 +5,9 @@ import bo.capital.tec.pet.modules.pago.dto.DatosTarjetaDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
 import bo.capital.tec.pet.modules.pago.entity.Pago;
+import bo.capital.tec.pet.modules.pago.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.pago.event.PagoProcesadoEvent;
+import bo.capital.tec.pet.modules.pago.event.PagoReembolsadoEvent;
 import bo.capital.tec.pet.modules.pago.event.ReservaConfirmadaEvent;
 import bo.capital.tec.pet.modules.pago.mapper.PagoMapper;
 import bo.capital.tec.pet.modules.pago.service.PagoService;
@@ -36,7 +38,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1, topics = {
         "test.reserva.confirmada",
-        "test.pago.completado"})
+        "test.pago.completado",
+        "test.pago.fallido",
+        "test.pago.reembolsado"})
 class PagoFlowIntegrationTest {
 
     @Autowired
@@ -146,6 +150,35 @@ class PagoFlowIntegrationTest {
     }
 
     @Test
+    void pagoFallidoPublicaPagoFallidoEvent() throws Exception {
+        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(1L, "DOMICILIO"));
+
+        PagoResponseDTO procesado = pagoService.procesar(creado.getId(), buildRequest("4000000000000000"));
+
+        assertThat(procesado.getEstadoSync()).isEqualTo("FALLIDO");
+        PagoFallidoEvent event = eventCollector.fallidos().poll(10, TimeUnit.SECONDS);
+        assertThat(event).isNotNull();
+        assertThat(event.getReservaId()).isEqualTo(1L);
+        assertThat(event.getPagoId()).isEqualTo(creado.getId());
+        assertThat(event.getIntencionId()).startsWith("INT-");
+        assertThat(event.getMotivo()).isNotBlank();
+    }
+
+    @Test
+    void reembolsoPublicaPagoReembolsadoEvent() throws Exception {
+        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(2L, "EN_ESTABLECIMIENTO"));
+        pagoService.procesar(creado.getId(), ProcesarPagoRequestDTO.builder().metodoPago("EFECTIVO").build());
+
+        PagoResponseDTO reembolsado = pagoService.reembolsar(creado.getId());
+
+        assertThat(reembolsado.getEstadoSync()).isEqualTo("REEMBOLSADO");
+        PagoReembolsadoEvent event = eventCollector.reembolsados().poll(10, TimeUnit.SECONDS);
+        assertThat(event).isNotNull();
+        assertThat(event.getReservaId()).isEqualTo(2L);
+        assertThat(event.getPagoId()).isEqualTo(creado.getId());
+    }
+
+    @Test
     void consumirReservaConfirmadaPorKafkaCreaPago() throws Exception {
         ReservaConfirmadaEvent event = buildConfirmada(2L, "EN_ESTABLECIMIENTO");
         kafkaTemplate.send("test.reserva.confirmada", String.valueOf(event.getReservaId()), event)
@@ -199,6 +232,8 @@ class PagoFlowIntegrationTest {
     static class TestEventCollector {
 
         private final BlockingQueue<PagoProcesadoEvent> procesados = new LinkedBlockingQueue<>();
+        private final BlockingQueue<PagoFallidoEvent> fallidos = new LinkedBlockingQueue<>();
+        private final BlockingQueue<PagoReembolsadoEvent> reembolsados = new LinkedBlockingQueue<>();
 
         @KafkaListener(topics = "test.pago.completado",
                 groupId = "payment-service-test-collector",
@@ -208,12 +243,38 @@ class PagoFlowIntegrationTest {
             ack.acknowledge();
         }
 
+        @KafkaListener(topics = "test.pago.fallido",
+                groupId = "payment-service-test-collector",
+                containerFactory = "kafkaListenerContainerFactory")
+        public void onFallido(@Payload PagoFallidoEvent event, Acknowledgment ack) {
+            fallidos.offer(event);
+            ack.acknowledge();
+        }
+
+        @KafkaListener(topics = "test.pago.reembolsado",
+                groupId = "payment-service-test-collector",
+                containerFactory = "kafkaListenerContainerFactory")
+        public void onReembolsado(@Payload PagoReembolsadoEvent event, Acknowledgment ack) {
+            reembolsados.offer(event);
+            ack.acknowledge();
+        }
+
         BlockingQueue<PagoProcesadoEvent> procesados() {
             return procesados;
         }
 
+        BlockingQueue<PagoFallidoEvent> fallidos() {
+            return fallidos;
+        }
+
+        BlockingQueue<PagoReembolsadoEvent> reembolsados() {
+            return reembolsados;
+        }
+
         void clear() {
             procesados.clear();
+            fallidos.clear();
+            reembolsados.clear();
         }
     }
 }

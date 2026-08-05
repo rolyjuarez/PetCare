@@ -44,6 +44,8 @@ app:
       reserva-rechazada: reserva.rechazada
       reserva-confirmada: reserva.confirmada
       pago-completado: pago.completado
+      pago-fallido: pago.fallido
+      pago-reembolsado: pago.reembolsado
       dlt: reserva.dlt.v1
     partitions: 3
     replication-factor: 1

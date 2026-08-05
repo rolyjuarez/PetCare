@@ -30,6 +30,12 @@ public class KafkaTopicConfig {
     @Value("${app.kafka.topic.pago-completado:pago.completado}")
     private String pagoCompletadoTopic;
 
+    @Value("${app.kafka.topic.pago-fallido:pago.fallido}")
+    private String pagoFallidoTopic;
+
+    @Value("${app.kafka.topic.pago-reembolsado:pago.reembolsado}")
+    private String pagoReembolsadoTopic;
+
     @Value("${app.kafka.topic.dlt:reserva.dlt.v1}")
     private String deadLetterTopic;
 
@@ -95,6 +101,26 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic pagoCompletadoTopic() {
         return TopicBuilder.name(pagoCompletadoTopic)
+                .partitions(partitions)
+                .replicas(replicationFactor)
+                .config("retention.ms", String.valueOf(retentionMs))
+                .config("cleanup.policy", "delete")
+                .build();
+    }
+
+    @Bean
+    public NewTopic pagoFallidoTopic() {
+        return TopicBuilder.name(pagoFallidoTopic)
+                .partitions(partitions)
+                .replicas(replicationFactor)
+                .config("retention.ms", String.valueOf(retentionMs))
+                .config("cleanup.policy", "delete")
+                .build();
+    }
+
+    @Bean
+    public NewTopic pagoReembolsadoTopic() {
+        return TopicBuilder.name(pagoReembolsadoTopic)
                 .partitions(partitions)
                 .replicas(replicationFactor)
                 .config("retention.ms", String.valueOf(retentionMs))

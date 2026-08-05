@@ -11,7 +11,9 @@ import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
 import bo.capital.tec.pet.modules.pago.dto.ReservaInfoDTO;
 import bo.capital.tec.pet.modules.pago.entity.Pago;
+import bo.capital.tec.pet.modules.pago.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.pago.event.PagoProcesadoEvent;
+import bo.capital.tec.pet.modules.pago.event.PagoReembolsadoEvent;
 import bo.capital.tec.pet.modules.pago.event.ReservaConfirmadaEvent;
 import bo.capital.tec.pet.modules.pago.mapper.PagoCatalogMapper;
 import bo.capital.tec.pet.modules.pago.mapper.PagoMapper;
@@ -149,12 +151,13 @@ public class PagoServiceImpl implements PagoService {
                     resultado.getReferenciaTransaccion(), resultado.getIntencionId(),
                     LocalDateTime.now(), request.getMetodoPago());
             log.info("Pago {} completado, referencia {}", pago.getId(), resultado.getReferenciaTransaccion());
+            publishProcesado(pago, request);
         } else {
             pagoMapper.updateEstado(pago.getId(), ESTADO_FALLIDO, ESTADO_FALLIDO,
                     null, resultado.getIntencionId(), null, request.getMetodoPago());
             log.warn("Pago {} fallido: {}", pago.getId(), resultado.getMensaje());
+            publishFallido(pago, resultado);
         }
-        publishProcesado(pago, request);
         return getById(id);
     }
 
@@ -169,6 +172,7 @@ public class PagoServiceImpl implements PagoService {
                 pago.getReferenciaTransaccion(), pago.getIntencionId(), LocalDateTime.now(),
                 pago.getMetodoPago());
         log.info("Pago {} reembolsado", pago.getId());
+        publishReembolsado(pago);
         return getById(id);
     }
 
@@ -183,6 +187,29 @@ public class PagoServiceImpl implements PagoService {
                     actualizado.getEstadoSync(), actualizado.getReferenciaTransaccion()));
         } catch (Exception e) {
             log.warn("Error publicando PagoProcesadoEvent: {}", e.getMessage());
+        }
+    }
+
+    private void publishFallido(Pago pago, ResultadoPasarela resultado) {
+        try {
+            Pago actualizado = pagoMapper.selectById(pago.getId());
+            eventPublisher.publish(new PagoFallidoEvent(
+                    actualizado.getId(), actualizado.getReservaId(),
+                    actualizado.getMonto(), actualizado.getIntencionId(),
+                    resultado.getMensaje()));
+        } catch (Exception e) {
+            log.warn("Error publicando PagoFallidoEvent: {}", e.getMessage());
+        }
+    }
+
+    private void publishReembolsado(Pago pago) {
+        try {
+            Pago actualizado = pagoMapper.selectById(pago.getId());
+            eventPublisher.publish(new PagoReembolsadoEvent(
+                    actualizado.getId(), actualizado.getReservaId(),
+                    actualizado.getMonto(), actualizado.getReferenciaTransaccion()));
+        } catch (Exception e) {
+            log.warn("Error publicando PagoReembolsadoEvent: {}", e.getMessage());
         }
     }
 

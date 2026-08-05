@@ -33,6 +33,12 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
     @Value("${app.kafka.topic.pago-completado:pago.completado}")
     private String pagoCompletadoTopic;
 
+    @Value("${app.kafka.topic.pago-fallido:pago.fallido}")
+    private String pagoFallidoTopic;
+
+    @Value("${app.kafka.topic.pago-reembolsado:pago.reembolsado}")
+    private String pagoReembolsadoTopic;
+
     @Value("${app.kafka.topic.dlt:reserva.dlt.v1}")
     private String deadLetterTopic;
 
@@ -61,6 +67,8 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
             };
             case "PAGO" -> switch (event.getClass().getSimpleName()) {
                 case "PagoProcesadoEvent" -> pagoCompletadoTopic;
+                case "PagoFallidoEvent" -> pagoFallidoTopic;
+                case "PagoReembolsadoEvent" -> pagoReembolsadoTopic;
                 default -> deadLetterTopic;
             };
             default -> deadLetterTopic;
