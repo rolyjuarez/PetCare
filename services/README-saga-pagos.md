@@ -53,14 +53,6 @@ Hoy **todos los microservicios comparten la misma base PostgreSQL**
 cada servicio solo toca sus propias tablas (`pago`, `reserva`, `evento_procesado`),
 pero un despliegue multi-base (una BD por servicio) permitiría aislar dominios.
 
-**Camino de migración (recomendado, NO aplicado):**
-1. Extraer las tablas `pago*` a una BD `paymentdb`; `reserva*` a `reservationdb`.
-2. Configurar `spring.datasource.url` por servicio en cada `application.yml`.
-3. Mover `evento_procesado` (o un `outbox`) a cada BD por servicio para
-   mantener la idempotencia local.
-4. Los catálogos compartidos (`persona`, `proveedor_servicio`, `promocion`)
-   pasan a exponerse por API o por replicación de datos de referencia.
-5. Validar con los tests de integración existentes (flujo feliz y compensación).
 
 Mientras no se migre, **no** se debe crear una BD separada: la saga y los tests
 asumen la base compartida actual.
