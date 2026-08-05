@@ -105,12 +105,18 @@ MAIL_PASSWORD=...
 
 ## Diagramas disponibles
 
-Los diagramas de arquitectura se encuentran en la carpeta diagramas:
-- 1-contexto.puml
-- 2-contenedores.puml
-- 3-componentes.puml
-- 5-event-driven-pagos.puml
-- -event-driven-reservas.puml
+Los diagramas de arquitectura (PlantUML) se encuentran en la carpeta `diagramas`:
+
+- 1-contexto.puml — vista de contexto de la plataforma
+- 2-contenedores.puml — vista de contenedores
+- 3-componentes.puml — vista de componentes
+- 3-event-driven-reservas.puml — saga coreografiada de reservas (eventos, topics, productores y consumidores)
+- 3-event-driven-pagos.puml — saga coreografiada de pagos (eventos, topics, productores y consumidores)
+
+Los diagramas de eventos usan la librería C4-PlantUML mediante `!includeurl`, por lo
+que renderizan en cualquier visor de PlantUML (VSCode, plantuml.com, etc.).
+
+Para el detalle del saga, ver `services/README-saga-pagos.md`.
 
 ## Estado actual del proyecto
 

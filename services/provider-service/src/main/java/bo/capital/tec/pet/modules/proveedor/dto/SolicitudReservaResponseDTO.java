@@ -30,6 +30,9 @@ public class SolicitudReservaResponseDTO {
     private LocalTime horaInicio;
     private BigDecimal precioTotal;
     private String modalidadEntrega;
+    private BigDecimal latitud;
+    private BigDecimal longitud;
+    private String direccionReferencia;
     private String estado;
     private String motivoRechazo;
     private Long registroVacunacionId;

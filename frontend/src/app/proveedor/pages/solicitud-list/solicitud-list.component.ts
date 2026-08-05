@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SolicitudService } from '../../../core/services/solicitud.service';
 import { SolicitudReserva } from '../../../core/models/solicitud.model';
+import { modalidadLabel } from '../../../core/models/proveedor.model';
 import { ToastService } from '../../../core/services/toast.service';
 
 @Component({
@@ -127,5 +128,18 @@ export class SolicitudListComponent implements OnInit {
       case 'RECHAZADA': return '#ef4444';
       default: return '#6b7280';
     }
+  }
+
+  modalidadLabel(m?: string): string {
+    return m ? modalidadLabel(m) : 'No indicada';
+  }
+
+  entregaResumen(s: SolicitudReserva): string {
+    if (!s.modalidadEntrega) return 'No indicada';
+    const partes = [this.modalidadLabel(s.modalidadEntrega)];
+    if (s.modalidadEntrega !== 'EN_ESTABLECIMIENTO' && s.direccionReferencia) {
+      partes.push(s.direccionReferencia);
+    }
+    return partes.join(' · ');
   }
 }

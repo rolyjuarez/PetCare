@@ -10,9 +10,10 @@
         s.fecha_inicio AS fechaInicio, s.hora_inicio AS horaInicio,
         s.precio_total AS precioTotal, s.modalidad_entrega AS modalidadEntrega, s.estado, s.motivo_rechazo AS motivoRechazo,
         s.registro_vacunacion_id AS registroVacunacionId,
+        r.latitud AS latitud, r.longitud AS longitud, r.direccion_referencia AS direccionReferencia,
         s.creada_en AS creadaEn, s.respondida_en AS respondidaEn
     </sql>
-    <sql id="table">solicitud_reserva s</sql>
+    <sql id="table">solicitud_reserva s LEFT JOIN reserva r ON r.id = s.reserva_id</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id"
             parameterType="bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva">

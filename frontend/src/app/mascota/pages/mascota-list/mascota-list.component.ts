@@ -1,7 +1,9 @@
-import { Component, signal, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, signal, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { Ciudad } from '../../../core/models/auth.model';
+import { environment } from '../../../../environments/environment';
 import { MascotaService } from '../../../core/services/mascota.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { EspecieService, Especie } from '../../../core/services/especie.service';
@@ -21,13 +23,15 @@ import { PagoResponse, ProcesarPagoRequest } from '../../../core/models/pago.mod
 import { modalidadLabel } from '../../../core/models/proveedor.model';
 import Swal from 'sweetalert2';
 
+declare const google: any;
+
 @Component({
   selector: 'app-mascota-list',
   standalone: true,
   imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './mascota-list.component.html'
 })
-export class MascotaListComponent implements OnInit {
+export class MascotaListComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('certificadoInput') certificadoInput!: ElementRef<HTMLInputElement>;
 
@@ -92,6 +96,7 @@ export class MascotaListComponent implements OnInit {
     notas: '',
     registroVacunacionId: null as number | null,
     modalidadEntrega: '',
+    ciudadId: null as number | null,
     latitud: null as number | null,
     longitud: null as number | null,
     direccionReferencia: ''
@@ -99,6 +104,10 @@ export class MascotaListComponent implements OnInit {
 
   modalidadesDisponibles = signal<ModalidadInfo[]>([]);
   selectedModalidad = signal<ModalidadInfo | null>(null);
+  ciudades = signal<Ciudad[]>([]);
+  private clienteCiudadId: number | null = null;
+  private reservaMap: any = null;
+  private reservaMarker: any = null;
 
   // Pago modal
   showPagoModal = signal(false);
@@ -159,11 +168,22 @@ export class MascotaListComponent implements OnInit {
       next: (res) => { if (res.success) this.servicios.set(res.data); }
     });
     this.proveedorService.getAll({ size: 100 }).subscribe({
-      next: (res) => { if (res.success) this.proveedores.set(res.data.content.filter(p => p.verificado !== false)); }
+      next: (res) => { if (res.success) this.proveedores.set(res.data.content); }
+    });
+    this.auth.getCiudades().subscribe({
+      next: (data) => {
+        this.ciudades.set(data);
+        this.aplicarCiudadDefecto();
+      }
     });
     if (this.isCliente) {
       this.clienteService.getMe().subscribe({
-        next: (res) => { if (res.success) this.clienteId = res.data.id; }
+        next: (res) => {
+          if (res.success) {
+            this.clienteId = res.data.id;
+            this.cargarCiudadDelCliente(res.data.id);
+          }
+        }
       });
     }
   }
@@ -535,6 +555,7 @@ export class MascotaListComponent implements OnInit {
     this.selectedServicio.set(null);
     this.modalidadesDisponibles.set([]);
     this.selectedModalidad.set(null);
+    this.destroyReservaMap();
     this.resetCertificadoState();
   }
 
@@ -583,6 +604,11 @@ export class MascotaListComponent implements OnInit {
   selectModalidad(m: ModalidadInfo): void {
     this.selectedModalidad.set(m);
     this.reservaForm.modalidadEntrega = m.modalidad;
+    if (this.requiereCoordenadas()) {
+      this.refrescarMapaSiNecesario();
+    } else {
+      this.destroyReservaMap();
+    }
   }
 
   requiereCoordenadas(): boolean {
@@ -603,11 +629,18 @@ export class MascotaListComponent implements OnInit {
         if (res.success) {
           this.slotsPorFecha.set(res.data);
           this.requiereCertificado.set(res.data.some(s => s.requiereCertificado));
-          const mods = res.data.length > 0 ? res.data[0].modalidades : [];
-          this.modalidadesDisponibles.set(mods || []);
-          if (this.editReservaId() && this.reservaForm.modalidadEntrega) {
-            this.selectedModalidad.set((mods || []).find(m => m.modalidad === this.reservaForm.modalidadEntrega) ?? null);
+          const mods = this.ordenarModalidades(res.data.length > 0 ? (res.data[0].modalidades ?? []) : []);
+          this.modalidadesDisponibles.set(mods);
+          if (!this.reservaForm.modalidadEntrega) {
+            const defecto = mods.find(m => m.modalidad === 'EN_ESTABLECIMIENTO') ?? mods[0] ?? null;
+            if (defecto) {
+              this.selectedModalidad.set(defecto);
+              this.reservaForm.modalidadEntrega = defecto.modalidad;
+            }
+          } else {
+            this.selectedModalidad.set(mods.find(m => m.modalidad === this.reservaForm.modalidadEntrega) ?? null);
           }
+          this.refrescarMapaSiNecesario();
           if (this.requiereCertificado()) {
             this.loadRegistrosParaCertificado();
           }
@@ -642,6 +675,7 @@ export class MascotaListComponent implements OnInit {
     this.selectedSlot.set(slot);
     this.reservaForm.horaInicio = slot.horaInicio;
     this.reservaForm.horaFin = slot.horaFin;
+    this.refrescarMapaSiNecesario();
   }
 
   // --- Certificado de vacunación en reserva ---
@@ -867,6 +901,7 @@ export class MascotaListComponent implements OnInit {
     this.reservaForm.notas = '';
     this.reservaForm.registroVacunacionId = null;
     this.reservaForm.modalidadEntrega = '';
+    this.reservaForm.ciudadId = this.clienteCiudadId ?? (this.ciudades().length > 0 ? this.ciudades()[0].id : null);
     this.reservaForm.latitud = null;
     this.reservaForm.longitud = null;
     this.reservaForm.direccionReferencia = '';
@@ -877,6 +912,7 @@ export class MascotaListComponent implements OnInit {
     this.selectedServicio.set(null);
     this.modalidadesDisponibles.set([]);
     this.selectedModalidad.set(null);
+    this.destroyReservaMap();
     this.resetCertificadoState();
   }
 
@@ -909,6 +945,127 @@ export class MascotaListComponent implements OnInit {
 
   modalidadLabel(m: string): string {
     return modalidadLabel(m);
+  }
+
+  onCiudadChangeReserva(): void {
+    const ciudad = this.ciudades().find(c => c.id === Number(this.reservaForm.ciudadId));
+    if (!ciudad) return;
+    const center = { lat: ciudad.latitud || -16.5, lng: ciudad.longitud || -68.15 };
+    if (this.reservaMap) {
+      this.reservaMap.setCenter(center);
+      this.reservaMap.setZoom(13);
+    }
+    if (this.reservaMarker) {
+      this.reservaMarker.setPosition(center);
+    }
+    this.reservaForm.latitud = center.lat;
+    this.reservaForm.longitud = center.lng;
+  }
+
+  private ordenarModalidades(mods: ModalidadInfo[]): ModalidadInfo[] {
+    const prioridad: Record<string, number> = {
+      'EN_ESTABLECIMIENTO': 0,
+      'DOMICILIO': 1,
+      'RECOGIDA_ENTREGA': 2
+    };
+    return [...(mods || [])].sort(
+      (a, b) => (prioridad[a.modalidad] ?? 99) - (prioridad[b.modalidad] ?? 99)
+    );
+  }
+
+  private refrescarMapaSiNecesario(): void {
+    if (this.requiereCoordenadas() && !this.reservaMap) {
+      setTimeout(() => this.initReservaMap(), 150);
+    }
+  }
+
+  private initReservaMap(): void {
+    const mapEl = document.getElementById('reserva-map');
+    if (!mapEl || this.reservaMap) return;
+
+    const loadMap = () => {
+      const ciudad = this.ciudades().find(c => c.id === Number(this.reservaForm.ciudadId));
+      const defaultCenter = ciudad
+        ? { lat: ciudad.latitud || -16.5, lng: ciudad.longitud || -68.15 }
+        : { lat: -16.5, lng: -68.15 };
+      const center = this.reservaForm.latitud != null && this.reservaForm.longitud != null
+        ? { lat: this.reservaForm.latitud, lng: this.reservaForm.longitud }
+        : defaultCenter;
+
+      if (this.reservaForm.latitud == null || this.reservaForm.longitud == null) {
+        this.reservaForm.latitud = center.lat;
+        this.reservaForm.longitud = center.lng;
+      }
+
+      this.reservaMap = new google.maps.Map(mapEl, {
+        center,
+        zoom: 15,
+        mapTypeControl: false
+      });
+
+      this.reservaMarker = new google.maps.Marker({
+        position: center,
+        map: this.reservaMap,
+        draggable: true,
+        title: 'Ubicación'
+      });
+
+      this.reservaMarker.addListener('dragend', () => {
+        const pos = this.reservaMarker.getPosition();
+        this.reservaForm.latitud = pos.lat();
+        this.reservaForm.longitud = pos.lng();
+      });
+
+      this.reservaMap.addListener('click', (e: any) => {
+        this.reservaMarker.setPosition(e.latLng);
+        this.reservaForm.latitud = e.latLng.lat();
+        this.reservaForm.longitud = e.latLng.lng();
+      });
+    };
+
+    if ((window as any).google && (window as any).google.maps) {
+      loadMap();
+    } else {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${environment.googleMapsApiKey}`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => loadMap();
+      document.head.appendChild(script);
+    }
+  }
+
+  private destroyReservaMap(): void {
+    this.reservaMap = null;
+    this.reservaMarker = null;
+  }
+
+  private cargarCiudadDelCliente(clienteId: number): void {
+    this.clienteService.getAll({ size: 100 }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          const c = res.data.content.find(x => x.id === clienteId);
+          if (c) {
+            this.clienteCiudadId = c.ciudadId || null;
+            this.aplicarCiudadDefecto();
+          }
+        }
+      }
+    });
+  }
+
+  private aplicarCiudadDefecto(): void {
+    const ciudades = this.ciudades();
+    if (ciudades.length === 0) return;
+    if (this.clienteCiudadId && ciudades.some(c => c.id === this.clienteCiudadId)) {
+      this.reservaForm.ciudadId = this.clienteCiudadId;
+    } else {
+      this.reservaForm.ciudadId = ciudades[0].id;
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyReservaMap();
   }
 
   // --- Pago modal ---

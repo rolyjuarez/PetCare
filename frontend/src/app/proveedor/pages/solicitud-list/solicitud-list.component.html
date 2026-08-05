@@ -31,6 +31,7 @@
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Cliente</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Servicio</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Mascota</th>
+            <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Entrega</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Vacunación</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Fecha</th>
             <th class="px-6 py-3 text-left text-sm font-medium dark:text-gray-300">Hora</th>
@@ -46,6 +47,25 @@
               <td class="px-6 py-4 dark:text-gray-300">{{ item.clienteNombre }}</td>
               <td class="px-6 py-4 dark:text-gray-300">{{ item.servicioNombre }}</td>
               <td class="px-6 py-4 dark:text-gray-300">{{ item.mascotaNombre }}</td>
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-1">
+                  @if (item.modalidadEntrega === 'EN_ESTABLECIMIENTO') {
+                    <span class="material-icons text-sm text-primary-600 dark:text-primary-400">store</span>
+                  } @else if (item.modalidadEntrega === 'DOMICILIO') {
+                    <span class="material-icons text-sm text-primary-600 dark:text-primary-400">home</span>
+                  } @else if (item.modalidadEntrega === 'RECOGIDA_ENTREGA') {
+                    <span class="material-icons text-sm text-primary-600 dark:text-primary-400">local_shipping</span>
+                  } @else {
+                    <span class="material-icons text-sm text-gray-400">remove</span>
+                  }
+                  <div>
+                    <p class="text-sm dark:text-gray-300">{{ modalidadLabel(item.modalidadEntrega) }}</p>
+                    @if (item.modalidadEntrega !== 'EN_ESTABLECIMIENTO' && item.direccionReferencia) {
+                      <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.direccionReferencia }}</p>
+                    }
+                  </div>
+                </div>
+              </td>
               <td class="px-6 py-4">
                 @if (item.vacunaInfo) {
                   <div class="space-y-1">
@@ -87,7 +107,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="10" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay solicitudes de reserva</td>
+              <td colspan="11" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">No hay solicitudes de reserva</td>
             </tr>
           }
         </tbody>
@@ -111,6 +131,15 @@
             <p class="text-sm"><span class="font-medium">Cliente:</span> {{ selected()!.clienteNombre }}</p>
             <p class="text-sm"><span class="font-medium">Servicio:</span> {{ selected()!.servicioNombre }}</p>
             <p class="text-sm"><span class="font-medium">Fecha:</span> {{ selected()!.fechaInicio }} {{ selected()!.horaInicio }}</p>
+            <p class="text-sm"><span class="font-medium">Entrega:</span> {{ modalidadLabel(selected()!.modalidadEntrega) }}</p>
+            @if (selected()!.modalidadEntrega !== 'EN_ESTABLECIMIENTO' && selected()!.direccionReferencia) {
+              <p class="text-sm text-gray-500 dark:text-gray-400">
+                <span class="font-medium">Dirección:</span> {{ selected()!.direccionReferencia }}
+                @if (selected()!.latitud != null) {
+                  <span class="text-xs">({{ selected()!.latitud | number:'1.4-6' }}, {{ selected()!.longitud | number:'1.4-6' }})</span>
+                }
+              </p>
+            }
             @if (selected()!.vacunaInfo) {
               <div class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <p class="text-sm text-green-700 dark:text-green-300 flex items-center gap-1">
@@ -154,6 +183,7 @@
             <p class="text-sm"><span class="font-medium">Cliente:</span> {{ selected()!.clienteNombre }}</p>
             <p class="text-sm"><span class="font-medium">Servicio:</span> {{ selected()!.servicioNombre }}</p>
             <p class="text-sm"><span class="font-medium">Fecha:</span> {{ selected()!.fechaInicio }} {{ selected()!.horaInicio }}</p>
+            <p class="text-sm"><span class="font-medium">Entrega:</span> {{ modalidadLabel(selected()!.modalidadEntrega) }}</p>
             @if (selected()!.vacunaInfo) {
               <div class="mt-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <p class="text-sm text-green-700 dark:text-green-300 flex items-center gap-1">
