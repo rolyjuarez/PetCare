@@ -1,59 +1,61 @@
 @startuml
-skinparam componentStyle rectangle
-skinparam rectangle {
-  BackgroundColor #F8F9FA
-  BorderColor #444444
-}
-skinparam component {
-  BackgroundColor #FFFFFF
-  BorderColor #2F4F4F
-}
-skinparam database {
-  BackgroundColor #EAF4FF
-  BorderColor #2B6CB0
-}
-skinparam queue {
-  BackgroundColor #FDECEC
-  BorderColor #C53030
-}
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title Event-Driven - Módulo de Pagos
+' ============================================================================
+' PETCare - Flujo event-driven del módulo de Pagos
+' ============================================================================
 
-component "PagoService" as PagoService
-component "PagoRepository / Mapper" as PagoRepo
-component "ReservaApi" as ReservaApi
-component "ClienteApi" as ClienteApi
-component "PersonaApi" as PersonaApi
-component "DomainEventPublisher" as EventPublisher
-component "OutboxPublisher" as Outbox
-component "KafkaDomainEventPublisher" as KafkaPublisher
-component "Kafka Topics" as Kafka
-component "PagoEventConsumer" as PagoConsumer
-component "NotificacionApi" as NotificacionApi
-component "PostgreSQL" as Database
+title Event-driven de Pagos - PETCare
 
-PagoService --> PagoRepo : persiste pago
-PagoService --> ReservaApi : consulta reserva
-PagoService --> ClienteApi : consulta cliente
-PagoService --> PersonaApi : consulta datos de persona
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
 
-PagoService --> EventPublisher : publica PagoConfirmadoEvent / PagoReembolsadoEvent
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Paga y consulta el historial de sus reservas")
 
-EventPublisher --> KafkaPublisher : modo kafka
-KafkaPublisher --> Outbox : registra evento
-Outbox --> Kafka : petcare.pago.event.v1
-Kafka --> PagoConsumer : consume eventos
-PagoConsumer --> NotificacionApi : crea notificación
-NotificacionApi --> Database : inserta notificación
-PagoRepo --> Database : guarda estado del pago
+' ---------------------------------------------------------------------------
+' Servicios
+' ---------------------------------------------------------------------------
+System_Ext(rs, "reservation-service", "Spring Boot 8081", "Publica la reserva confirmada")
+System_Ext(ms, "payment-service", "Spring Boot 8083", "Crea, procesa y reembolsa pagos; aplica la cadena de descuentos")
 
-note right of PagoService
-  Al confirmar o reembolsar un pago
-  se emite un evento de dominio.
+' ---------------------------------------------------------------------------
+' Tópicos Kafka
+' ---------------------------------------------------------------------------
+ContainerQueue(confirmada, "reserva.confirmada", "ReservaConfirmadaEvent", "Producer: reservation-service | Consumer: payment-service")
+ContainerQueue(completado, "pago.completado", "PagoProcesadoEvent", "Producer: payment-service | Consumer: (ninguno)")
+
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Tablas pago, promoción, descuento")
+System_Ext(pasarela, "Pasarela de pago", "Proveedor externo de pagos", "Simulada en dev por SimulatedPaymentGateway")
+
+' ---------------------------------------------------------------------------
+' Flujo de eventos
+' ---------------------------------------------------------------------------
+Rel(rs, confirmada, "1. Publica ReservaConfirmadaEvent", "Kafka")
+Rel(confirmada, ms, "2. Consume y crea el pago", "Kafka")
+Rel(ms, db, "3. Persiste el pago", "JDBC")
+Rel(ms, pasarela, "4. Procesa / reembolsa", "REST/HTTPS")
+Rel(ms, completado, "5. Publica PagoProcesadoEvent", "Kafka")
+Rel(cliente, ms, "Consulta historial de pagos", "REST /pagos")
+
+note bottom of completado
+    {|
+    |= Evento |= Topic |= Productor |= Consumidor |
+    | ReservaConfirmadaEvent | reserva.confirmada | reservation-service | payment-service |
+    | PagoProcesadoEvent | pago.completado | payment-service | (ninguno) |
+    |}
+
+    pago.completado no tiene consumidor todavía: un futuro servicio de
+    notificaciones o reportes puede suscribirse para avisar al cliente.
 end note
 
-note bottom of Outbox
-  Patrón outbox para asegurar
-  la publicación confiable del evento.
-end note
+LAYOUT_WITH_LEGEND()
+
 @enduml

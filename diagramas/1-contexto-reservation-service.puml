@@ -1,0 +1,86 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - Contexto del reservation-service (puerto 8081)
+' ============================================================================
+
+title Contexto de reservation-service - Spring Boot 8081
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Crea reservas y consulta disponibilidad")
+Person(proveedor, "Proveedor", "Acepta o rechaza las solicitudes de reserva")
+
+' ---------------------------------------------------------------------------
+' reservation-service
+' ---------------------------------------------------------------------------
+System_Boundary(rs, "reservation-service", "Spring Boot 3.4.1 - contexto /api/v1") {
+
+    Container(api, "ReservaController", "Spring Web", "GET/POST /reservas, /slots, /estados, /disponibilidad")
+    Container(cat, "ReservaCatalogMapper", "MyBatis", "Catálogos de servicios, modalidades, proveedores y vacunas")
+    Container(events, "DomainEventPublisher", "Kafka", "Publica ReservaCreadaEvent y ReservaConfirmadaEvent")
+    Container(consumer, "ReservaEventConsumer", "Kafka Listener", "Consume ReservaAceptadaEvent y ReservaRechazadaEvent")
+    Container(mail, "EmailService", "JavaMailSender", "Correos de confirmación/rechazo al cliente")
+}
+
+' ---------------------------------------------------------------------------
+' Dependencias
+' ---------------------------------------------------------------------------
+Container(frontend, "Frontend Angular", "Angular 21", "Interfaz del usuario")
+System_Ext(be, "Backend monolito", "Spring Boot 8080", "Proxy REST de /api/v1/reservas/*")
+System_Ext(ps, "provider-service", "Spring Boot 8082", "Crea solicitudes y responde aceptación/rechazo")
+System_Ext(ms, "payment-service", "Spring Boot 8083", "Procesa el pago de la reserva confirmada")
+ContainerQueue(kafka, "Kafka + Zookeeper", "Apache Kafka 3.8", "Tópicos de eventos de reserva")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Tablas reserva, disponibilidad, estado_reserva")
+System_Ext(smtp, "Servicio SMTP", "Correo electrónico", "Correos al cliente")
+
+' ---------------------------------------------------------------------------
+' Relaciones
+' ---------------------------------------------------------------------------
+Rel(cliente, frontend, "Reserva servicios", "HTTPS")
+Rel(proveedor, frontend, "Responde solicitudes", "HTTPS")
+Rel(frontend, be, "Consume API", "REST")
+Rel(be, api, "Reenvía rutas de reservas", "HTTP /api/v1/reservas/*")
+Rel(api, cat, "Consulta catálogos y valida reservas", "JDBC")
+Rel(cat, db, "Lee/escribe", "JDBC")
+
+' --- Kafka: publicación ---
+Rel(api, events, "Publica al crear una reserva", "ReservaCreadaEvent")
+Rel(api, events, "Publica al confirmarse", "ReservaConfirmadaEvent")
+Rel(events, kafka, "Escribe eventos", "reserva.creada / reserva.confirmada")
+
+' --- Kafka: consumo ---
+Rel(kafka, consumer, "Lee eventos", "reserva.aceptada / reserva.rechazada")
+Rel(consumer, api, "Aplica aceptación/rechazo", "Actualiza estado a CONFIRMADA/RECHAZADA")
+
+' --- Proveedor y pago vía eventos ---
+Rel(ps, kafka, "Intercambia eventos de aceptación", "aceptada/rechazada")
+Rel(ms, kafka, "Recibe reserva confirmada", "reserva.confirmada")
+
+' --- Correos ---
+Rel(api, mail, "Notifica al cliente", "Confirmación/rechazo")
+Rel(mail, smtp, "Envía correos", "SMTP")
+
+' ---------------------------------------------------------------------------
+' Notas
+' ---------------------------------------------------------------------------
+note bottom of rs
+    El reservation-service es dueño de la reserva: valida slots, persiste la
+    reserva (estado PENDIENTE) y publica ReservaCreadaEvent. Al recibir la
+    aceptación del proveedor pasa la reserva a CONFIRMADA y publica
+    ReservaConfirmadaEvent para que payment-service procese el pago.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

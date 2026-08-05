@@ -13,6 +13,10 @@ export interface SolicitudReserva {
   fechaInicio: string;
   horaInicio: string;
   precioTotal: number;
+  modalidadEntrega?: string;
+  direccionReferencia?: string;
+  latitud?: number;
+  longitud?: number;
   estado: string;
   motivoRechazo: string;
   registroVacunacionId?: number;

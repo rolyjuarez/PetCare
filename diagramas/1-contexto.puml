@@ -1,25 +1,105 @@
 @startuml
-skinparam rectangle {
-  BackgroundColor #F7F7F7
-  BorderColor #333333
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - Vista general de contexto (Nivel 1 C4)
+' Muestra los usuarios, los contenedores de la plataforma y los sistemas externos.
+' ============================================================================
+
+title Vista general de contexto - Plataforma PETCare
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Personas (usuarios del sistema)
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Dueño de mascotas que agenda y paga servicios de cuidado")
+Person(proveedor, "Proveedor", "Profesional que ofrece servicios y gestiona sus reservas")
+Person(admin, "Administrador", "Gestiona catálogos, usuarios y parámetros del sistema")
+
+' ---------------------------------------------------------------------------
+' Límite del sistema PETCare
+' ---------------------------------------------------------------------------
+System_Boundary(petcare, "PETCare", "Plataforma web de gestión de servicios para mascotas") {
+
+    ' Frontend
+    Container(frontend, "Frontend Angular", "Angular 21 + Tailwind CSS", "SPA con módulos de cliente, proveedor, reservas y pagos")
+
+    ' Backend monolito (API gateway y catálogo)
+    Container(backend, "Backend monolito", "Spring Boot 3.4.1", "Autenticación JWT, CRUD de catálogos y proxy REST hacia los microservicios")
+
+    ' Microservicios
+    Container(rs, "reservation-service", "Spring Boot 3.4.1", "Gestión de reservas, disponibilidad y slots", $tags="ms")
+    Container(ps, "provider-service", "Spring Boot 3.4.1", "Solicitudes de reserva y aceptación/rechazo del proveedor", $tags="ms")
+    Container(ms, "payment-service", "Spring Boot 3.4.1", "Pagos, reembolsos y descuentos", $tags="ms")
+
+    ' Infraestructura
+    ContainerQueue(kafka, "Kafka + Zookeeper", "Apache Kafka 3.8", "Broker de mensajería para eventos asíncronos de reservas y pagos")
+    ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Base de datos única compartida por todos los servicios")
+    
+    
 }
 
-Title Diagrama de contexto del sistema PetCare
+' ---------------------------------------------------------------------------
+' Sistemas externos
+' ---------------------------------------------------------------------------
+System_Ext(pasarela, "Pasarela de pago", "Proveedor externo de pagos (simulado en dev por SimulatedPaymentGateway)")
+System_Ext(smtp, "Servicio SMTP", "Envío de correos de notificación a clientes")
+System_Ext(gmaps, "Google Maps API", "Mapas, geocodificación y coordenadas de entrega")
 
-actor Cliente as "Cliente"
-actor Administrador as "Administrador"
-actor Proveedor as "Proveedor de servicios veterinarios"
+' ---------------------------------------------------------------------------
+' Relaciones de las personas
+' ---------------------------------------------------------------------------
+Rel(cliente, frontend, "Agenda reservas, gestiona mascotas y paga", "HTTPS")
+Rel(proveedor, frontend, "Gestiona servicios y responde solicitudes", "HTTPS")
+Rel(admin, frontend, "Administra catálogos y usuarios", "HTTPS")
 
-package "PetCare" {
-  rectangle "Frontend Angular" as Frontend
-  rectangle "Backend Spring Boot" as Backend
-  rectangle "PostgreSQL" as Database
-}
+' ---------------------------------------------------------------------------
+' Relaciones entre contenedores
+' ---------------------------------------------------------------------------
+Rel(frontend, backend, "Consume API REST", "HTTPS /api/v1")
+Rel(backend, rs, "Proxy REST de reservas", "HTTP /reservas/*", "Reenvío de /api/v1/reservas hacia 8081")
+Rel(backend, ps, "Proxy REST de solicitudes", "HTTP /proveedor/*", "Reenvío de /api/v1/proveedor hacia 8082")
+Rel(backend, ms, "Proxy REST de pagos", "HTTP /pagos/*", "Reenvío de /api/v1/pagos hacia 8083")
 
-Cliente --> Frontend : Usa la aplicación web
-Administrador --> Frontend : Gestiona el sistema
-Proveedor --> Frontend : Presta servicios
-Frontend --> Backend : Consume API REST
-Backend --> Database : Guarda/recupera datos
+' --- Eventos Kafka ---
+Rel(rs, kafka, "Publica ReservaCreada / ReservaConfirmada", "Eventos")
+Rel(rs, kafka, "Consume ReservaAceptada / ReservaRechazada", "Eventos")
+Rel(ps, kafka, "Consume ReservaCreada; publica Aceptada/Rechazada", "Eventos")
+Rel(ms, kafka, "Consume ReservaConfirmada; publica PagoProcesado", "Eventos")
 
-@enduml 
+' --- Base de datos ---
+Rel(backend, db, "Lee/escribe datos de catálogos y usuarios", "JDBC")
+Rel(rs, db, "Persiste reservas y disponibilidad", "JDBC")
+Rel(ps, db, "Persiste solicitudes de reserva", "JDBC")
+Rel(ms, db, "Persiste pagos y reembolsos", "JDBC")
+
+' --- Sistemas externos ---
+Rel(ms, pasarela, "Procesa y reembolsa pagos", "REST/HTTPS")
+Rel(backend, smtp, "Envía correos (registro, notificaciones)", "SMTP")
+Rel(rs, smtp, "Envía correos de confirmación al cliente", "SMTP")
+Rel(frontend, gmaps, "Mapas y coordenadas de entrega", "HTTPS")
+
+' --- Monitorización ---
+
+
+' ---------------------------------------------------------------------------
+' Notas aclaratorias
+' ---------------------------------------------------------------------------
+legend right
+    = PETCare (vista de contexto) =
+    Un solo backend monolito actúa como API gateway y, según la ruta,
+    reenvía a reservation-service (8081), provider-service (8082) o
+    payment-service (8083). La comunicación entre servicios es asíncrona
+    vía Kafka. Todos comparten la misma base PostgreSQL.
+endlegend
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

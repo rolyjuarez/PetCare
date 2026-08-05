@@ -68,7 +68,7 @@ public class MicroserviceRoutingFilter extends OncePerRequestFilter {
         if (uri.startsWith(CONTEXT_PATH + "/reservas")) {
             return reservationBase + uri;
         }
-        if (uri.startsWith(CONTEXT_PATH + "/proveedor")) {
+        if (uri.startsWith(CONTEXT_PATH + "/proveedor/")) {
             return providerBase + uri;
         }
         if (isPaymentPath(uri)) {

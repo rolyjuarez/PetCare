@@ -1,63 +1,75 @@
 @startuml
-skinparam componentStyle rectangle
-skinparam rectangle {
-  BackgroundColor #F8F9FA
-  BorderColor #444444
-}
-skinparam component {
-  BackgroundColor #FFFFFF
-  BorderColor #2F4F4F
-}
-skinparam database {
-  BackgroundColor #EAF4FF
-  BorderColor #2B6CB0
-}
-skinparam queue {
-  BackgroundColor #FDECEC
-  BorderColor #C53030
-}
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-title Event-Driven - Módulo de Reservas
+' ============================================================================
+' PETCare - Flujo event-driven del módulo de Reservas
+' ============================================================================
 
-component "ReservaService" as ReservaService
-component "ReservaMapper" as ReservaRepo
-component "ClienteApi" as ClienteApi
-component "ProveedorApi" as ProveedorApi
-component "ServicioApi" as ServicioApi
-component "MascotaApi" as MascotaApi
-component "PersonaApi" as PersonaApi
-component "DomainEventPublisher" as EventPublisher
-component "OutboxPublisher" as Outbox
-component "KafkaDomainEventPublisher" as KafkaPublisher
-component "Kafka Topics" as Kafka
-component "ReservaEventConsumer" as ReservaConsumer
-component "NotificacionApi" as NotificacionApi
-component "PostgreSQL" as Database
+title Event-driven de Reservas - PETCare
 
-ReservaService --> ReservaRepo : persiste y actualiza reserva
-ReservaService --> ClienteApi : obtiene cliente
-ReservaService --> ProveedorApi : obtiene proveedor
-ReservaService --> ServicioApi : obtiene servicio
-ReservaService --> MascotaApi : obtiene mascota
-ReservaService --> PersonaApi : obtiene datos de persona
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
 
-ReservaService --> EventPublisher : publica ReservaCreadaEvent / ReservaConfirmadaEvent / ReservaCanceladaEvent / ReservaCompletadaEvent
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Crea y da seguimiento a sus reservas")
+Person(proveedor, "Proveedor", "Acepta o rechaza las solicitudes de reserva")
 
-EventPublisher --> KafkaPublisher : modo kafka
-KafkaPublisher --> Outbox : registra eventos
-Outbox --> Kafka : petcare.reserva.event.v1
-Kafka --> ReservaConsumer : consume eventos
-ReservaConsumer --> NotificacionApi : crea notificaciones para cliente y proveedor
-NotificacionApi --> Database : inserta notificaciones
-ReservaRepo --> Database : guarda estado de reserva
+' ---------------------------------------------------------------------------
+' Servicios
+' ---------------------------------------------------------------------------
+System_Ext(rs, "reservation-service", "Spring Boot 8081", "Dueño de la reserva: valida, persiste y actualiza estados")
+System_Ext(ps, "provider-service", "Spring Boot 8082", "Crea solicitudes y responde la aceptación/rechazo")
+System_Ext(ms, "payment-service", "Spring Boot 8083", "Procesa el pago de la reserva confirmada")
 
-note right of ReservaService
-  Al crear, confirmar, cancelar o completar
-  una reserva se emiten eventos de dominio.
+' ---------------------------------------------------------------------------
+' Tópicos Kafka
+' ---------------------------------------------------------------------------
+ContainerQueue(creada, "reserva.creada", "ReservaCreadaEvent", "Producer: reservation-service | Consumer: provider-service")
+ContainerQueue(aceptada, "reserva.aceptada", "ReservaAceptadaEvent", "Producer: provider-service | Consumer: reservation-service")
+ContainerQueue(rechazada, "reserva.rechazada", "ReservaRechazadaEvent", "Producer: provider-service | Consumer: reservation-service")
+ContainerQueue(confirmada, "reserva.confirmada", "ReservaConfirmadaEvent", "Producer: reservation-service | Consumer: payment-service")
+ContainerQueue(dlt, "reserva.dlt.v1", "Dead-letter", "Eventos que fallan tras el retry")
+
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Tablas reserva, solicitud_reserva, estado_reserva")
+
+' ---------------------------------------------------------------------------
+' Flujo de eventos
+' ---------------------------------------------------------------------------
+Rel(cliente, rs, "1. Crea la reserva", "REST /reservas")
+Rel(rs, creada, "2. Publica ReservaCreadaEvent", "Kafka")
+Rel(creada, ps, "3. Consume y crea solicitud PENDIENTE", "Kafka")
+Rel(ps, db, "4. Persiste solicitud_reserva", "JDBC")
+Rel(proveedor, ps, "5. Acepta / rechaza la solicitud", "REST /aceptar /rechazar")
+Rel(ps, aceptada, "6a. Publica ReservaAceptadaEvent", "Kafka")
+Rel(ps, rechazada, "6b. Publica ReservaRechazadaEvent", "Kafka")
+Rel(aceptada, rs, "7a. Reserva pasa a CONFIRMADA", "Kafka")
+Rel(rechazada, rs, "7b. Reserva pasa a RECHAZADA", "Kafka")
+Rel(rs, confirmada, "8. Publica ReservaConfirmadaEvent", "Kafka")
+Rel(confirmada, ms, "9. Consume y crea el pago", "Kafka")
+Rel(rs, db, "Persiste reserva y estados", "JDBC")
+
+note bottom of confirmada
+    {|
+    |= Evento |= Topic |= Productor |= Consumidor |
+    | ReservaCreadaEvent | reserva.creada | reservation-service | provider-service |
+    | ReservaAceptadaEvent | reserva.aceptada | provider-service | reservation-service |
+    | ReservaRechazadaEvent | reserva.rechazada | provider-service | reservation-service |
+    | ReservaConfirmadaEvent | reserva.confirmada | reservation-service | payment-service |
+    |}
 end note
 
-note bottom of Outbox
-  El outbox permite publicar los eventos
-  aunque haya fallos temporales en Kafka.
+note bottom of dlt
+    Los consumidores usan ack manual e idempotencia con la tabla
+    evento_procesado; los eventos que fallan van a reserva.dlt.v1.
 end note
+
+LAYOUT_WITH_LEGEND()
+
 @enduml

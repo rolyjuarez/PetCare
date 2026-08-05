@@ -1,196 +1,106 @@
 @startuml
-skinparam rectangle {
-  BackgroundColor #F7F7F7
-  BorderColor #333333
-}
-skinparam component {
-  BackgroundColor #FFFFFF
-  BorderColor #2F4F4F
-}
-skinparam cloud {
-  BackgroundColor #E8F7E0
-  BorderColor #4A7C59
-}
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
-Title Diagrama de contenedores de PetCare
+' ============================================================================
+' PETCare - Vista de contenedores (Nivel 2 C4)
+' ============================================================================
 
-actor Cliente as Cliente
-actor Administrador as Administrador
-actor Proveedor as Proveedor
+title Vista de contenedores - PETCare
 
-rectangle "Frontend" as Frontend {
-  component "Angular SPA" as SPA
-  note right of SPA
-    - Interfaz del usuario
-    - Consume la API REST
-    - Valida formularios y carga de fotos
-  end note
-}
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
 
-rectangle "Monolito Backend" as Monolith {
-  component "API REST / Controladores" as Api
-  component "Módulo auth" as AuthModule
-  component "Módulo persona" as PersonaModule
-  component "Módulo cliente" as ClienteModule
-  component "Módulo usuario" as UsuarioModule
-  component "Módulo mascota" as MascotaModule
-  component "Módulo direccion" as DireccionModule
-  component "Módulo proveedor" as ProveedorModule
-  component "Módulo reserva" as ReservaModule
-  component "Módulo pago" as PagoModule
-  component "Módulo promocion" as PromocionModule
-  component "Módulo notificacion" as NotificacionModule
-  component "Módulo rol/menu" as MenuRolModule
-  component "Módulo sucursal" as SucursalModule
-  component "Módulo bitacora" as BitacoraModule
-  component "Infraestructura" as InfraModule
-  note right of Monolith
-    - Spring Boot monolítico con paquetes por dominio
-    - Backend organizado como módulos dentro del mismo proceso
-    - Cada módulo expone controladores, servicios y mappers
-    - Persistencia con MyBatis + XML mappers
-  end note
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Reserva y paga servicios para sus mascotas")
+Person(proveedor, "Proveedor", "Ofrece servicios y responde solicitudes")
+Person(admin, "Administrador", "Gestiona el sistema")
+
+' ---------------------------------------------------------------------------
+' Límite de la plataforma
+' ---------------------------------------------------------------------------
+System_Boundary(petcare, "PETCare", "Plataforma de servicios para mascotas") {
+
+    ' --- Frontend ---
+    Container(frontend, "Frontend Angular", "Angular 21 + Tailwind CSS", "SPA: módulos de cliente, proveedor, admin; se ejecuta en puerto 4200 (dev) o 80 (docker)")
+
+    ' --- Backend monolito (API gateway) ---
+    Container(backend, "Backend monolito", "Spring Boot 3.4.1", "API REST /api/v1; auth JWT, catálogos, uploads, correos y proxy hacia microservicios", $tags="gw")
+
+    ' --- Microservicios ---
+    Container(rs, "reservation-service", "Spring Boot 3.4.1", "Reservas, slots y disponibilidad (8081)", $tags="ms")
+    Container(ps, "provider-service", "Spring Boot 3.4.1", "Solicitudes de reserva del proveedor (8082)", $tags="ms")
+    Container(ms, "payment-service", "Spring Boot 3.4.1", "Pagos, descuentos y reembolsos (8083)", $tags="ms")
+
+    ' --- Mensajería ---
+    ContainerQueue(kafka, "Kafka + Zookeeper", "Apache Kafka 3.8", "Tópicos: reserva.creada, reserva.aceptada, reserva.rechazada, reserva.confirmada, pago.completado, reserva.dlt.v1")
+
+    ' --- Persistencia ---
+    ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Base única compartida por backend y microservicios (5432)")
 }
 
-database "PostgreSQL" as Database
-storage "Uploads locales" as FileStorage
-cloud "SMTP Gmail" as EmailService
-cloud "Google Maps API" as MapsAPI
+' ---------------------------------------------------------------------------
+' Sistemas externos
+' ---------------------------------------------------------------------------
+System_Ext(pasarela, "Pasarela de pago", "Proveedor externo de pagos (simulado en dev)")
+System_Ext(smtp, "Servicio SMTP", "Correos transaccionales")
+System_Ext(gmaps, "Google Maps API", "Mapas y geocodificación")
 
-Cliente --> SPA : Usa la aplicación web
-Administrador --> SPA : Administra recursos
-Proveedor --> SPA : Publica y administra servicios
-SPA --> Api : Consume endpoints REST
+' ---------------------------------------------------------------------------
+' Relaciones de usuarios
+' ---------------------------------------------------------------------------
+Rel(cliente, frontend, "Agenda, paga y administra mascotas", "HTTPS")
+Rel(proveedor, frontend, "Gestiona servicios y solicitudes", "HTTPS")
+Rel(admin, frontend, "Administra el sistema", "HTTPS")
 
-Api --> AuthModule : Login / JWT / registro / recuperación
-Api --> PersonaModule : /api/v1/personas
-Api --> ClienteModule : /api/v1/clientes
-Api --> UsuarioModule : /api/v1/usuarios
-Api --> MascotaModule : /api/v1/mascotas, especies, razas
-Api --> DireccionModule : /api/v1/direcciones, /api/v1/ciudades
-Api --> ProveedorModule : /api/v1/proveedores, /api/v1/disponibilidades
-Api --> ReservaModule : /api/v1/reservas
-Api --> PagoModule : /api/v1/pagos
-Api --> PromocionModule : /api/v1/promociones
-Api --> NotificacionModule : /api/v1/notificaciones
-Api --> MenuRolModule : /api/v1/menus, /api/v1/permisos, /api/v1/roles
-Api --> SucursalModule : /api/v1/sucursales
-Api --> BitacoraModule : /api/v1/bitacoras
-Api --> InfraModule : Uploads, emails, seguridad, configuración
+' ---------------------------------------------------------------------------
+' Flujo REST (frontend -> backend -> microservicios)
+' ---------------------------------------------------------------------------
+Rel(frontend, backend, "Consume API REST", "HTTPS /api/v1")
+Rel(backend, rs, "Proxy de reservas", "HTTP /api/v1/reservas/*")
+Rel(backend, ps, "Proxy de solicitudes", "HTTP /api/v1/proveedor/*")
+Rel(backend, ms, "Proxy de pagos", "HTTP /api/v1/pagos/*")
 
-AuthModule --> Database : Credenciales / usuarios
-PersonaModule --> Database : Personas
-ClienteModule --> Database : Clientes
-UsuarioModule --> Database : Usuarios
-MascotaModule --> Database : Mascotas, especies, razas
-DireccionModule --> Database : Direcciones, ciudades, estados
-ProveedorModule --> Database : Proveedores, especialidades, disponibilidades
-ReservaModule --> Database : Reservas, estado de reservas
-PagoModule --> Database : Pagos
-PromocionModule --> Database : Promociones, promociones locales
-NotificacionModule --> Database : Notificaciones
-MenuRolModule --> Database : Menús, permisos, roles
-SucursalModule --> Database : Sucursales
-BitacoraModule --> Database : Bitácora de acciones
-InfraModule --> Database : Configuraciones, logs
-InfraModule --> FileStorage : Guarda fotos y archivos de mascotas
-InfraModule --> EmailService : Envío de correos
-SPA --> MapsAPI : Solicita mapas y geolocalización
+' ---------------------------------------------------------------------------
+' Flujo de eventos Kafka
+' ---------------------------------------------------------------------------
+Rel(rs, kafka, "Publica ReservaCreada / ReservaConfirmada", "reserva.creada / reserva.confirmada")
+Rel(ps, kafka, "Consume ReservaCreada; publica Aceptada/Rechazada", "reserva.creada / reserva.aceptada / reserva.rechazada")
+Rel(ms, kafka, "Consume ReservaConfirmada; publica PagoProcesado", "reserva.confirmada / pago.completado")
+Rel(rs, kafka, "Consume Aceptada/Rechazada", "reserva.aceptada / reserva.rechazada")
 
-note left of AuthModule
-  - bo.capital.tec.pet.modules.auth.controller
-  - bo.capital.tec.pet.modules.auth.service
-  - bo.capital.tec.pet.modules.auth.dto
+' ---------------------------------------------------------------------------
+' Persistencia
+' ---------------------------------------------------------------------------
+Rel(backend, db, "Catálogos, usuarios, notificaciones", "JDBC")
+Rel(rs, db, "Reservas, disponibilidad, estados", "JDBC")
+Rel(ps, db, "Solicitudes, proveedores, vacunas", "JDBC")
+Rel(ms, db, "Pagos y reembolsos", "JDBC")
+
+' ---------------------------------------------------------------------------
+' Externos y observabilidad
+' ---------------------------------------------------------------------------
+Rel(ms, pasarela, "Procesa/reembolsa pagos", "REST/HTTPS")
+Rel(backend, smtp, "Envía correos", "SMTP")
+Rel(rs, smtp, "Confirma/rechaza por correo", "SMTP")
+Rel(frontend, gmaps, "Mapas y coordenadas", "HTTPS")
+
+
+' ---------------------------------------------------------------------------
+' Nota general
+' ---------------------------------------------------------------------------
+note bottom of petcare
+    Los microservicios no se llaman por REST entre sí: se comunican mediante
+    eventos asíncronos en Kafka. El backend monolito conserva el CRUD y la
+    autenticación, y actúa como API gateway para las rutas delegadas.
 end note
 
-note left of PersonaModule
-  - bo.capital.tec.pet.modules.persona.controller
-  - bo.capital.tec.pet.modules.persona.service
-  - bo.capital.tec.pet.modules.persona.mapper
-end note
-
-note left of ClienteModule
-  - bo.capital.tec.pet.modules.cliente.controller
-  - bo.capital.tec.pet.modules.cliente.service
-  - bo.capital.tec.pet.modules.cliente.mapper
-end note
-
-note left of UsuarioModule
-  - bo.capital.tec.pet.modules.usuario.controller
-  - bo.capital.tec.pet.modules.usuario.service
-  - bo.capital.tec.pet.modules.usuario.mapper
-end note
-
-note left of MascotaModule
-  - bo.capital.tec.pet.modules.mascota.controller
-  - bo.capital.tec.pet.modules.mascota.service
-  - bo.capital.tec.pet.modules.mascota.mapper
-end note
-
-note left of DireccionModule
-  - bo.capital.tec.pet.modules.direccion.controller
-  - bo.capital.tec.pet.modules.direccion.service
-  - bo.capital.tec.pet.modules.direccion.mapper
-end note
-
-note left of ProveedorModule
-  - bo.capital.tec.pet.modules.proveedor.controller
-  - bo.capital.tec.pet.modules.proveedor.service
-  - bo.capital.tec.pet.modules.proveedor.mapper
-end note
-
-note left of ReservaModule
-  - bo.capital.tec.pet.modules.reserva.controller
-  - bo.capital.tec.pet.modules.reserva.service
-  - bo.capital.tec.pet.modules.reserva.mapper
-end note
-
-note left of PagoModule
-  - bo.capital.tec.pet.modules.pago.controller
-  - bo.capital.tec.pet.modules.pago.service
-  - bo.capital.tec.pet.modules.pago.mapper
-end note
-
-note left of PromocionModule
-  - bo.capital.tec.pet.modules.promocion.controller
-  - bo.capital.tec.pet.modules.promocion.service
-  - bo.capital.tec.pet.modules.promocion.mapper
-end note
-
-note left of NotificacionModule
-  - bo.capital.tec.pet.modules.notificacion.controller
-  - bo.capital.tec.pet.modules.notificacion.service
-  - bo.capital.tec.pet.modules.notificacion.mapper
-end note
-
-note left of MenuRolModule
-  - bo.capital.tec.pet.modules.menu.controller
-  - bo.capital.tec.pet.modules.menu.service
-  - bo.capital.tec.pet.modules.menu.mapper
-  - bo.capital.tec.pet.modules.rol.controller
-  - bo.capital.tec.pet.modules.rol.service
-  - bo.capital.tec.pet.modules.rol.mapper
-end note
-
-note left of SucursalModule
-  - bo.capital.tec.pet.modules.sucursal.controller
-  - bo.capital.tec.pet.modules.sucursal.service
-  - bo.capital.tec.pet.modules.sucursal.mapper
-end note
-
-note left of BitacoraModule
-  - bo.capital.tec.pet.modules.bitacora.controller
-  - bo.capital.tec.pet.modules.bitacora.service
-  - bo.capital.tec.pet.modules.bitacora.mapper
-end note
-
-note left of InfraModule
-  - bo.capital.tec.pet.common.upload.UploadController
-  - bo.capital.tec.pet.common.email.EmailServiceImpl
-  - bo.capital.tec.pet.config.SecurityConfig
-  - bo.capital.tec.pet.config.MyBatisConfig
-  - bo.capital.tec.pet.config.OpenApiConfig
-  - bo.capital.tec.pet.common.exceptions.GlobalExceptionHandler
-end note
+LAYOUT_WITH_LEGEND()
 
 @enduml
