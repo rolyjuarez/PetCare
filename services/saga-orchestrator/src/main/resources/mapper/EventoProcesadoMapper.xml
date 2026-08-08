@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.saga.infrastructure.adapter.out.persistence.EventoProcesadoMapper">
+
+    <select id="exists" resultType="java.lang.Long">
+        SELECT event_id
+        FROM evento_procesado
+        WHERE event_id = #{eventId}
+    </select>
+
+    <insert id="insert" parameterType="bo.capital.tec.pet.saga.infrastructure.adapter.out.persistence.EventoProcesadoRecord">
+        INSERT INTO evento_procesado (event_id, event_type, service, aggregate_id, procesado_en)
+        VALUES (#{eventId}, #{eventType}, #{service}, #{aggregateId}, #{procesadoEn})
+    </insert>
+</mapper>

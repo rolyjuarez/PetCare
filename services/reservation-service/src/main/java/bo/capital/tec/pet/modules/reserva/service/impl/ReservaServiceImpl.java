@@ -8,6 +8,9 @@ import bo.capital.tec.pet.common.exception.EntityNotFoundException;
 import bo.capital.tec.pet.common.util.PaginationUtil;
 import bo.capital.tec.pet.modules.notificacion.entity.Notificacion;
 import bo.capital.tec.pet.modules.notificacion.mapper.NotificacionMapper;
+import bo.capital.tec.pet.modules.reserva.command.CancelarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.command.ConfirmarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.command.RechazarReservaCommand;
 import bo.capital.tec.pet.modules.reserva.dto.ClienteInfoDTO;
 import bo.capital.tec.pet.modules.reserva.dto.DisponibilidadSlotsDTO;
 import bo.capital.tec.pet.modules.reserva.dto.MascotaInfoDTO;
@@ -22,12 +25,9 @@ import bo.capital.tec.pet.modules.reserva.dto.SlotDTO;
 import bo.capital.tec.pet.modules.reserva.entity.Disponibilidad;
 import bo.capital.tec.pet.modules.reserva.entity.EstadoReserva;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
-import bo.capital.tec.pet.modules.reserva.event.PagoFallidoEvent;
-import bo.capital.tec.pet.modules.reserva.event.ReservaAceptadaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaConfirmadaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCreadaEvent;
-import bo.capital.tec.pet.modules.reserva.event.ReservaRechazadaEvent;
 import bo.capital.tec.pet.modules.reserva.mapper.DisponibilidadMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.EstadoReservaMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaCatalogMapper;
@@ -383,8 +383,8 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional
-    public ReservaResponseDTO compensarPorPagoFallido(PagoFallidoEvent event) {
-        Reserva reserva = requireReserva(event.getReservaId());
+    public ReservaResponseDTO compensarPorPagoFallido(CancelarReservaCommand comando) {
+        Reserva reserva = requireReserva(comando.getReservaId());
         Long estadoCancelada = estadoIdPorNombre(ESTADO_CANCELADA);
         if (estadoCancelada.equals(reserva.getEstadoReservaId())) {
             log.debug("Reserva {} ya cancelada, compensación omitida", reserva.getCodigo());
@@ -392,10 +392,9 @@ public class ReservaServiceImpl implements ReservaService {
         }
         reservaMapper.updateEstado(reserva.getId(), estadoCancelada);
         reserva.setEstadoReservaId(estadoCancelada);
-        String motivo = event.getMotivo() != null && !event.getMotivo().isBlank()
-                ? event.getMotivo() : "El pago no pudo completarse";
-        log.info("Reserva {} compensada por pago fallido (pago {}): {}", reserva.getCodigo(),
-                event.getPagoId(), motivo);
+        String motivo = comando.getMotivo() != null && !comando.getMotivo().isBlank()
+                ? comando.getMotivo() : "El pago no pudo completarse";
+        log.info("Reserva {} compensada por pago fallido: {}", reserva.getCodigo(), motivo);
         notificarCliente(reserva, "Reserva cancelada por pago fallido",
                 "Su reserva " + reserva.getCodigo()
                         + " fue cancelada porque el pago no pudo completarse. Motivo: " + motivo + ".",
@@ -428,15 +427,15 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional
-    public ReservaResponseDTO aplicarAceptacion(ReservaAceptadaEvent event) {
-        Reserva reserva = requireReserva(event.getReservaId());
+    public ReservaResponseDTO aplicarAceptacion(ConfirmarReservaCommand comando) {
+        Reserva reserva = requireReserva(comando.getReservaId());
         Long estadoId = estadoIdPorNombre("CONFIRMADA");
-        reservaMapper.updateRespuesta(reserva.getId(), event.getProveedorId(), estadoId, null);
-        reserva.setProveedorId(event.getProveedorId());
+        reservaMapper.updateRespuesta(reserva.getId(), comando.getProveedorId(), estadoId, null);
+        reserva.setProveedorId(comando.getProveedorId());
         reserva.setEstadoReservaId(estadoId);
         reserva.setRespuestaEn(java.time.LocalDateTime.now());
-        log.info("Reserva {} aceptada por proveedor {}", reserva.getCodigo(), event.getProveedorId());
-        String comentario = event.getComentarioProveedor();
+        log.info("Reserva {} aceptada por proveedor {}", reserva.getCodigo(), comando.getProveedorId());
+        String comentario = comando.getComentario();
         String comentarioHtml = comentario != null && !comentario.isBlank()
                 ? "<p><strong>Comentario del proveedor:</strong> " + comentario + "</p>" : "";
         notificarCliente(reserva, "Reserva confirmada",
@@ -445,8 +444,8 @@ public class ReservaServiceImpl implements ReservaService {
         enviarEmailCliente(reserva, "Reserva Confirmada - PETCare",
                 "<h2>¡Reserva confirmada!</h2>"
                         + "<p>Su reserva <strong>" + reserva.getCodigo() + "</strong> ("
-                        + event.getServicioNombre() + ") ha sido aceptada por "
-                        + event.getProveedorEmpresa() + ".</p>"
+                        + comando.getServicioNombre() + ") ha sido aceptada por "
+                        + comando.getProveedorEmpresa() + ".</p>"
                         + "<p>Fecha: " + reserva.getFechaInicio()
                         + (reserva.getHoraInicio() != null ? " a las " + reserva.getHoraInicio() : "") + "</p>"
                         + comentarioHtml);
@@ -470,26 +469,26 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional
-    public ReservaResponseDTO aplicarRechazo(ReservaRechazadaEvent event) {
-        Reserva reserva = requireReserva(event.getReservaId());
+    public ReservaResponseDTO aplicarRechazo(RechazarReservaCommand comando) {
+        Reserva reserva = requireReserva(comando.getReservaId());
         Long estadoId = estadoIdPorNombre("RECHAZADA");
-        reservaMapper.updateRespuesta(reserva.getId(), event.getProveedorId(), estadoId, event.getMotivoRechazo());
-        reserva.setProveedorId(event.getProveedorId());
+        reservaMapper.updateRespuesta(reserva.getId(), comando.getProveedorId(), estadoId, comando.getMotivo());
+        reserva.setProveedorId(comando.getProveedorId());
         reserva.setEstadoReservaId(estadoId);
-        reserva.setMotivoRechazo(event.getMotivoRechazo());
+        reserva.setMotivoRechazo(comando.getMotivo());
         reserva.setRespuestaEn(java.time.LocalDateTime.now());
         log.info("Reserva {} rechazada por proveedor {}: {}", reserva.getCodigo(),
-                event.getProveedorId(), event.getMotivoRechazo());
+                comando.getProveedorId(), comando.getMotivo());
         notificarCliente(reserva, "Reserva rechazada",
                 "Su reserva " + reserva.getCodigo() + " fue rechazada"
-                        + (event.getMotivoRechazo() != null && !event.getMotivoRechazo().isBlank()
-                        ? ": " + event.getMotivoRechazo() : "") + ".", "ADVERTENCIA");
+                        + (comando.getMotivo() != null && !comando.getMotivo().isBlank()
+                        ? ": " + comando.getMotivo() : "") + ".", "ADVERTENCIA");
         enviarEmailCliente(reserva, "Reserva Rechazada - PETCare",
                 "<h2>Reserva rechazada</h2>"
                         + "<p>Su reserva <strong>" + reserva.getCodigo() + "</strong> ("
-                        + event.getServicioNombre() + ") fue rechazada"
-                        + (event.getMotivoRechazo() != null && !event.getMotivoRechazo().isBlank()
-                        ? " por el siguiente motivo: " + event.getMotivoRechazo() : "") + ".</p>");
+                        + comando.getServicioNombre() + ") fue rechazada"
+                        + (comando.getMotivo() != null && !comando.getMotivo().isBlank()
+                        ? " por el siguiente motivo: " + comando.getMotivo() : "") + ".</p>");
         return toResponseDTO(reserva);
     }
 

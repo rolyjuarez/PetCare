@@ -1,6 +1,7 @@
 package bo.capital.tec.pet.modules.pago;
 
 import bo.capital.tec.pet.common.kafka.IdempotencyService;
+import bo.capital.tec.pet.modules.pago.command.CrearPagoCommand;
 import bo.capital.tec.pet.modules.pago.dto.DatosTarjetaDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
@@ -8,7 +9,6 @@ import bo.capital.tec.pet.modules.pago.entity.Pago;
 import bo.capital.tec.pet.modules.pago.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.pago.event.PagoProcesadoEvent;
 import bo.capital.tec.pet.modules.pago.event.PagoReembolsadoEvent;
-import bo.capital.tec.pet.modules.pago.event.ReservaConfirmadaEvent;
 import bo.capital.tec.pet.modules.pago.mapper.PagoMapper;
 import bo.capital.tec.pet.modules.pago.service.PagoService;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,7 +25,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.concurrent.BlockingQueue;
@@ -37,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1, topics = {
-        "test.reserva.confirmada",
+        "test.saga.comando.crear-pago",
         "test.pago.completado",
         "test.pago.fallido",
         "test.pago.reembolsado"})
@@ -71,8 +70,8 @@ class PagoFlowIntegrationTest {
         eventCollector.clear();
     }
 
-    private ReservaConfirmadaEvent buildConfirmada(Long reservaId, String modalidad) {
-        return new ReservaConfirmadaEvent(reservaId, "RES-00000001", 1L, 1L, 1L, 1L,
+    private CrearPagoCommand buildComando(Long reservaId, String modalidad) {
+        return new CrearPagoCommand(reservaId, "RES-00000001", 1L, 1L, 1L, 1L,
                 LocalDate.now().plusDays(2), LocalTime.of(10, 0),
                 new BigDecimal("100.00"), modalidad, null);
     }
@@ -91,7 +90,7 @@ class PagoFlowIntegrationTest {
 
     @Test
     void reservaConfirmadaCreaPagoPendiente() {
-        PagoResponseDTO pago = pagoService.crearDesdeReservaConfirmada(buildConfirmada(1L, "DOMICILIO"));
+        PagoResponseDTO pago = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
 
         assertThat(pago.getId()).isNotNull();
         assertThat(pago.getReservaId()).isEqualTo(1L);
@@ -102,7 +101,7 @@ class PagoFlowIntegrationTest {
 
     @Test
     void procesarPagoOnlineAplicaPromocionYRecargo() {
-        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(1L, "DOMICILIO"));
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
 
         PagoResponseDTO procesado = pagoService.procesar(creado.getId(), buildRequest("4242424242424242"));
 
@@ -118,7 +117,7 @@ class PagoFlowIntegrationTest {
 
     @Test
     void tarjetaRechazadaDejaPagoFallido() {
-        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(1L, "DOMICILIO"));
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
 
         PagoResponseDTO procesado = pagoService.procesar(creado.getId(), buildRequest("4000000000000000"));
 
@@ -129,7 +128,7 @@ class PagoFlowIntegrationTest {
 
     @Test
     void pagoEnEstablecimientoSeCompletaSinPasarela() {
-        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(2L, "EN_ESTABLECIMIENTO"));
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(2L, "EN_ESTABLECIMIENTO"));
 
         PagoResponseDTO procesado = pagoService.procesar(creado.getId(),
                 ProcesarPagoRequestDTO.builder().metodoPago("EFECTIVO").build());
@@ -141,7 +140,7 @@ class PagoFlowIntegrationTest {
 
     @Test
     void reembolsarPagoCompletadoCambiaEstado() {
-        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(2L, "EN_ESTABLECIMIENTO"));
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(2L, "EN_ESTABLECIMIENTO"));
         pagoService.procesar(creado.getId(), ProcesarPagoRequestDTO.builder().metodoPago("EFECTIVO").build());
 
         PagoResponseDTO reembolsado = pagoService.reembolsar(creado.getId());
@@ -151,7 +150,7 @@ class PagoFlowIntegrationTest {
 
     @Test
     void pagoFallidoPublicaPagoFallidoEvent() throws Exception {
-        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(1L, "DOMICILIO"));
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
 
         PagoResponseDTO procesado = pagoService.procesar(creado.getId(), buildRequest("4000000000000000"));
 
@@ -166,7 +165,7 @@ class PagoFlowIntegrationTest {
 
     @Test
     void reembolsoPublicaPagoReembolsadoEvent() throws Exception {
-        PagoResponseDTO creado = pagoService.crearDesdeReservaConfirmada(buildConfirmada(2L, "EN_ESTABLECIMIENTO"));
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(2L, "EN_ESTABLECIMIENTO"));
         pagoService.procesar(creado.getId(), ProcesarPagoRequestDTO.builder().metodoPago("EFECTIVO").build());
 
         PagoResponseDTO reembolsado = pagoService.reembolsar(creado.getId());
@@ -179,25 +178,25 @@ class PagoFlowIntegrationTest {
     }
 
     @Test
-    void consumirReservaConfirmadaPorKafkaCreaPago() throws Exception {
-        ReservaConfirmadaEvent event = buildConfirmada(2L, "EN_ESTABLECIMIENTO");
-        kafkaTemplate.send("test.reserva.confirmada", String.valueOf(event.getReservaId()), event)
+    void consumirComandoCrearPagoPorKafkaCreaPago() throws Exception {
+        CrearPagoCommand comando = buildComando(2L, "EN_ESTABLECIMIENTO");
+        kafkaTemplate.send("test.saga.comando.crear-pago", String.valueOf(comando.getReservaId()), comando)
                 .get(10, TimeUnit.SECONDS);
 
         Pago pago = awaitPago(2L);
         assertThat(pago).isNotNull();
         assertThat(pago.getModalidadPago()).isEqualTo("EN_ESTABLECIMIENTO");
-        assertThat(idempotencyService.isProcessed(event.getEventId())).isTrue();
+        assertThat(idempotencyService.isProcessed(comando.getCommandId())).isTrue();
     }
 
     @Test
-    void eventoDuplicadoSeIgnora() throws Exception {
-        ReservaConfirmadaEvent event = buildConfirmada(2L, "EN_ESTABLECIMIENTO");
-        kafkaTemplate.send("test.reserva.confirmada", String.valueOf(event.getReservaId()), event)
+    void comandoDuplicadoSeIgnora() throws Exception {
+        CrearPagoCommand comando = buildComando(2L, "EN_ESTABLECIMIENTO");
+        kafkaTemplate.send("test.saga.comando.crear-pago", String.valueOf(comando.getReservaId()), comando)
                 .get(10, TimeUnit.SECONDS);
         awaitPago(2L);
 
-        kafkaTemplate.send("test.reserva.confirmada", String.valueOf(event.getReservaId()), event)
+        kafkaTemplate.send("test.saga.comando.crear-pago", String.valueOf(comando.getReservaId()), comando)
                 .get(10, TimeUnit.SECONDS);
         TimeUnit.SECONDS.sleep(2);
 

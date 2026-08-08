@@ -18,9 +18,6 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Value("${app.kafka.topic.reserva-creada:reserva.creada}")
-    private String reservaCreadaTopic;
-
     @Value("${app.kafka.topic.reserva-aceptada:reserva.aceptada}")
     private String reservaAceptadaTopic;
 
@@ -47,7 +44,6 @@ public class KafkaDomainEventPublisher implements DomainEventPublisher {
     private String resolveTopic(DomainEvent event) {
         return switch (event.getAggregateType()) {
             case "RESERVA" -> switch (event.getClass().getSimpleName()) {
-                case "ReservaCreadaEvent" -> reservaCreadaTopic;
                 case "ReservaAceptadaEvent" -> reservaAceptadaTopic;
                 case "ReservaRechazadaEvent" -> reservaRechazadaTopic;
                 default -> deadLetterTopic;

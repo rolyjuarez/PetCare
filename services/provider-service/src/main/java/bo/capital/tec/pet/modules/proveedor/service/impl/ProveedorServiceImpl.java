@@ -5,11 +5,11 @@ import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exception.BusinessException;
 import bo.capital.tec.pet.common.exception.EntityNotFoundException;
 import bo.capital.tec.pet.common.util.PaginationUtil;
+import bo.capital.tec.pet.modules.proveedor.command.NotificarProveedorCommand;
 import bo.capital.tec.pet.modules.proveedor.dto.ResponderSolicitudRequestDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.SolicitudReservaResponseDTO;
 import bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaAceptadaEvent;
-import bo.capital.tec.pet.modules.proveedor.event.ReservaCreadaEvent;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaRechazadaEvent;
 import bo.capital.tec.pet.modules.proveedor.mapper.ProveedorCatalogMapper;
 import bo.capital.tec.pet.modules.proveedor.mapper.SolicitudReservaMapper;
@@ -93,40 +93,40 @@ public class ProveedorServiceImpl implements ProveedorService {
 
     @Override
     @Transactional
-    public void procesarReservaCreada(ReservaCreadaEvent event) {
+    public void procesarNotificarProveedor(NotificarProveedorCommand comando) {
         List<Long> proveedorIds;
-        if (event.getProveedorId() != null) {
-            proveedorIds = List.of(event.getProveedorId());
+        if (comando.getProveedorId() != null) {
+            proveedorIds = List.of(comando.getProveedorId());
         } else {
-            proveedorIds = proveedorCatalogMapper.selectProveedoresByServicioId(event.getServicioId());
+            proveedorIds = proveedorCatalogMapper.selectProveedoresByServicioId(comando.getServicioId());
         }
         if (proveedorIds.isEmpty()) {
             log.warn("Sin proveedores para el servicio {} de la reserva {}",
-                    event.getServicioId(), event.getReservaId());
+                    comando.getServicioId(), comando.getReservaId());
             return;
         }
         for (Long proveedorId : proveedorIds) {
-            if (solicitudReservaMapper.existsByReservaYProveedor(event.getReservaId(), proveedorId)) {
+            if (solicitudReservaMapper.existsByReservaYProveedor(comando.getReservaId(), proveedorId)) {
                 log.debug("Solicitud ya creada para reserva {} y proveedor {}, ignorada",
-                        event.getReservaId(), proveedorId);
+                        comando.getReservaId(), proveedorId);
                 continue;
             }
             SolicitudReserva solicitud = SolicitudReserva.builder()
-                    .reservaId(event.getReservaId())
-                    .codigo(event.getCodigo())
-                    .clienteId(event.getClienteId())
-                    .clienteNombre(event.getClienteNombre())
+                    .reservaId(comando.getReservaId())
+                    .codigo(comando.getCodigo())
+                    .clienteId(comando.getClienteId())
+                    .clienteNombre(comando.getClienteNombre())
                     .proveedorId(proveedorId)
-                    .proveedorEmpresa(event.getProveedorEmpresa())
-                    .servicioId(event.getServicioId())
-                    .servicioNombre(event.getServicioNombre())
-                    .mascotaId(event.getMascotaId())
-                    .mascotaNombre(event.getMascotaNombre())
-                    .fechaInicio(event.getFechaInicio())
-                    .horaInicio(event.getHoraInicio())
-                    .precioTotal(event.getPrecioTotal())
-                    .modalidadEntrega(event.getModalidadEntrega())
-                    .registroVacunacionId(event.getRegistroVacunacionId())
+                    .proveedorEmpresa(comando.getProveedorEmpresa())
+                    .servicioId(comando.getServicioId())
+                    .servicioNombre(comando.getServicioNombre())
+                    .mascotaId(comando.getMascotaId())
+                    .mascotaNombre(comando.getMascotaNombre())
+                    .fechaInicio(comando.getFechaInicio())
+                    .horaInicio(comando.getHoraInicio())
+                    .precioTotal(comando.getPrecioTotal())
+                    .modalidadEntrega(comando.getModalidadEntrega())
+                    .registroVacunacionId(comando.getRegistroVacunacionId())
                     .estado(ESTADO_PENDIENTE)
                     .build();
             solicitudReservaMapper.insert(solicitud);

@@ -23,11 +23,11 @@ app:
     group-id: reservation-service-test
     topic:
       reserva-creada: test.reserva.creada
-      reserva-aceptada: test.reserva.aceptada
-      reserva-rechazada: test.reserva.rechazada
       reserva-cancelada: test.reserva.cancelada
-      pago-fallido: test.pago.fallido
-      dlt: test.reserva.dlt
+      comando-confirmar-reserva: test.saga.comando.confirmar-reserva
+      comando-rechazar-reserva: test.saga.comando.rechazar-reserva
+      comando-cancelar-reserva: test.saga.comando.cancelar-reserva
+      dlt: test.saga.dlt
 
 jwt:
   secret: PETCareSecretKeyForJWTTokenGeneration2024VeryLongAndSecureKeyMustBe256Bits

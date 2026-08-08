@@ -1,0 +1,65 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: saga-orchestrator
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:postgresql://localhost:5432/petcaredb
+    username: postgres
+    password: 123qwe
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: America/La_Paz
+    serialization:
+      write-dates-as-timestamps: false
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: bo.capital.tec.pet.saga.infrastructure.adapter.out.persistence
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+app:
+  kafka:
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
+    group-id: saga-orchestrator
+    topic:
+      reserva-creada: reserva.creada
+      reserva-aceptada: reserva.aceptada
+      reserva-rechazada: reserva.rechazada
+      reserva-confirmada: reserva.confirmada
+      reserva-cancelada: reserva.cancelada
+      pago-completado: pago.completado
+      pago-fallido: pago.fallido
+      pago-reembolsado: pago.reembolsado
+      comando-notificar-proveedor: saga.comando.notificar-proveedor
+      comando-confirmar-reserva: saga.comando.confirmar-reserva
+      comando-crear-pago: saga.comando.crear-pago
+      comando-cancelar-reserva: saga.comando.cancelar-reserva
+      comando-rechazar-reserva: saga.comando.rechazar-reserva
+      dlt: saga.dlt.v1
+    partitions: 3
+    replication-factor: 1
+    retention-ms: 604800000
+
+logging:
+  level:
+    bo.capital.tec.pet: DEBUG
+    org.springframework.kafka: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always

@@ -46,7 +46,8 @@ app:
       pago-completado: pago.completado
       pago-fallido: pago.fallido
       pago-reembolsado: pago.reembolsado
-      dlt: reserva.dlt.v1
+      comando-crear-pago: saga.comando.crear-pago
+      dlt: saga.dlt.v1
     partitions: 3
     replication-factor: 1
     retention-ms: 604800000

@@ -15,9 +15,6 @@ import java.util.Map;
 @Configuration
 public class KafkaTopicConfig {
 
-    @Value("${app.kafka.topic.reserva-creada:reserva.creada}")
-    private String reservaCreadaTopic;
-
     @Value("${app.kafka.topic.reserva-aceptada:reserva.aceptada}")
     private String reservaAceptadaTopic;
 
@@ -44,16 +41,6 @@ public class KafkaTopicConfig {
         Map<String, Object> configs = new HashMap<>();
         configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         return new KafkaAdmin(configs);
-    }
-
-    @Bean
-    public NewTopic reservaCreadaTopic() {
-        return TopicBuilder.name(reservaCreadaTopic)
-                .partitions(partitions)
-                .replicas(replicationFactor)
-                .config("retention.ms", String.valueOf(retentionMs))
-                .config("cleanup.policy", "delete")
-                .build();
     }
 
     @Bean

@@ -1,0 +1,83 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' ============================================================================
+' PETCare - Componentes de saga-orchestrator (8085) - C4 Nivel 3
+' Clean Architecture: domain + application + infrastructure
+' ============================================================================
+
+title Componentes de saga-orchestrator (8085) - C4 Nivel 3
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(component, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#D9E2F3")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Elementos externos
+' ---------------------------------------------------------------------------
+System_Ext(rs, "reservation-service", "8081", "Dueño de la reserva")
+System_Ext(ps, "provider-service", "8082", "Solicitudes y respuesta del proveedor")
+System_Ext(ms, "payment-service", "8083", "Pagos")
+
+ContainerQueue(kafka, "Kafka", "Topics", "Eventos: reserva.creada, reserva.aceptada, reserva.rechazada, reserva.confirmada, reserva.cancelada, pago.completado, pago.fallido, pago.reembolsado | Comandos: saga.comando.* | DLT: saga.dlt.v1")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "saga_estado, evento_procesado")
+
+' ---------------------------------------------------------------------------
+' Componentes internos
+' ---------------------------------------------------------------------------
+Container_Boundary(sa, "saga-orchestrator (8085)") {
+    Component(sa_domain, "domain/model", "POJOs", "Eventos de dominio, comandos, EstadoSaga, SagaEstado")
+    Component(sa_portin, "domain/port/in", "Interfaz", "SagaCoordinator")
+    Component(sa_portout, "domain/port/out", "Interfaces", "SagaEstadoRepository, SagaCommandPublisher, EventoProcesadoRepository")
+
+    Component(sa_app, "SagaOrquestadorService", "Spring @Service", "Máquina de estados de la saga")
+    Component(sa_idem, "IdempotenciaSagaService", "Spring @Service", "Registra event_id en evento_procesado")
+
+    Component(sa_reserva_in, "ReservaEventosListener", "Kafka listener", "Consume reserva.*")
+    Component(sa_pago_in, "PagoEventosListener", "Kafka listener", "Consume pago.*")
+    Component(sa_pub, "KafkaSagaCommandPublisher", "Kafka producer", "Publica saga.comando.* con acks=all")
+    Component(sa_saga_repo, "MyBatisSagaEstadoRepository", "MyBatis", "Persiste saga_estado")
+    Component(sa_ep_repo, "MyBatisEventoProcesadoRepository", "MyBatis", "Persiste evento_procesado")
+    Component(sa_cfg, "KafkaProducer/Consumer/ErrorHandler/TopicConfig", "Spring Kafka", "Configs, ack manual, DLT saga.dlt.v1")
+
+    Rel(sa_reserva_in, sa_app, "onReservaCreada/Aceptada/Rechazada/Confirmada/Cancelada")
+    Rel(sa_pago_in, sa_app, "onPagoProcesado/Fallido/Reembolsado")
+    Rel(sa_app, sa_idem, "Marca el evento como procesado")
+    Rel(sa_app, sa_portin, "Implementa")
+    Rel(sa_app, sa_portout, "Usa")
+    Rel(sa_portout, sa_pub, "Implementado por")
+    Rel(sa_portout, sa_saga_repo, "Implementado por")
+    Rel(sa_portout, sa_ep_repo, "Implementado por")
+    Rel(sa_reserva_in, sa_cfg, "Configurado por")
+    Rel(sa_pago_in, sa_cfg, "Configurado por")
+    Rel(sa_pub, sa_cfg, "Configurado por")
+}
+
+' ---------------------------------------------------------------------------
+' Relaciones con el exterior
+' ---------------------------------------------------------------------------
+Rel(kafka, sa_reserva_in, "Consume eventos de dominio", "reserva.*, pago.*")
+Rel(sa_pub, kafka, "Publica comandos", "saga.comando.*")
+Rel(sa_pub, rs, "Confirmar/Rechazar/CancelarReservaCommand", "Kafka")
+Rel(sa_pub, ps, "NotificarProveedorCommand", "Kafka")
+Rel(sa_pub, ms, "CrearPagoCommand", "Kafka")
+Rel(sa_saga_repo, db, "Persiste saga_estado", "JDBC / MyBatis")
+Rel(sa_ep_repo, db, "Persiste evento_procesado", "JDBC / MyBatis")
+
+note bottom of sa_app
+  Máquina de estados por reserva (tabla saga_estado):
+  INICIADA -> PROVEEDOR_NOTIFICADO -> RESERVA_ACEPTADA ->
+  RESERVA_CONFIRMADA -> PAGO_SOLICITADO -> COMPLETADA.
+  Fallos: PAGO_FALLIDO -> CancelarReservaCommand -> CANCELADA;
+  rechazo del proveedor -> RECHAZADA; reembolso -> PAGO_REEMBOLSADO.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

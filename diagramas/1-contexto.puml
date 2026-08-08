@@ -1,25 +1,50 @@
 @startuml
-skinparam rectangle {
-  BackgroundColor #F7F7F7
-  BorderColor #333333
-}
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-Title Diagrama de contexto del sistema PetCare
+' ============================================================================
+' PETCare - Diagrama de contexto (C4 Nivel 1)
+' ============================================================================
 
-actor Cliente as "Cliente"
-actor Administrador as "Administrador"
-actor Proveedor as "Proveedor de servicios veterinarios"
+title Diagrama de contexto del sistema PetCare (Nivel 1)
 
-package "PetCare" {
-  rectangle "Frontend Angular" as Frontend
-  rectangle "Backend Spring Boot" as Backend
-  rectangle "PostgreSQL" as Database
-}
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(external_system, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
 
-Cliente --> Frontend : Usa la aplicación web
-Administrador --> Frontend : Gestiona el sistema
-Proveedor --> Frontend : Presta servicios
-Frontend --> Backend : Consume API REST
-Backend --> Database : Guarda/recupera datos
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Agenda servicios veterinarios, paga y da seguimiento a sus reservas")
+Person(proveedor, "Proveedor", "Publica servicios y responde las solicitudes de reserva")
+Person(admin, "Administrador", "Administra usuarios, roles, menús y la operación del sistema")
 
-@enduml 
+' ---------------------------------------------------------------------------
+' Sistema
+' ---------------------------------------------------------------------------
+System(petcare, "PetCare", "Plataforma de reserva de servicios veterinarios: frontend Angular, backend Spring Boot y cuatro microservicios (reservas, proveedores, pagos y orquestador de la saga)")
+
+' ---------------------------------------------------------------------------
+' Sistemas externos
+' ---------------------------------------------------------------------------
+System_Ext(pasarela, "Pasarela de pago", "Procesa, reembolsa y rechaza los pagos (simulada en desarrollo)")
+System_Ext(smtp, "SMTP Gmail", "Envía los correos transaccionales")
+System_Ext(maps, "Google Maps API", "Provee mapas y geolocalización")
+
+
+' ---------------------------------------------------------------------------
+' Relaciones
+' ---------------------------------------------------------------------------
+Rel(cliente, petcare, "Crea reservas, paga y consulta el estado", "HTTPS")
+Rel(proveedor, petcare, "Publica servicios y responde solicitudes de reserva", "HTTPS")
+Rel(admin, petcare, "Administra usuarios, roles y reportes", "HTTPS")
+
+Rel(petcare, pasarela, "Procesa el pago de las reservas", "REST/HTTPS")
+Rel(petcare, smtp, "Envía correos transaccionales", "SMTP")
+Rel(petcare, maps, "Geolocalización y mapas", "HTTPS")
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

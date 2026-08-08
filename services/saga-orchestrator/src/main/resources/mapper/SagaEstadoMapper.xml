@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.saga.infrastructure.adapter.out.persistence.SagaEstadoMapper">
+
+    <select id="findByReservaId" resultType="bo.capital.tec.pet.saga.infrastructure.adapter.out.persistence.SagaEstadoRecord">
+        SELECT id,
+               reserva_id           AS reservaId,
+               codigo_reserva       AS codigoReserva,
+               estado,
+               paso_actual          AS pasoActual,
+               motivo,
+               ultimo_evento_id     AS ultimoEventoId,
+               creada_en            AS creadaEn,
+               actualizada_en       AS actualizadaEn
+        FROM saga_estado
+        WHERE reserva_id = #{reservaId}
+    </select>
+
+    <insert id="insert" parameterType="bo.capital.tec.pet.saga.infrastructure.adapter.out.persistence.SagaEstadoRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO saga_estado (reserva_id, codigo_reserva, estado, paso_actual, motivo,
+                                 ultimo_evento_id, creada_en, actualizada_en)
+        VALUES (#{reservaId}, #{codigoReserva}, #{estado}, #{pasoActual}, #{motivo},
+                #{ultimoEventoId}, #{creadaEn}, #{actualizadaEn})
+    </insert>
+
+    <update id="updateEstado">
+        UPDATE saga_estado
+        SET estado           = #{estado},
+            paso_actual      = #{pasoActual},
+            motivo           = #{motivo},
+            ultimo_evento_id = #{eventoId},
+            actualizada_en   = NOW()
+        WHERE reserva_id = #{reservaId}
+    </update>
+</mapper>

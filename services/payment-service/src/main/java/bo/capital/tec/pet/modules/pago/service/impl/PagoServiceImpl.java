@@ -11,10 +11,10 @@ import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
 import bo.capital.tec.pet.modules.pago.dto.ReservaInfoDTO;
 import bo.capital.tec.pet.modules.pago.entity.Pago;
+import bo.capital.tec.pet.modules.pago.command.CrearPagoCommand;
 import bo.capital.tec.pet.modules.pago.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.pago.event.PagoProcesadoEvent;
 import bo.capital.tec.pet.modules.pago.event.PagoReembolsadoEvent;
-import bo.capital.tec.pet.modules.pago.event.ReservaConfirmadaEvent;
 import bo.capital.tec.pet.modules.pago.mapper.PagoCatalogMapper;
 import bo.capital.tec.pet.modules.pago.mapper.PagoMapper;
 import bo.capital.tec.pet.modules.pago.pasarela.IntencionPago;
@@ -52,21 +52,21 @@ public class PagoServiceImpl implements PagoService {
 
     @Override
     @Transactional
-    public PagoResponseDTO crearDesdeReservaConfirmada(ReservaConfirmadaEvent event) {
-        Pago existente = pagoMapper.selectByReservaId(event.getReservaId());
+    public PagoResponseDTO crearPago(CrearPagoCommand comando) {
+        Pago existente = pagoMapper.selectByReservaId(comando.getReservaId());
         if (existente != null) {
             return toResponseDTO(existente);
         }
-        ReservaInfoDTO reserva = catalogMapper.selectReservaInfo(event.getReservaId());
+        ReservaInfoDTO reserva = catalogMapper.selectReservaInfo(comando.getReservaId());
         if (reserva == null) {
-            throw new BusinessException("La reserva " + event.getReservaId() + " no existe");
+            throw new BusinessException("La reserva " + comando.getReservaId() + " no existe");
         }
         String modalidadPago = MODALIDAD_EN_ESTABLECIMIENTO.equals(reserva.getModalidadEntrega())
                 ? MODALIDAD_EN_ESTABLECIMIENTO : MODALIDAD_EN_LINEA;
         Pago pago = Pago.builder()
-                .reservaId(event.getReservaId())
-                .monto(event.getPrecioTotal())
-                .montoOriginal(event.getPrecioTotal())
+                .reservaId(comando.getReservaId())
+                .monto(comando.getPrecioTotal())
+                .montoOriginal(comando.getPrecioTotal())
                 .descuentoTotal(BigDecimal.ZERO)
                 .metodoPago(MODALIDAD_EN_ESTABLECIMIENTO.equals(modalidadPago) ? "EN_ESTABLECIMIENTO" : "SIN_DEFINIR")
                 .estadoPago(ESTADO_PENDIENTE)
@@ -74,7 +74,7 @@ public class PagoServiceImpl implements PagoService {
                 .modalidadPago(modalidadPago)
                 .build();
         pagoMapper.insert(pago);
-        log.info("Pago {} creado para reserva confirmada {}", pago.getId(), event.getCodigo());
+        log.info("Pago {} creado para reserva confirmada {}", pago.getId(), comando.getCodigo());
         return toResponseDTO(pago);
     }
 

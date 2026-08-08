@@ -187,6 +187,7 @@ entity "proveedor_especialidad" as proveedor_especialidad {
   --
   proveedor_id : bigint
   servicio_id : bigint
+  requiere_certificado : boolean
 }
 
 entity "sucursal" as sucursal {
@@ -233,6 +234,8 @@ entity "reserva" as reserva {
   servicio_id : bigint
   mascota_id : bigint
   estado_reserva_id : bigint
+  registro_vacunacion_id : bigint
+  modalidad_entrega : varchar
   fecha_reserva : timestamp
   fecha_inicio : timestamp
   fecha_fin : timestamp
@@ -243,6 +246,8 @@ entity "reserva" as reserva {
   direccion_referencia : text
   notas : text
   precio_total : numeric
+  motivo_rechazo : text
+  respuesta_en : timestamp
 }
 
 entity "promocion" as promocion {
@@ -279,6 +284,11 @@ entity "pago" as pago {
   referencia_transaccion : varchar
   fecha_pago : timestamp
   comprobante_url : varchar
+  modalidad_pago : varchar
+  intencion_id : varchar
+  monto_original : numeric
+  descuento_total : numeric
+  estado_sync : varchar
 }
 
 entity "vacuna" as vacuna {
@@ -299,6 +309,7 @@ entity "registro_vacunacion" as registro_vacunacion {
   lote : varchar
   veterinario : varchar
   observaciones : text
+  certificado_url : varchar
 }
 
 entity "notificacion" as notificacion {
@@ -337,6 +348,88 @@ entity "correo_enviado" as correo_enviado {
   fecha_envio : timestamp
 }
 
+entity "solicitud_reserva" as solicitud_reserva {
+  * id : bigint
+  --
+  reserva_id : bigint
+  codigo : varchar
+  cliente_id : bigint
+  cliente_nombre : varchar
+  proveedor_id : bigint
+  proveedor_empresa : varchar
+  servicio_id : bigint
+  servicio_nombre : varchar
+  mascota_id : bigint
+  mascota_nombre : varchar
+  fecha_inicio : timestamp
+  hora_inicio : time
+  precio_total : numeric
+  modalidad_entrega : varchar
+  estado : varchar
+  motivo_rechazo : text
+  registro_vacunacion_id : bigint
+  creada_en : timestamp
+  respondida_en : timestamp
+}
+
+entity "proveedor_servicio" as proveedor_servicio {
+  * id : bigint
+  --
+  proveedor_id : bigint
+  servicio_id : bigint
+  precio : numeric
+  duracion_minutos : integer
+  activo : boolean
+}
+
+entity "proveedor_servicio_modalidad" as proveedor_servicio_modalidad {
+  * id : bigint
+  --
+  proveedor_servicio_id : bigint
+  modalidad : varchar
+  costo_adicional : numeric
+}
+
+entity "evento_procesado" as evento_procesado {
+  * event_id : varchar
+  --
+  event_type : varchar
+  service : varchar
+  aggregate_id : bigint
+  payload : text
+  procesado_en : timestamp
+}
+
+entity "outbox" as outbox {
+  * id : bigint
+  --
+  event_id : varchar
+  aggregate_type : varchar
+  aggregate_id : bigint
+  event_type : varchar
+  topic : varchar
+  payload : text
+  status : varchar
+  retry_count : integer
+  last_error : text
+  created_at : timestamp
+  processed_at : timestamp
+  next_retry_at : timestamp
+}
+
+entity "saga_estado" as saga_estado {
+  * id : bigint
+  --
+  reserva_id : bigint
+  codigo_reserva : varchar
+  estado : varchar
+  paso_actual : varchar
+  motivo : text
+  ultimo_evento_id : varchar
+  creada_en : timestamp
+  actualizada_en : timestamp
+}
+
 persona }|..|| direccion
 usuario }|..|| persona
 usuario_rol }|..|| usuario
@@ -372,4 +465,13 @@ pago }|..|| reserva
 notificacion }|..|| usuario
 registro_vacunacion }|..|| mascota
 registro_vacunacion }|..|| vacuna
+
+' Saga orquestada (microservicios + orquestador)
+solicitud_reserva }|..|| reserva
+solicitud_reserva }|..|| proveedor
+solicitud_reserva }|..|| servicio
+proveedor_servicio }|..|| proveedor
+proveedor_servicio }|..|| servicio
+proveedor_servicio_modalidad }|..|| proveedor_servicio
+saga_estado }|..|| reserva
 @enduml

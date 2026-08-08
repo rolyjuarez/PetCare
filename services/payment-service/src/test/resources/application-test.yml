@@ -27,7 +27,8 @@ app:
       pago-completado: test.pago.completado
       pago-fallido: test.pago.fallido
       pago-reembolsado: test.pago.reembolsado
-      dlt: test.reserva.dlt
+      comando-crear-pago: test.saga.comando.crear-pago
+      dlt: test.saga.dlt
   pasarela:
     prefijo-referencia: PTC-TEST
 

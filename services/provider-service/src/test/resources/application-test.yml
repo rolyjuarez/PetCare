@@ -20,10 +20,10 @@ app:
     bootstrap-servers: ${spring.embedded.kafka.brokers:localhost:9092}
     group-id: provider-service-test
     topic:
-      reserva-creada: test.reserva.creada
       reserva-aceptada: test.reserva.aceptada
       reserva-rechazada: test.reserva.rechazada
-      dlt: test.reserva.dlt
+      comando-notificar-proveedor: test.saga.comando.notificar-proveedor
+      dlt: test.saga.dlt
 
 jwt:
   secret: PETCareSecretKeyForJWTTokenGeneration2024VeryLongAndSecureKeyMustBe256Bits

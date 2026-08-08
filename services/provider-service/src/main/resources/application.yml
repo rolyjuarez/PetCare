@@ -39,10 +39,10 @@ app:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
     group-id: provider-service
     topic:
-      reserva-creada: reserva.creada
       reserva-aceptada: reserva.aceptada
       reserva-rechazada: reserva.rechazada
-      dlt: reserva.dlt.v1
+      comando-notificar-proveedor: saga.comando.notificar-proveedor
+      dlt: saga.dlt.v1
     partitions: 3
     replication-factor: 1
     retention-ms: 604800000

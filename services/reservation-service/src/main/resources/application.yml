@@ -51,12 +51,12 @@ app:
     group-id: reservation-service
     topic:
       reserva-creada: reserva.creada
-      reserva-aceptada: reserva.aceptada
-      reserva-rechazada: reserva.rechazada
       reserva-confirmada: reserva.confirmada
       reserva-cancelada: reserva.cancelada
-      pago-fallido: pago.fallido
-      dlt: reserva.dlt.v1
+      comando-confirmar-reserva: saga.comando.confirmar-reserva
+      comando-rechazar-reserva: saga.comando.rechazar-reserva
+      comando-cancelar-reserva: saga.comando.cancelar-reserva
+      dlt: saga.dlt.v1
     partitions: 3
     replication-factor: 1
     retention-ms: 604800000

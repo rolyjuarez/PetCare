@@ -1,0 +1,70 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' ============================================================================
+' PETCare - Componentes de provider-service (8082) - C4 Nivel 3
+' ============================================================================
+
+title Componentes de provider-service (8082) - C4 Nivel 3
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(component, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#D9E2F3")
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(proveedor, "Proveedor", "Publica servicios y responde solicitudes de reserva")
+
+' ---------------------------------------------------------------------------
+' Elementos externos
+' ---------------------------------------------------------------------------
+System_Ext(sa, "saga-orchestrator", "8085", "Coordina la saga y ordena comandos")
+System_Ext(backend, "backend", "8080", "API REST principal / catálogos")
+System_Ext(rs, "reservation-service", "8081", "Dueño de la reserva")
+
+ContainerQueue(kafka, "Kafka", "Topics", "Consume: saga.comando.notificar-proveedor | Publica: reserva.aceptada, reserva.rechazada | DLT: saga.dlt.v1")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "solicitud_reserva, evento_procesado")
+
+' ---------------------------------------------------------------------------
+' Componentes internos
+' ---------------------------------------------------------------------------
+Container_Boundary(ps, "provider-service (8082)") {
+    Component(ps_consumer, "NotificarProveedorCommandConsumer", "Kafka listener", "Recibe el comando y crea las solicitudes PENDIENTE")
+    Component(ps_svc, "ProveedorService / ProveedorServiceImpl", "Service", "Crea solicitudes, acepta y rechaza")
+    Component(ps_api, "SolicitudReservaController", "Spring MVC", "El proveedor acepta/rechaza vía REST")
+    Component(ps_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica ReservaAceptadaEvent, ReservaRechazadaEvent")
+    Component(ps_idem, "IdempotencyService", "MyBatis", "Registra command_id en evento_procesado")
+
+    Rel(ps_consumer, ps_svc, "Crea solicitudes")
+    Rel(ps_api, ps_svc, "Acepta / rechaza")
+    Rel(ps_svc, ps_pub, "Publica eventos de aceptación/rechazo")
+    Rel(ps_consumer, ps_idem, "Verifica/registra duplicados")
+}
+
+' ---------------------------------------------------------------------------
+' Relaciones con el exterior
+' ---------------------------------------------------------------------------
+Rel(sa, kafka, "Publica NotificarProveedorCommand", "saga.comando.notificar-proveedor")
+Rel(kafka, ps_consumer, "Consume el comando", "saga.comando.notificar-proveedor")
+Rel(proveedor, ps_api, "Acepta / rechaza la solicitud", "REST /aceptar /rechazar")
+Rel(backend, ps_api, "Consulta solicitudes del proveedor", "HTTP")
+Rel(ps_pub, kafka, "ReservaAceptadaEvent / ReservaRechazadaEvent", "Kafka")
+Rel(ps_svc, db, "Persiste solicitud_reserva", "JDBC / MyBatis")
+Rel(ps_idem, db, "Persiste evento_procesado", "JDBC / MyBatis")
+
+note bottom of ps_consumer
+  Las solicitudes solo se crean cuando el orquestador lo ordena:
+  provider-service ya no consume reserva.creada.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

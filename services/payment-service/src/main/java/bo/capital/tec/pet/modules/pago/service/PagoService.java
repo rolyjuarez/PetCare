@@ -1,13 +1,13 @@
 package bo.capital.tec.pet.modules.pago.service;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.modules.pago.command.CrearPagoCommand;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
-import bo.capital.tec.pet.modules.pago.event.ReservaConfirmadaEvent;
 
 public interface PagoService {
 
-    PagoResponseDTO crearDesdeReservaConfirmada(ReservaConfirmadaEvent event);
+    PagoResponseDTO crearPago(CrearPagoCommand comando);
 
     PagoResponseDTO getById(Long id);
 

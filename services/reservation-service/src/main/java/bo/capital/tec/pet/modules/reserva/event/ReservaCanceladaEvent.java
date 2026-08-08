@@ -18,11 +18,11 @@ public class ReservaCanceladaEvent extends DomainEvent {
     private String proveedorEmpresa;
     private Long servicioId;
     private String servicioNombre;
-    private String motivoCancelacion;
+    private String motivo;
 
     public ReservaCanceladaEvent(Long reservaId, String codigo, Long clienteId, String clienteNombre,
                                  String clienteEmail, Long proveedorId, String proveedorEmpresa,
-                                 Long servicioId, String servicioNombre, String motivoCancelacion) {
+                                 Long servicioId, String servicioNombre, String motivo) {
         super("RESERVA", reservaId);
         this.reservaId = reservaId;
         this.codigo = codigo;
@@ -33,6 +33,6 @@ public class ReservaCanceladaEvent extends DomainEvent {
         this.proveedorEmpresa = proveedorEmpresa;
         this.servicioId = servicioId;
         this.servicioNombre = servicioNombre;
-        this.motivoCancelacion = motivoCancelacion;
+        this.motivo = motivo;
     }
 }

@@ -107,13 +107,18 @@ MAIL_PASSWORD=...
 
 Los diagramas de arquitectura (PlantUML) se encuentran en la carpeta `diagramas`:
 
-- 1-contexto.puml — vista de contexto de la plataforma
-- 2-contenedores.puml — vista de contenedores
-- 3-componentes.puml — vista de componentes
-- 3-event-driven-reservas.puml — saga coreografiada de reservas (eventos, topics, productores y consumidores)
-- 3-event-driven-pagos.puml — saga coreografiada de pagos (eventos, topics, productores y consumidores)
+- 1-contexto.puml — vista de contexto de la plataforma (C4 Nivel 1)
+- 2-contenedores.puml — vista de contenedores (C4 Nivel 2)
+- 3-componentes.puml — vista global de componentes de la saga orquestada (C4 Nivel 3)
+- 3-componentes-saga-orchestrator.puml — componentes internos del orquestador (C4 Nivel 3)
+- 3-componentes-reservation-service.puml — componentes internos de reservation-service (C4 Nivel 3)
+- 3-componentes-provider-service.puml — componentes internos de provider-service (C4 Nivel 3)
+- 3-componentes-payment-service.puml — componentes internos de payment-service (C4 Nivel 3)
+- 3-event-driven-reservas.puml — saga orquestada de reservas (eventos, comandos, topics, productores y consumidores)
+- 3-event-driven-pagos.puml — saga orquestada de pagos (eventos, comandos, topics, productores y consumidores)
+- petcaredb.puml — esquema de base de datos (incluye solicitud_reserva, evento_procesado, outbox y saga_estado)
 
-Los diagramas de eventos usan la librería C4-PlantUML mediante `!includeurl`, por lo
+Los diagramas usan la librería C4-PlantUML mediante `!includeurl`, por lo
 que renderizan en cualquier visor de PlantUML (VSCode, plantuml.com, etc.).
 
 Para el detalle del saga, ver `services/README-saga-pagos.md`.

@@ -1,0 +1,64 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' ============================================================================
+' PETCare - Componentes de payment-service (8083) - C4 Nivel 3
+' ============================================================================
+
+title Componentes de payment-service (8083) - C4 Nivel 3
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(component, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#D9E2F3")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Elementos externos
+' ---------------------------------------------------------------------------
+System_Ext(sa, "saga-orchestrator", "8085", "Coordina la saga y ordena comandos")
+System_Ext(rs, "reservation-service", "8081", "Dueño de la reserva")
+
+ContainerQueue(kafka, "Kafka", "Topics", "Consume: saga.comando.crear-pago | Publica: pago.completado, pago.fallido, pago.reembolsado | DLT: saga.dlt.v1")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "pago, evento_procesado")
+System_Ext(pasarela, "Pasarela de pago", "Proveedor externo", "Simulada en dev")
+
+' ---------------------------------------------------------------------------
+' Componentes internos
+' ---------------------------------------------------------------------------
+Container_Boundary(ms, "payment-service (8083)") {
+    Component(ms_consumer, "CrearPagoCommandConsumer", "Kafka listener", "Recibe el comando y crea el pago (PENDIENTE)")
+    Component(ms_svc, "PagoService / PagoServiceImpl", "Service", "Crea, procesa y reembolsa pagos")
+    Component(ms_pasarela, "PasarelaSimuladaService", "Mock", "Simula la pasarela de pago en desarrollo")
+    Component(ms_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica PagoProcesadoEvent, PagoFallidoEvent, PagoReembolsadoEvent")
+    Component(ms_idem, "IdempotencyService", "MyBatis", "Registra command_id en evento_procesado")
+
+    Rel(ms_consumer, ms_svc, "Crea el pago")
+    Rel(ms_consumer, ms_idem, "Verifica/registra duplicados")
+    Rel(ms_svc, ms_pasarela, "Procesa el pago")
+    Rel(ms_svc, ms_pub, "Publica el resultado del pago")
+}
+
+' ---------------------------------------------------------------------------
+' Relaciones con el exterior
+' ---------------------------------------------------------------------------
+Rel(sa, kafka, "Publica CrearPagoCommand", "saga.comando.crear-pago")
+Rel(kafka, ms_consumer, "Consume el comando", "saga.comando.crear-pago")
+Rel(ms_svc, pasarela, "procesar() vía pasarela", "REST/HTTPS")
+Rel(ms_pub, kafka, "PagoProcesadoEvent / PagoFallidoEvent / PagoReembolsadoEvent", "Kafka")
+Rel(ms_svc, db, "Persiste pago", "JDBC / MyBatis")
+Rel(ms_idem, db, "Persiste evento_procesado", "JDBC / MyBatis")
+
+note bottom of ms_pub
+  El pago ya no se dispara por reserva.confirmada directo: payment-service
+  solo actúa al recibir el CrearPagoCommand del orquestador. Si el pago
+  falla, publica pago.fallido y la compensación la ordena el orquestador.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

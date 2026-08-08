@@ -1,11 +1,11 @@
 package bo.capital.tec.pet.modules.proveedor;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.modules.proveedor.command.NotificarProveedorCommand;
 import bo.capital.tec.pet.modules.proveedor.dto.ResponderSolicitudRequestDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.SolicitudReservaResponseDTO;
 import bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaAceptadaEvent;
-import bo.capital.tec.pet.modules.proveedor.event.ReservaCreadaEvent;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaRechazadaEvent;
 import bo.capital.tec.pet.modules.proveedor.mapper.SolicitudReservaMapper;
 import bo.capital.tec.pet.modules.proveedor.service.ProveedorService;
@@ -35,7 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1, topics = {
-        "test.reserva.creada",
+        "test.saga.comando.notificar-proveedor",
         "test.reserva.aceptada",
         "test.reserva.rechazada"})
 class ProveedorFlowIntegrationTest {
@@ -65,20 +65,20 @@ class ProveedorFlowIntegrationTest {
         eventCollector.clear();
     }
 
-    private ReservaCreadaEvent buildEvent(Long proveedorId) {
-        return new ReservaCreadaEvent(1L, "RES-20260731-001", 1L, "Ana Gomez",
+    private NotificarProveedorCommand buildComando(Long proveedorId) {
+        return new NotificarProveedorCommand(1L, "RES-20260731-001", 1L, "Ana Gomez",
                 "ana@petcare.bo", proveedorId, "VetPet SRL",
                 1L, "Consulta general", 1L, "Rex",
                 LocalDate.now().plusDays(2), LocalTime.of(10, 0), new BigDecimal("80.00"),
-                "EN_ESTABLECIMIENTO", null);
+                null, "EN_ESTABLECIMIENTO");
     }
 
     @Test
-    void alRecibirReservaCreadaSeCreanSolicitudes() throws Exception {
-        ReservaCreadaEvent event = buildEvent(null);
+    void alRecibirComandoNotificarProveedorSeCreanSolicitudes() throws Exception {
+        NotificarProveedorCommand comando = buildComando(null);
 
-        kafkaTemplate.send("test.reserva.creada", String.valueOf(event.getReservaId()), event)
-                .get(10, TimeUnit.SECONDS);
+        kafkaTemplate.send("test.saga.comando.notificar-proveedor",
+                String.valueOf(comando.getReservaId()), comando).get(10, TimeUnit.SECONDS);
 
         List<SolicitudReserva> solicitudes = awaitSolicitudes(1L, 2);
         assertThat(solicitudes).hasSize(2);
@@ -90,7 +90,7 @@ class ProveedorFlowIntegrationTest {
 
     @Test
     void aceptarSolicitudPublicaReservaAceptadaEvent() throws Exception {
-        proveedorService.procesarReservaCreada(buildEvent(1L));
+        proveedorService.procesarNotificarProveedor(buildComando(1L));
         SolicitudReserva solicitud = solicitudReservaMapper.selectByReservaId(1L).get(0);
 
         SolicitudReservaResponseDTO resultado =
@@ -114,7 +114,7 @@ class ProveedorFlowIntegrationTest {
 
     @Test
     void rechazarSolicitudPublicaReservaRechazadaEvent() throws Exception {
-        proveedorService.procesarReservaCreada(buildEvent(1L));
+        proveedorService.procesarNotificarProveedor(buildComando(1L));
         SolicitudReserva solicitud = solicitudReservaMapper.selectByReservaId(1L).get(0);
 
         SolicitudReservaResponseDTO resultado =
@@ -134,15 +134,15 @@ class ProveedorFlowIntegrationTest {
     }
 
     @Test
-    void eventoDuplicadoSeIgnora() throws Exception {
-        ReservaCreadaEvent event = buildEvent(null);
+    void comandoDuplicadoSeIgnora() throws Exception {
+        NotificarProveedorCommand comando = buildComando(null);
 
-        kafkaTemplate.send("test.reserva.creada", String.valueOf(event.getReservaId()), event)
-                .get(10, TimeUnit.SECONDS);
+        kafkaTemplate.send("test.saga.comando.notificar-proveedor",
+                String.valueOf(comando.getReservaId()), comando).get(10, TimeUnit.SECONDS);
         awaitSolicitudes(1L, 2);
 
-        kafkaTemplate.send("test.reserva.creada", String.valueOf(event.getReservaId()), event)
-                .get(10, TimeUnit.SECONDS);
+        kafkaTemplate.send("test.saga.comando.notificar-proveedor",
+                String.valueOf(comando.getReservaId()), comando).get(10, TimeUnit.SECONDS);
         TimeUnit.SECONDS.sleep(2);
 
         assertThat(solicitudReservaMapper.selectByReservaId(1L)).hasSize(2);
@@ -150,7 +150,7 @@ class ProveedorFlowIntegrationTest {
 
     @Test
     void listarSolicitudesPorProveedor() {
-        proveedorService.procesarReservaCreada(buildEvent(1L));
+        proveedorService.procesarNotificarProveedor(buildComando(1L));
 
         PagedResponse<SolicitudReservaResponseDTO> pendientes =
                 proveedorService.listarSolicitudes(1L, "PENDIENTE", 0, 20);

@@ -1,14 +1,14 @@
 package bo.capital.tec.pet.modules.reserva;
 
 import bo.capital.tec.pet.common.kafka.IdempotencyService;
+import bo.capital.tec.pet.modules.reserva.command.CancelarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.command.ConfirmarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.command.RechazarReservaCommand;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaRequestDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaResponseDTO;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
-import bo.capital.tec.pet.modules.reserva.event.PagoFallidoEvent;
-import bo.capital.tec.pet.modules.reserva.event.ReservaAceptadaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCreadaEvent;
-import bo.capital.tec.pet.modules.reserva.event.ReservaRechazadaEvent;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
 import bo.capital.tec.pet.modules.reserva.service.ReservaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +23,6 @@ import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.concurrent.BlockingQueue;
@@ -36,10 +35,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1, topics = {
         "test.reserva.creada",
-        "test.reserva.aceptada",
-        "test.reserva.rechazada",
         "test.reserva.cancelada",
-        "test.pago.fallido"})
+        "test.saga.comando.confirmar-reserva",
+        "test.saga.comando.rechazar-reserva",
+        "test.saga.comando.cancelar-reserva"})
 class ReservaFlowIntegrationTest {
 
     @Autowired
@@ -100,19 +99,20 @@ class ReservaFlowIntegrationTest {
     }
 
     @Test
-    void consumirReservaAceptadaActualizaReserva() throws Exception {
+    void consumirComandoConfirmarReservaActualizaReserva() throws Exception {
         ReservaResponseDTO creada = reservaService.create(buildRequest());
 
-        ReservaAceptadaEvent event = new ReservaAceptadaEvent(
+        ConfirmarReservaCommand comando = new ConfirmarReservaCommand(
                 creada.getId(), creada.getCodigo(), 1L,
-                "Maria Lopez", "VetPet SRL", "Consulta general", Instant.now(), null);
-        kafkaTemplate.send("test.reserva.aceptada", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
+                "Maria Lopez", "VetPet SRL", "Consulta general", null);
+        kafkaTemplate.send("test.saga.comando.confirmar-reserva", String.valueOf(creada.getId()), comando)
+                .get(10, TimeUnit.SECONDS);
 
         Reserva actualizada = awaitReserva(creada.getId(), "CONFIRMADA");
         assertThat(actualizada.getProveedorId()).isEqualTo(1L);
         assertThat(actualizada.getRespuestaEn()).isNotNull();
 
-        assertThat(idempotencyService.isProcessed(event.getEventId())).isTrue();
+        assertThat(idempotencyService.isProcessed(comando.getCommandId())).isTrue();
         Integer notificaciones = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM notificacion WHERE usuario_id = ? AND tipo = 'EXITO'",
                 Integer.class, creada.getClienteId());
@@ -120,14 +120,15 @@ class ReservaFlowIntegrationTest {
     }
 
     @Test
-    void consumirReservaRechazadaGuardaMotivo() throws Exception {
+    void consumirComandoRechazarReservaGuardaMotivo() throws Exception {
         ReservaResponseDTO creada = reservaService.create(buildRequest());
 
-        ReservaRechazadaEvent event = new ReservaRechazadaEvent(
+        RechazarReservaCommand comando = new RechazarReservaCommand(
                 creada.getId(), creada.getCodigo(), 1L,
                 "Maria Lopez", "VetPet SRL", "Consulta general",
-                "Horario no disponible", Instant.now());
-        kafkaTemplate.send("test.reserva.rechazada", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
+                "Horario no disponible");
+        kafkaTemplate.send("test.saga.comando.rechazar-reserva", String.valueOf(creada.getId()), comando)
+                .get(10, TimeUnit.SECONDS);
 
         Reserva actualizada = awaitReserva(creada.getId(), "RECHAZADA");
         assertThat(actualizada.getMotivoRechazo()).isEqualTo("Horario no disponible");
@@ -139,19 +140,21 @@ class ReservaFlowIntegrationTest {
     }
 
     @Test
-    void eventoDuplicadoSeIgnora() throws Exception {
+    void comandoDuplicadoSeIgnora() throws Exception {
         ReservaResponseDTO creada = reservaService.create(buildRequest());
 
-        ReservaAceptadaEvent event = new ReservaAceptadaEvent(
+        ConfirmarReservaCommand comando = new ConfirmarReservaCommand(
                 creada.getId(), creada.getCodigo(), 1L,
-                "Maria Lopez", "VetPet SRL", "Consulta general", Instant.now(), null);
-        kafkaTemplate.send("test.reserva.aceptada", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
+                "Maria Lopez", "VetPet SRL", "Consulta general", null);
+        kafkaTemplate.send("test.saga.comando.confirmar-reserva", String.valueOf(creada.getId()), comando)
+                .get(10, TimeUnit.SECONDS);
 
         awaitReserva(creada.getId(), "CONFIRMADA");
         Reserva trasPrimero = reservaMapper.selectById(creada.getId());
         int versionTrasPrimero = trasPrimero.getVersion();
 
-        kafkaTemplate.send("test.reserva.aceptada", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
+        kafkaTemplate.send("test.saga.comando.confirmar-reserva", String.valueOf(creada.getId()), comando)
+                .get(10, TimeUnit.SECONDS);
         TimeUnit.SECONDS.sleep(2);
 
         Reserva trasSegundo = reservaMapper.selectById(creada.getId());
@@ -159,17 +162,18 @@ class ReservaFlowIntegrationTest {
     }
 
     @Test
-    void pagoFallidoCancelaReservaYPublicaCompensacion() throws Exception {
+    void comandoCancelarReservaEjecutaCompensacionYPublica() throws Exception {
         ReservaResponseDTO creada = reservaService.create(buildRequest());
 
-        PagoFallidoEvent event = new PagoFallidoEvent(
-                creada.getId(), creada.getId(), new BigDecimal("80.00"),
-                "INT-FALLIDO000001", "La transacción fue rechazada por la entidad emisora");
-        kafkaTemplate.send("test.pago.fallido", String.valueOf(creada.getId()), event).get(10, TimeUnit.SECONDS);
+        CancelarReservaCommand comando = new CancelarReservaCommand(
+                creada.getId(), creada.getCodigo(),
+                "La transacción fue rechazada por la entidad emisora");
+        kafkaTemplate.send("test.saga.comando.cancelar-reserva", String.valueOf(creada.getId()), comando)
+                .get(10, TimeUnit.SECONDS);
 
         Reserva cancelada = awaitReservaCancelada(creada.getId());
         assertThat(cancelada.getEstadoReservaId()).isEqualTo(4L);
-        assertThat(idempotencyService.isProcessed(event.getEventId())).isTrue();
+        assertThat(idempotencyService.isProcessed(comando.getCommandId())).isTrue();
 
         Integer notificaciones = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM notificacion WHERE usuario_id = ? AND tipo = 'ADVERTENCIA'",
@@ -179,7 +183,7 @@ class ReservaFlowIntegrationTest {
         ReservaCanceladaEvent compensacion = eventCollector.canceladas().poll(10, TimeUnit.SECONDS);
         assertThat(compensacion).isNotNull();
         assertThat(compensacion.getReservaId()).isEqualTo(creada.getId());
-        assertThat(compensacion.getMotivoCancelacion()).startsWith("Pago fallido");
+        assertThat(compensacion.getMotivo()).startsWith("Pago fallido");
     }
 
     private Reserva awaitReserva(Long id, String estadoNombre) throws InterruptedException {

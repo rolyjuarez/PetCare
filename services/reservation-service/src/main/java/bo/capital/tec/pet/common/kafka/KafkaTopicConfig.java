@@ -18,17 +18,8 @@ public class KafkaTopicConfig {
     @Value("${app.kafka.topic.reserva-creada:reserva.creada}")
     private String reservaCreadaTopic;
 
-    @Value("${app.kafka.topic.reserva-aceptada:reserva.aceptada}")
-    private String reservaAceptadaTopic;
-
-    @Value("${app.kafka.topic.reserva-rechazada:reserva.rechazada}")
-    private String reservaRechazadaTopic;
-
     @Value("${app.kafka.topic.reserva-cancelada:reserva.cancelada}")
     private String reservaCanceladaTopic;
-
-    @Value("${app.kafka.topic.pago-fallido:pago.fallido}")
-    private String pagoFallidoTopic;
 
     @Value("${app.kafka.topic.dlt:reserva.dlt.v1}")
     private String deadLetterTopic;
@@ -63,38 +54,8 @@ public class KafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic reservaAceptadaTopic() {
-        return TopicBuilder.name(reservaAceptadaTopic)
-                .partitions(partitions)
-                .replicas(replicationFactor)
-                .config("retention.ms", String.valueOf(retentionMs))
-                .config("cleanup.policy", "delete")
-                .build();
-    }
-
-    @Bean
-    public NewTopic reservaRechazadaTopic() {
-        return TopicBuilder.name(reservaRechazadaTopic)
-                .partitions(partitions)
-                .replicas(replicationFactor)
-                .config("retention.ms", String.valueOf(retentionMs))
-                .config("cleanup.policy", "delete")
-                .build();
-    }
-
-    @Bean
     public NewTopic reservaCanceladaTopic() {
         return TopicBuilder.name(reservaCanceladaTopic)
-                .partitions(partitions)
-                .replicas(replicationFactor)
-                .config("retention.ms", String.valueOf(retentionMs))
-                .config("cleanup.policy", "delete")
-                .build();
-    }
-
-    @Bean
-    public NewTopic pagoFallidoTopic() {
-        return TopicBuilder.name(pagoFallidoTopic)
                 .partitions(partitions)
                 .replicas(replicationFactor)
                 .config("retention.ms", String.valueOf(retentionMs))
