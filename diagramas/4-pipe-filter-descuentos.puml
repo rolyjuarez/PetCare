@@ -1,0 +1,94 @@
+@startuml
+title Pipe-Filter: pipeline de descuentos de pago (payment-service)
+
+' ============================================================================
+' Parte 1 - Estructura del patrón (participantes mapeados al código)
+' ============================================================================
+package "discount/" {
+    class DescuentoPipeline {
+        {method} ejecutar(ReservaInfoDTO): PagoContext
+        ' promocion.setNext(recargo);
+        ' recargo.setNext(terminal);
+        ' promocion.procesar(context);
+    }
+
+    interface DescuentoPipe <<Filter>> {
+        {method} procesar(PagoContext)
+        {method} setNext(DescuentoPipe)
+        {method} getNext(): DescuentoPipe
+    }
+
+    abstract class AbstractDescuentoPipe {
+        {field} # next: DescuentoPipe
+        {method} # delegar(PagoContext)
+    }
+
+    class PipePromocionProveedor <<ConcreteFilter>> {
+        {field} catalogMapper: PagoCatalogMapper
+        {method} procesar(PagoContext)
+        ' PERCENTAGE | FIXED
+    }
+
+    class PipeRecargoModalidad <<ConcreteFilter>> {
+        {field} catalogMapper: PagoCatalogMapper
+        {method} procesar(PagoContext)
+        ' solo si != EN_ESTABLECIMIENTO
+    }
+
+    class PipeTerminal <<TerminalFilter>> {
+        {method} procesar(PagoContext)
+    }
+
+    class PagoContext <<Data / Pipe>> {
+        {field} montoOriginal: BigDecimal
+        {field} montoActual: BigDecimal
+        {field} descuentoTotal: BigDecimal
+        {field} descuentosAplicados: List<DescuentoAplicadoDTO>
+        {method} aplicarDescuento(DescuentoAplicadoDTO)
+        {method} aplicarRecargo(BigDecimal)
+    }
+
+    AbstractDescuentoPipe ..|> DescuentoPipe
+    PipePromocionProveedor --|> AbstractDescuentoPipe
+    PipeRecargoModalidad --|> AbstractDescuentoPipe
+    PipeTerminal --|> AbstractDescuentoPipe
+
+    DescuentoPipeline ..> DescuentoPipe : construye cadena
+    DescuentoPipeline ..> PagoContext : alimenta/obtiene
+    PipePromocionProveedor *-- PipeRecargoModalidad : setNext()
+    PipeRecargoModalidad *-- PipeTerminal : setNext()
+    PipePromocionProveedor --> PagoContext : lee/escribe
+    PipeRecargoModalidad --> PagoContext : lee/escribe
+}
+
+note bottom of DescuentoPipeline
+  Ensamblador del patrón (Pipe-and-Filter):
+  filtros encadenados: Promoción -> Recargo -> Terminal.
+  Un solo PagoContext fluye de filtro en filtro.
+end note
+
+' ============================================================================
+' Parte 2 - Flujo de datos a través de los filtros
+' ============================================================================
+package "Flujo" {
+    object "in: ReservaInfoDTO\n(precioTotal, proveedorId,\nservicioId, modalidadEntrega)" as IN
+    object "PagoContext.of(reserva)\nmontoActual = precioTotal" as CTX
+    object "PipePromocionProveedor\n¿promoción activa?\nPERCENTAGE/FIXED -> -$" as F1
+    object "PipeRecargoModalidad\n¿modalidad != EN_ESTABLECIMIENTO?\n-> +$ costo adicional" as F2
+    object "PipeTerminal\n(no-op)" as F3
+    object "out: PagoContext\nmontoActual final + descuentosAplicados" as OUT
+
+    IN --> CTX : crear
+    CTX --> F1 : procesar
+    F1 --> F2 : delegar
+    F2 --> F3 : delegar
+    F3 --> OUT : retorna contexto
+}
+
+note bottom of F1
+  Filtros reutilizables e independientes:
+  cada uno transforma solo el dato que le toca
+  y delega el resto (delegar()).
+end note
+
+@enduml

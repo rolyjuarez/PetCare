@@ -1,0 +1,321 @@
+@startuml
+title saga-orchestrator (8085) - Diagrama de clases - Saga orquestada
+
+hide circle
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam packageStyle rectangle
+
+' ============================================================================
+' DOMAIN - MODEL
+' ============================================================================
+package "domain/model" <<domain>> {
+    abstract class DomainEvent {
+        {field} eventId: String
+        {field} occurredOn: Instant
+        {field} aggregateType: String
+        {field} aggregateId: Long
+        {field} source: String
+    }
+
+    class ReservaCreadaEvent {
+        {field} reservaId: Long
+        {field} codigo: String
+        {field} clienteId: Long
+        {field} proveedorId: Long
+        {field} servicioId: Long
+        {field} mascotaId: Long
+        {field} fechaInicio: LocalDate
+        {field} precioTotal: BigDecimal
+        {field} modalidadEntrega: String
+    }
+
+    class ReservaAceptadaEvent {
+        {field} reservaId: Long
+        {field} proveedorId: Long
+    }
+
+    class ReservaRechazadaEvent {
+        {field} reservaId: Long
+        {field} proveedorId: Long
+        {field} motivoRechazo: String
+    }
+
+    class ReservaConfirmadaEvent {
+        {field} reservaId: Long
+        {field} codigo: String
+        {field} clienteId: Long
+        {field} proveedorId: Long
+        {field} servicioId: Long
+        {field} mascotaId: Long
+        {field} fechaInicio: LocalDate
+        {field} horaInicio: LocalTime
+        {field} precioTotal: BigDecimal
+        {field} modalidadEntrega: String
+        {field} registroVacunacionId: Long
+    }
+
+    class ReservaCanceladaEvent {
+        {field} reservaId: Long
+        {field} motivo: String
+    }
+
+    class PagoProcesadoEvent {
+        {field} reservaId: Long
+        {field} pagoId: Long
+        {field} referenciaTransaccion: String
+    }
+
+    class PagoFallidoEvent {
+        {field} reservaId: Long
+        {field} pagoId: Long
+        {field} motivo: String
+    }
+
+    class PagoReembolsadoEvent {
+        {field} reservaId: Long
+        {field} pagoId: Long
+        {field} referenciaTransaccion: String
+    }
+
+    abstract class SagaCommand {
+        {field} commandId: String
+        {field} issuedAt: Instant
+        {field} aggregateType: String
+        {field} aggregateId: Long
+    }
+
+    class NotificarProveedorCommand {
+        {field} reservaId: Long
+        {field} codigo: String
+        {field} proveedorId: Long
+        {field} servicioId: Long
+        {field} fechaInicio: LocalDate
+        {field} precioTotal: BigDecimal
+        {method} static desde(ReservaCreadaEvent): NotificarProveedorCommand
+    }
+
+    class ConfirmarReservaCommand {
+        {field} reservaId: Long
+        {method} static desde(ReservaAceptadaEvent): ConfirmarReservaCommand
+    }
+
+    class RechazarReservaCommand {
+        {field} reservaId: Long
+        {field} motivoRechazo: String
+        {method} static desde(ReservaRechazadaEvent): RechazarReservaCommand
+    }
+
+    class CancelarReservaCommand {
+        {field} reservaId: Long
+        {field} codigo: String
+        {field} motivo: String
+        {method} static desde(PagoFallidoEvent): CancelarReservaCommand
+    }
+
+    class CrearPagoCommand {
+        {field} reservaId: Long
+        {field} codigo: String
+        {field} clienteId: Long
+        {field} proveedorId: Long
+        {field} servicioId: Long
+        {field} mascotaId: Long
+        {field} fechaInicio: LocalDate
+        {field} horaInicio: LocalTime
+        {field} precioTotal: BigDecimal
+        {field} modalidadEntrega: String
+        {field} registroVacunacionId: Long
+        {method} static desde(ReservaConfirmadaEvent): CrearPagoCommand
+    }
+
+    enum EstadoSaga {
+        INICIADA
+        PROVEEDOR_NOTIFICADO
+        RESERVA_ACEPTADA
+        RESERVA_CONFIRMADA
+        PAGO_SOLICITADO
+        PAGO_FALLIDO
+        COMPLETADA
+        PAGO_REEMBOLSADO
+        RECHAZADA
+        CANCELADA
+    }
+
+    class SagaEstado {
+        {field} id: Long
+        {field} reservaId: Long
+        {field} codigoReserva: String
+        {field} estado: EstadoSaga
+        {field} pasoActual: String
+        {field} motivo: String
+        {field} ultimoEventoId: String
+        {field} creadaEn: LocalDateTime
+        {field} actualizadaEn: LocalDateTime
+        {method} static iniciar(...): SagaEstado
+    }
+
+    DomainEvent <|-- ReservaCreadaEvent
+    DomainEvent <|-- ReservaAceptadaEvent
+    DomainEvent <|-- ReservaRechazadaEvent
+    DomainEvent <|-- ReservaConfirmadaEvent
+    DomainEvent <|-- ReservaCanceladaEvent
+    DomainEvent <|-- PagoProcesadoEvent
+    DomainEvent <|-- PagoFallidoEvent
+    DomainEvent <|-- PagoReembolsadoEvent
+
+    SagaCommand <|-- NotificarProveedorCommand
+    SagaCommand <|-- ConfirmarReservaCommand
+    SagaCommand <|-- RechazarReservaCommand
+    SagaCommand <|-- CancelarReservaCommand
+    SagaCommand <|-- CrearPagoCommand
+
+    SagaEstado *-- "1" EstadoSaga
+}
+
+' ============================================================================
+' DOMAIN - PORT
+' ============================================================================
+package "domain/port" <<domain>> {
+    interface "in.SagaCoordinator" as SagaCoordinator {
+        {method} onReservaCreada(ReservaCreadaEvent)
+        {method} onReservaAceptada(ReservaAceptadaEvent)
+        {method} onReservaRechazada(ReservaRechazadaEvent)
+        {method} onReservaConfirmada(ReservaConfirmadaEvent)
+        {method} onReservaCancelada(ReservaCanceladaEvent)
+        {method} onPagoProcesado(PagoProcesadoEvent)
+        {method} onPagoFallido(PagoFallidoEvent)
+        {method} onPagoReembolsado(PagoReembolsadoEvent)
+    }
+
+    interface "out.SagaCommandPublisher" as SagaCommandPublisher {
+        {method} publicar(SagaCommand comando)
+    }
+
+    interface "out.SagaEstadoRepository" as SagaEstadoRepository {
+        {method} findByReservaId(Long): Optional<SagaEstado>
+        {method} insert(SagaEstado)
+        {method} updateEstado(...)
+    }
+
+    interface "out.EventoProcesadoRepository" as EventoProcesadoRepository {
+        {method} existsByEventId(String): boolean
+        {method} insert(eventId, eventType, aggregateId, service)
+    }
+}
+
+' ============================================================================
+' APPLICATION - SERVICE
+' ============================================================================
+package "application/service" <<application>> {
+    class SagaOrquestadorService {
+        - sagaRepository: SagaEstadoRepository
+        - commandPublisher: SagaCommandPublisher
+        - idempotencia: IdempotenciaSagaService
+        {method} onReservaCreada(): NotificarProveedorCommand
+        {method} onReservaAceptada(): ConfirmarReservaCommand
+        {method} onReservaRechazada(): RechazarReservaCommand
+        {method} onReservaConfirmada(): CrearPagoCommand
+        {method} onPagoFallido(): CancelarReservaCommand
+    }
+
+    class IdempotenciaSagaService {
+        - repositorio: EventoProcesadoRepository
+        {method} marcarProcesado(eventId, tipoEvento, aggregateId): boolean
+    }
+}
+
+SagaOrquestadorService ..|> SagaCoordinator
+SagaOrquestadorService o-- SagaEstadoRepository
+SagaOrquestadorService o-- SagaCommandPublisher
+SagaOrquestadorService o-- IdempotenciaSagaService
+IdempotenciaSagaService o-- EventoProcesadoRepository
+
+SagaOrquestadorService ..> NotificarProveedorCommand : crea via desde()
+SagaOrquestadorService ..> ConfirmarReservaCommand
+SagaOrquestadorService ..> RechazarReservaCommand
+SagaOrquestadorService ..> CancelarReservaCommand
+SagaOrquestadorService ..> CrearPagoCommand
+
+' ============================================================================
+' INFRASTRUCTURE - ADAPTERS & CONFIG
+' ============================================================================
+package "infrastructure" <<infrastructure>> {
+    class ReservaEventosListener {
+        {method} onReservaCreada(ReservaCreadaEvent)
+        {method} onReservaAceptada(ReservaAceptadaEvent)
+        {method} onReservaRechazada(ReservaRechazadaEvent)
+        {method} onReservaConfirmada(ReservaConfirmadaEvent)
+        {method} onReservaCancelada(ReservaCanceladaEvent)
+    }
+
+    class PagoEventosListener {
+        {method} onPagoProcesado(PagoProcesadoEvent)
+        {method} onPagoFallido(PagoFallidoEvent)
+        {method} onPagoReembolsado(PagoReembolsadoEvent)
+    }
+
+    class KafkaSagaCommandPublisher {
+        {method} publicar(SagaCommand comando)
+    }
+
+    class MyBatisSagaEstadoRepository {
+        - mapper: SagaEstadoMapper
+    }
+
+    class MyBatisEventoProcesadoRepository {
+        - mapper: EventoProcesadoMapper
+    }
+
+    interface SagaEstadoMapper {
+        {method} findByReservaId(Long): SagaEstadoRecord
+        {method} insert(SagaEstadoRecord)
+        {method} updateEstado(...)
+    }
+
+    interface EventoProcesadoMapper {
+        {method} existsByEventId(String): int
+        {method} insert(EventoProcesadoRecord)
+    }
+
+    class SagaEstadoRecord
+    class EventoProcesadoRecord
+
+    class KafkaTopicConfig {
+        {method} 13 topics + saga.dlt.v1
+    }
+
+    class KafkaErrorHandlerConfig {
+        {method} 3 reintentos + FixedBackOff 1000ms + DLT
+    }
+
+    KafkaSagaCommandPublisher ..|> SagaCommandPublisher
+    MyBatisSagaEstadoRepository ..|> SagaEstadoRepository
+    MyBatisEventoProcesadoRepository ..|> EventoProcesadoRepository
+
+    MyBatisSagaEstadoRepository o-- SagaEstadoMapper
+    MyBatisEventoProcesadoRepository o-- EventoProcesadoMapper
+    SagaEstadoMapper ..> SagaEstadoRecord : mapea
+    EventoProcesadoMapper ..> EventoProcesadoRecord : mapea
+    MyBatisSagaEstadoRepository ..> SagaEstado : convierte
+    MyBatisEventoProcesadoRepository ..> " " : convierte
+
+    ReservaEventosListener ..> SagaOrquestadorService : delega casos de uso
+    PagoEventosListener ..> SagaOrquestadorService
+}
+
+note bottom of SagaOrquestadorService
+  Máquina de estados por reserva (tabla saga_estado):
+  INICIADA -> PROVEEDOR_NOTIFICADO -> RESERVA_ACEPTADA ->
+  RESERVA_CONFIRMADA -> PAGO_SOLICITADO -> COMPLETADA.
+  Fallos: PAGO_FALLIDO -> CancelarReservaCommand -> CANCELADA;
+  rechazo del proveedor -> RECHAZADA; reembolso -> PAGO_REEMBOLSADO.
+  Cada transición es @Transactional y registra el event_id en evento_procesado.
+end note
+
+legend bottom
+  |<<domain>>| Entidades y puertos (sin dependencias de Spring)|
+  |<<application>>| Casos de uso y máquina de estados|
+  |<<infrastructure>>| Adapters Kafka y MyBatis + configs|
+endlegend
+
+@enduml

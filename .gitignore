@@ -38,4 +38,6 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
-package/bin/opencode.exepackage/bin/opencode.exe
+
+# Local tools
+package/bin/
