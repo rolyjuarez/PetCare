@@ -1,6 +1,7 @@
 package bo.capital.tec.pet.modules.reserva.service.impl;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.common.client.ProviderCatalogClient;
 import bo.capital.tec.pet.common.email.EmailService;
 import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exception.BusinessException;
@@ -28,7 +29,6 @@ import bo.capital.tec.pet.modules.reserva.entity.Reserva;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaConfirmadaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCreadaEvent;
-import bo.capital.tec.pet.modules.reserva.mapper.DisponibilidadMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.EstadoReservaMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaCatalogMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
@@ -57,7 +57,7 @@ public class ReservaServiceImpl implements ReservaService {
     private final ReservaMapper reservaMapper;
     private final EstadoReservaMapper estadoReservaMapper;
     private final ReservaCatalogMapper catalogMapper;
-    private final DisponibilidadMapper disponibilidadMapper;
+    private final ProviderCatalogClient providerCatalogClient;
     private final VacunaCatalogMapper vacunaCatalogMapper;
     private final DomainEventPublisher eventPublisher;
     private final NotificacionMapper notificacionMapper;
@@ -148,13 +148,14 @@ public class ReservaServiceImpl implements ReservaService {
         if (to.isBefore(from)) {
             to = from;
         }
-        ServicioInfoDTO servicio = catalogMapper.selectServicio(servicioId);
+        ServicioInfoDTO servicio = providerCatalogClient.getServicio(servicioId);
         int duracion = servicio != null && servicio.getDuracionMinutos() != null
                 ? servicio.getDuracionMinutos() : 60;
-        List<ModalidadInfoDTO> modalidades = catalogMapper.selectModalidadesByServicio(servicioId);
-        List<Disponibilidad> windows = disponibilidadMapper.selectByProveedorServicio(proveedorId, servicioId);
+        List<ModalidadInfoDTO> modalidades = providerCatalogClient.getModalidades(servicioId);
+        List<Disponibilidad> windows = providerCatalogClient.getDisponibilidades(proveedorId, servicioId);
         List<Reserva> booked = reservaMapper.selectBooked(proveedorId, servicioId, from, to, excluirReservaId);
-        boolean requiereCertificado = Boolean.TRUE.equals(vacunaCatalogMapper.selectRequiereCertificado(proveedorId, servicioId));
+        boolean requiereCertificado = Boolean.TRUE.equals(
+                providerCatalogClient.getRequiereCertificado(proveedorId, servicioId));
 
         List<DisponibilidadSlotsDTO> result = new ArrayList<>();
         for (LocalDate fecha = from; !fecha.isAfter(to); fecha = fecha.plusDays(1)) {
@@ -212,7 +213,7 @@ public class ReservaServiceImpl implements ReservaService {
 
     private boolean slotCubiertoPorDisponibilidad(Long proveedorId, Long servicioId,
                                                   LocalDate fecha, LocalTime inicio, LocalTime fin) {
-        List<Disponibilidad> windows = disponibilidadMapper.selectByProveedorServicio(proveedorId, servicioId);
+        List<Disponibilidad> windows = providerCatalogClient.getDisponibilidades(proveedorId, servicioId);
         if (windows.isEmpty()) {
             return true;
         }
@@ -228,7 +229,7 @@ public class ReservaServiceImpl implements ReservaService {
             modalidad = "EN_ESTABLECIMIENTO";
         }
         if (dto.getServicioId() != null
-                && !catalogMapper.selectModalidadValida(dto.getServicioId(), modalidad)) {
+                && !providerCatalogClient.isModalidadValida(dto.getServicioId(), modalidad)) {
             throw new BusinessException("La modalidad " + modalidad + " no está disponible para el servicio seleccionado");
         }
         if (!"EN_ESTABLECIMIENTO".equals(modalidad)
@@ -244,7 +245,7 @@ public class ReservaServiceImpl implements ReservaService {
             return;
         }
         boolean requiere = Boolean.TRUE.equals(
-                vacunaCatalogMapper.selectRequiereCertificado(dto.getProveedorId(), dto.getServicioId()));
+                providerCatalogClient.getRequiereCertificado(dto.getProveedorId(), dto.getServicioId()));
         if (!requiere && dto.getRegistroVacunacionId() == null) {
             return;
         }
@@ -541,8 +542,8 @@ public class ReservaServiceImpl implements ReservaService {
         ClienteInfoDTO cliente = reserva.getClienteId() != null
                 ? catalogMapper.selectCliente(reserva.getClienteId()) : null;
         ProveedorInfoDTO proveedor = reserva.getProveedorId() != null
-                ? catalogMapper.selectProveedor(reserva.getProveedorId()) : null;
-        ServicioInfoDTO servicio = catalogMapper.selectServicio(reserva.getServicioId());
+                ? providerCatalogClient.getProveedor(reserva.getProveedorId()) : null;
+        ServicioInfoDTO servicio = providerCatalogClient.getServicio(reserva.getServicioId());
         MascotaInfoDTO mascota = catalogMapper.selectMascota(reserva.getMascotaId());
         EstadoReserva estado = estadoReservaMapper.selectById(reserva.getEstadoReservaId());
         return ReservaResponseDTO.builder()
@@ -582,8 +583,8 @@ public class ReservaServiceImpl implements ReservaService {
         ClienteInfoDTO cliente = reserva.getClienteId() != null
                 ? catalogMapper.selectCliente(reserva.getClienteId()) : null;
         ProveedorInfoDTO proveedor = reserva.getProveedorId() != null
-                ? catalogMapper.selectProveedor(reserva.getProveedorId()) : null;
-        ServicioInfoDTO servicio = catalogMapper.selectServicio(reserva.getServicioId());
+                ? providerCatalogClient.getProveedor(reserva.getProveedorId()) : null;
+        ServicioInfoDTO servicio = providerCatalogClient.getServicio(reserva.getServicioId());
         MascotaInfoDTO mascota = catalogMapper.selectMascota(reserva.getMascotaId());
         EstadoReserva estado = estadoReservaMapper.selectById(reserva.getEstadoReservaId());
         return ReservaSummaryDTO.builder()

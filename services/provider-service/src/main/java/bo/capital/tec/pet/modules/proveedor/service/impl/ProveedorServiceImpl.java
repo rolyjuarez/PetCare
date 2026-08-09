@@ -1,19 +1,20 @@
 package bo.capital.tec.pet.modules.proveedor.service.impl;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.common.client.ReservationInternalClient;
 import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exception.BusinessException;
 import bo.capital.tec.pet.common.exception.EntityNotFoundException;
 import bo.capital.tec.pet.common.util.PaginationUtil;
 import bo.capital.tec.pet.modules.proveedor.command.NotificarProveedorCommand;
 import bo.capital.tec.pet.modules.proveedor.dto.ResponderSolicitudRequestDTO;
+import bo.capital.tec.pet.modules.proveedor.dto.ReservaUbicacionDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.SolicitudReservaResponseDTO;
 import bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaAceptadaEvent;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaRechazadaEvent;
 import bo.capital.tec.pet.modules.proveedor.mapper.ProveedorCatalogMapper;
 import bo.capital.tec.pet.modules.proveedor.mapper.SolicitudReservaMapper;
-import bo.capital.tec.pet.modules.proveedor.mapper.VacunaCatalogMapper;
 import bo.capital.tec.pet.modules.proveedor.service.ProveedorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class ProveedorServiceImpl implements ProveedorService {
 
     private final SolicitudReservaMapper solicitudReservaMapper;
     private final ProveedorCatalogMapper proveedorCatalogMapper;
-    private final VacunaCatalogMapper vacunaCatalogMapper;
+    private final ReservationInternalClient reservationClient;
     private final DomainEventPublisher eventPublisher;
 
     @Override
@@ -105,6 +106,7 @@ public class ProveedorServiceImpl implements ProveedorService {
                     comando.getServicioId(), comando.getReservaId());
             return;
         }
+        ReservaUbicacionDTO ubicacion = fetchUbicacion(comando.getReservaId());
         for (Long proveedorId : proveedorIds) {
             if (solicitudReservaMapper.existsByReservaYProveedor(comando.getReservaId(), proveedorId)) {
                 log.debug("Solicitud ya creada para reserva {} y proveedor {}, ignorada",
@@ -126,11 +128,23 @@ public class ProveedorServiceImpl implements ProveedorService {
                     .horaInicio(comando.getHoraInicio())
                     .precioTotal(comando.getPrecioTotal())
                     .modalidadEntrega(comando.getModalidadEntrega())
+                    .latitud(ubicacion != null ? ubicacion.getLatitud() : null)
+                    .longitud(ubicacion != null ? ubicacion.getLongitud() : null)
+                    .direccionReferencia(ubicacion != null ? ubicacion.getDireccionReferencia() : null)
                     .registroVacunacionId(comando.getRegistroVacunacionId())
                     .estado(ESTADO_PENDIENTE)
                     .build();
             solicitudReservaMapper.insert(solicitud);
             log.info("Solicitud {} creada para proveedor {}", solicitud.getCodigo(), proveedorId);
+        }
+    }
+
+    private ReservaUbicacionDTO fetchUbicacion(Long reservaId) {
+        try {
+            return reservationClient.getUbicacionReserva(reservaId);
+        } catch (Exception e) {
+            log.warn("No se pudo obtener la ubicación de la reserva {}: {}", reservaId, e.getMessage());
+            return null;
         }
     }
 
@@ -169,9 +183,15 @@ public class ProveedorServiceImpl implements ProveedorService {
     }
 
     private SolicitudReservaResponseDTO toDTO(SolicitudReserva s) {
-        bo.capital.tec.pet.modules.proveedor.dto.VacunaInfoDTO vacunaInfo =
-                s.getRegistroVacunacionId() != null
-                        ? vacunaCatalogMapper.selectRegistroVacunacion(s.getRegistroVacunacionId()) : null;
+        bo.capital.tec.pet.modules.proveedor.dto.VacunaInfoDTO vacunaInfo = null;
+        if (s.getRegistroVacunacionId() != null) {
+            try {
+                vacunaInfo = reservationClient.getRegistroVacunacion(s.getRegistroVacunacionId());
+            } catch (Exception e) {
+                log.warn("No se pudo obtener el registro de vacunación {}: {}",
+                        s.getRegistroVacunacionId(), e.getMessage());
+            }
+        }
         return SolicitudReservaResponseDTO.builder()
                 .id(s.getId())
                 .reservaId(s.getReservaId())

@@ -10,20 +10,21 @@
         s.fecha_inicio AS fechaInicio, s.hora_inicio AS horaInicio,
         s.precio_total AS precioTotal, s.modalidad_entrega AS modalidadEntrega, s.estado, s.motivo_rechazo AS motivoRechazo,
         s.registro_vacunacion_id AS registroVacunacionId,
-        r.latitud AS latitud, r.longitud AS longitud, r.direccion_referencia AS direccionReferencia,
+        s.latitud AS latitud, s.longitud AS longitud, s.direccion_referencia AS direccionReferencia,
         s.creada_en AS creadaEn, s.respondida_en AS respondidaEn
     </sql>
-    <sql id="table">solicitud_reserva s LEFT JOIN reserva r ON r.id = s.reserva_id</sql>
+    <sql id="table">solicitud_reserva s</sql>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id"
             parameterType="bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva">
         INSERT INTO solicitud_reserva (reserva_id, codigo, cliente_id, cliente_nombre, proveedor_id,
             proveedor_empresa, servicio_id, servicio_nombre, mascota_id, mascota_nombre,
-            fecha_inicio, hora_inicio, precio_total, modalidad_entrega, estado, motivo_rechazo, registro_vacunacion_id)
+            fecha_inicio, hora_inicio, precio_total, modalidad_entrega, estado, motivo_rechazo,
+            registro_vacunacion_id, latitud, longitud, direccion_referencia)
         VALUES (#{reservaId}, #{codigo}, #{clienteId}, #{clienteNombre}, #{proveedorId},
             #{proveedorEmpresa}, #{servicioId}, #{servicioNombre}, #{mascotaId}, #{mascotaNombre},
             #{fechaInicio}, #{horaInicio}, #{precioTotal}, #{modalidadEntrega}, #{estado}, #{motivoRechazo},
-            #{registroVacunacionId})
+            #{registroVacunacionId}, #{latitud}, #{longitud}, #{direccionReferencia})
     </insert>
 
     <select id="selectById" resultType="bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva">

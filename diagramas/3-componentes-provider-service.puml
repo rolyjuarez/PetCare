@@ -21,44 +21,70 @@ UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgCo
 ' ---------------------------------------------------------------------------
 ' Personas
 ' ---------------------------------------------------------------------------
-Person(proveedor, "Proveedor", "Publica servicios y responde solicitudes de reserva")
+Person(proveedor, "Proveedor", "Registra su perfil, publica servicios, gestiona disponibilidad y responde solicitudes de reserva")
 
 ' ---------------------------------------------------------------------------
 ' Elementos externos
 ' ---------------------------------------------------------------------------
 System_Ext(sa, "saga-orchestrator", "8085", "Coordina la saga y ordena comandos")
-System_Ext(backend, "backend", "8080", "API REST principal / catálogos")
-System_Ext(rs, "reservation-service", "8081", "Dueño de la reserva")
+System_Ext(backend, "backend", "8080", "API REST principal / routing / autenticación")
+System_Ext(rs, "reservation-service", "8081", "Dueño de la reserva (catálogo interno de vacunas y ubicación)")
+System_Ext(ms, "payment-service", "8083", "Pagos (consulta promociones y modalidades vía /interna)")
 
 ContainerQueue(kafka, "Kafka", "Topics", "Consume: saga.comando.notificar-proveedor | Publica: reserva.aceptada, reserva.rechazada | DLT: saga.dlt.v1")
-ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "solicitud_reserva, evento_procesado, promocion")
+ContainerDb(db, "PostgreSQL petcaredb_provider", "PostgreSQL 18 (base propia del proveedor)", "Tablas de dominio: proveedor, proveedor_especialidad, proveedor_servicio, proveedor_servicio_modalidad, disponibilidad, solicitud_reserva, promocion, evento_procesado | Copias de solo-lectura: persona, rol, usuario, usuario_rol, ciudad, estado, direccion, servicio")
 
 ' ---------------------------------------------------------------------------
-' Componentes internos - solicitudes de reserva
+' Componentes internos - Solicitudes de reserva (saga)
 ' ---------------------------------------------------------------------------
 Container_Boundary(ps, "provider-service (8082)") {
+
     Component(ps_consumer, "NotificarProveedorCommandConsumer", "Kafka listener", "Recibe el comando y crea las solicitudes PENDIENTE")
-    Component(ps_svc, "ProveedorService / ProveedorServiceImpl", "Service", "Crea solicitudes, acepta y rechaza")
-    Component(ps_api, "SolicitudReservaController", "Spring MVC", "El proveedor acepta/rechaza vía REST")
     Component(ps_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica ReservaAceptadaEvent, ReservaRechazadaEvent")
     Component(ps_idem, "IdempotencyService", "MyBatis", "Registra command_id en evento_procesado")
 
-    Rel(ps_consumer, ps_svc, "Crea solicitudes")
-    Rel(ps_api, ps_svc, "Acepta / rechaza")
-    Rel(ps_svc, ps_pub, "Publica eventos de aceptación/rechazo")
+    Component(ps_solicitudes, "ProveedorSolicitudesController + ProveedorService", "Spring MVC + Service", "Lista solicitudes y acepta/rechaza (/proveedor/solicitudes)")
+    Component(ps_sol_mapper, "SolicitudReservaMapper", "MyBatis", "Persiste solicitud_reserva")
+
+    Rel(ps_consumer, ps_solicitudes, "Crea solicitudes PENDIENTE")
     Rel(ps_consumer, ps_idem, "Verifica/registra duplicados")
-}
+    Rel(ps_solicitudes, ps_pub, "Publica eventos de aceptación/rechazo")
+    Rel(ps_solicitudes, ps_sol_mapper, "Persiste solicitudes")
 
-' ---------------------------------------------------------------------------
-' Componentes internos - promociones / descuentos
-' ---------------------------------------------------------------------------
-Container_Boundary(pp, "módulo promocion") {
-    Component(pp_api, "PromocionController", "Spring MVC", "CRUD de descuentos del proveedor (/proveedores/{proveedorId}/descuentos)")
-    Component(pp_svc, "PromocionService / PromocionServiceImpl", "Service", "Reglas de alta, baja y validez de promociones")
-    Component(pp_mapper, "PromocionMapper / PromocionCatalogMapper", "MyBatis", "Persistencia y consultas de promociones")
+    ' --- CRUD completo del proveedor ---
+    Component(ps_crud, "ProveedorController + ProveedorCrudService", "Spring MVC + Service", "CRUD /proveedores: create/createFull, get, my, update/updateFull, especialidad, delete, has-reservas")
+    Component(ps_crud_mappers, "ProveedorMapper + ProveedorEspecialidadMapper + ProveedorCatalogMapper", "MyBatis", "Persiste proveedor y especialidades; catálogo de proveedores")
+    Component(ps_soporte, "Persona/Usuario/Direccion/Rol/Servicio/UsuarioRol", "modules/soporte", "Entidades + mappers: alta de persona, usuario, dirección, roles y catálogo de servicios (copias de solo-lectura)")
+    Component(ps_rs_client, "ReservationInternalClient (REST)", "HTTP out", "countReservasByProveedor, getUbicacionReserva, getRegistroVacunacion")
 
-    Rel(pp_api, pp_svc, "Crea / actualiza / elimina / consulta")
-    Rel(pp_svc, pp_mapper, "Persiste promociones")
+    Rel(ps_crud, ps_crud_mappers, "Persiste proveedor/especialidades")
+    Rel(ps_crud, ps_soporte, "Crea persona, usuario, dirección y asocia servicios")
+    Rel(ps_crud, ps_rs_client, "Valida has-reservas / datos de reserva")
+
+    ' --- Disponibilidad ---
+    Component(ps_disp, "DisponibilidadController + DisponibilidadService", "Spring MVC + Service", "CRUD /disponibilidades (filtros por proveedor/servicio, by-proveedor-servicio, by-servicio)")
+    Component(ps_disp_mapper, "DisponibilidadMapper", "MyBatis", "Persiste disponibilidad (dia_semana, hora_inicio, hora_fin, activo)")
+
+    Rel(ps_disp, ps_disp_mapper, "Persiste disponibilidad")
+
+    ' --- Servicios propios del proveedor ---
+    Component(ps_svc_propio, "ProveedorServicioController + ProveedorServicioService", "Spring MVC + Service", "Servicios del proveedor (/proveedores/my/servicios) con modalidades y activación")
+    Component(ps_svc_mappers, "ProveedorServicioMapper + ProveedorServicioModalidadMapper", "MyBatis", "Persiste proveedor_servicio y proveedor_servicio_modalidad (costo_adicional, activo)")
+
+    Rel(ps_svc_propio, ps_svc_mappers, "Persiste servicios y modalidades")
+
+    ' --- Promociones (propias + globales) ---
+    Component(ps_promo, "PromocionController / PromocionesController / PromocionProveedorController + PromocionService", "Spring MVC + Service", "Promociones propias (/proveedores/my/promociones + notificar), descuentos del proveedor (/proveedores/{id}/descuentos) y globales de admin (/promociones)")
+    Component(ps_promo_mapper, "PromocionMapper", "MyBatis", "Persiste promocion (proveedor_id NULL = global); consulta activas por proveedor/servicio")
+
+    Rel(ps_promo, ps_promo_mapper, "Persiste promociones")
+
+    ' --- Catálogo interno (entre servicios) ---
+    Component(ps_interna, "CatalogoInternoController", "Spring MVC", "Endpoints /interna/** para reservation y payment: proveedor, servicio, modalidades, valida, costo-adicional, requiere-certificado, disponibilidades, promoción activa, usos")
+    Component(ps_cat_mapper, "CatalogoInternoMapper", "MyBatis", "Consultas de catálogo y contadores de usos de promoción")
+
+    Rel(ps_interna, ps_cat_mapper, "Consulta catálogo")
+    Rel(ps_interna, ps_promo_mapper, "Promoción activa y usos")
 }
 
 ' ---------------------------------------------------------------------------
@@ -66,23 +92,40 @@ Container_Boundary(pp, "módulo promocion") {
 ' ---------------------------------------------------------------------------
 Rel(sa, kafka, "Publica NotificarProveedorCommand", "saga.comando.notificar-proveedor")
 Rel(kafka, ps_consumer, "Consume el comando", "saga.comando.notificar-proveedor")
-Rel(proveedor, ps_api, "Acepta / rechaza la solicitud", "REST /aceptar /rechazar")
-Rel(proveedor, pp_api, "Gestiona sus descuentos", "REST /descuentos")
-Rel(backend, ps_api, "Consulta solicitudes del proveedor", "HTTP")
-Rel(backend, pp_api, "Consulta promociones activas del proveedor", "HTTP")
+Rel(proveedor, ps_crud, "Registra y gestiona su perfil", "REST /proveedores, /proveedores/my")
+Rel(proveedor, ps_disp, "Gestiona disponibilidad", "REST /disponibilidades")
+Rel(proveedor, ps_svc_propio, "Publica sus servicios", "REST /proveedores/my/servicios")
+Rel(proveedor, ps_promo, "Crea sus promociones", "REST /proveedores/my/promociones")
+Rel(proveedor, ps_solicitudes, "Acepta / rechaza la solicitud", "REST /proveedor/solicitudes/{id}/aceptar|rechazar")
+Rel(backend, ps_solicitudes, "Enruta /api/v1/proveedor/** hacia este servicio", "HTTP")
 Rel(ps_pub, kafka, "ReservaAceptadaEvent / ReservaRechazadaEvent", "Kafka")
-Rel(ps_svc, db, "Persiste solicitud_reserva", "JDBC / MyBatis")
+Rel(ps_rs_client, rs, "Consulta vacuna, ubicación y has-reservas", "HTTP /interna/**")
+Rel(ms, ps_interna, "Promoción activa, usos y costo adicional de modalidad", "HTTP /interna/promociones/**, /interna/servicios/**")
+Rel(rs, ps_interna, "Catálogo: proveedor, servicio, modalidades y disponibilidad", "HTTP /interna/**")
+Rel(ps_crud, db, "Persiste persona, usuario, dirección y proveedor", "JDBC / MyBatis")
+Rel(ps_sol_mapper, db, "Persiste solicitud_reserva", "JDBC / MyBatis")
+Rel(ps_disp_mapper, db, "Persiste disponibilidad", "JDBC / MyBatis")
+Rel(ps_svc_mappers, db, "Persiste proveedor_servicio y modalidades", "JDBC / MyBatis")
+Rel(ps_promo_mapper, db, "Persiste promocion", "JDBC / MyBatis")
+Rel(ps_cat_mapper, db, "Consulta catálogo", "JDBC / MyBatis")
 Rel(ps_idem, db, "Persiste evento_procesado", "JDBC / MyBatis")
-Rel(pp_mapper, db, "Persiste promocion", "JDBC / MyBatis")
 
 note bottom of ps_consumer
   Las solicitudes solo se crean cuando el orquestador lo ordena:
   provider-service ya no consume reserva.creada.
 end note
 
-note bottom of pp_svc
-  payment-service consume el cupo de la promoción (usos_actuales)
-  al procesar el pago de una reserva con descuento.
+note bottom of ps_promo
+  Promociones globales = promocion.proveedor_id IS NULL (las gestiona el
+  ADMIN en /promociones). Las del proveedor se crean en
+  /proveedores/my/promociones. payment-service consume cupo (usos_actuales)
+  vía /interna/promociones/**.
+end note
+
+note bottom of ps_interna
+  Endpoints /interna/** quedan permitAll en el SecurityConfig:
+  reservation-service y payment-service los consumen vía HTTP
+  (ProviderCatalogClient / PagoProviderClient).
 end note
 
 LAYOUT_WITH_LEGEND()

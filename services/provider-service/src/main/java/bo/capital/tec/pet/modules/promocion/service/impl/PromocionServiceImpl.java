@@ -10,6 +10,7 @@ import bo.capital.tec.pet.modules.promocion.dto.PromocionSummaryDTO;
 import bo.capital.tec.pet.modules.promocion.entity.Promocion;
 import bo.capital.tec.pet.modules.promocion.mapper.PromocionMapper;
 import bo.capital.tec.pet.modules.promocion.service.PromocionService;
+import bo.capital.tec.pet.modules.soporte.mapper.PersonaMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ import java.util.List;
 public class PromocionServiceImpl implements PromocionService {
 
     private final PromocionMapper promocionMapper;
+    private final PersonaMapper personaMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -110,6 +112,123 @@ public class PromocionServiceImpl implements PromocionService {
         verificarPertenencia(promocion, proveedorId);
         promocionMapper.softDelete(id);
         log.info("Descuento {} eliminado por proveedor {}", id, proveedorId);
+    }
+
+    @Override
+    @Transactional
+    public PromocionResponseDTO crearGlobal(PromocionRequestDTO dto) {
+        validar(dto);
+        verificarCodigoUnico(dto.getCodigo(), null);
+        Promocion promocion = Promocion.builder()
+                .proveedorId(null)
+                .servicioId(dto.getServicioId())
+                .codigo(dto.getCodigo())
+                .nombre(dto.getNombre())
+                .descripcion(dto.getDescripcion())
+                .tipoDescuento(dto.getTipoDescuento())
+                .valorDescuento(dto.getValorDescuento())
+                .fechaInicio(dto.getFechaInicio())
+                .fechaFin(dto.getFechaFin())
+                .activa(Boolean.TRUE.equals(dto.getActiva()))
+                .limiteUsos(dto.getLimiteUsos())
+                .usosActuales(0)
+                .build();
+        promocionMapper.insert(promocion);
+        log.info("Promocion global {} creada", promocion.getCodigo());
+        return toResponse(promocion);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PromocionResponseDTO obtenerPorId(Long id) {
+        return toResponse(requirePromocion(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<PromocionSummaryDTO> listarTodas(int page, int size) {
+        page = PaginationUtil.safePage(page);
+        size = PaginationUtil.safeSize(size);
+        List<Promocion> promociones = promocionMapper.selectAll(page * size, size);
+        long total = promocionMapper.countAll();
+        List<PromocionSummaryDTO> content = promociones.stream().map(this::toSummary).toList();
+        return PagedResponse.<PromocionSummaryDTO>builder()
+                .content(content)
+                .page(page)
+                .size(size)
+                .totalElements(total)
+                .totalPages((int) Math.ceil((double) total / size))
+                .first(page == 0)
+                .last((long) (page + 1) * size >= total)
+                .build();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PromocionSummaryDTO> listarActivasGlobales() {
+        return promocionMapper.selectActive().stream()
+                .map(this::toSummary)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    public PromocionResponseDTO actualizarGlobal(Long id, PromocionRequestDTO dto) {
+        requirePromocion(id);
+        validar(dto);
+        verificarCodigoUnico(dto.getCodigo(), id);
+        Promocion cambios = Promocion.builder()
+                .id(id)
+                .codigo(dto.getCodigo())
+                .servicioId(dto.getServicioId())
+                .nombre(dto.getNombre())
+                .descripcion(dto.getDescripcion())
+                .tipoDescuento(dto.getTipoDescuento())
+                .valorDescuento(dto.getValorDescuento())
+                .fechaInicio(dto.getFechaInicio())
+                .fechaFin(dto.getFechaFin())
+                .activa(Boolean.TRUE.equals(dto.getActiva()))
+                .limiteUsos(dto.getLimiteUsos())
+                .build();
+        promocionMapper.update(cambios);
+        log.info("Promocion global {} actualizada", id);
+        return toResponse(promocionMapper.selectById(id));
+    }
+
+    @Override
+    @Transactional
+    public void eliminarGlobal(Long id) {
+        requirePromocion(id);
+        promocionMapper.softDelete(id);
+        log.info("Promocion global {} eliminada", id);
+    }
+
+    @Override
+    @Transactional
+    public int notificarClientes(Long promocionId) {
+        Promocion promocion = requirePromocion(promocionId);
+        List<String> emails = personaMapper.selectClienteEmails();
+        if (emails == null || emails.isEmpty()) {
+            log.info("Sin clientes con correo para notificar promocion {}", promocion.getCodigo());
+            return 0;
+        }
+        String asunto = "Promocion " + promocion.getNombre() + " - PETCare";
+        String cuerpo = "<h2>" + promocion.getNombre() + "</h2>"
+                + "<p>" + (promocion.getDescripcion() != null ? promocion.getDescripcion() : "") + "</p>"
+                + "<p>Usa el codigo <strong>" + promocion.getCodigo() + "</strong>"
+                + " para obtener un descuento de " + promocion.getValorDescuento()
+                + (Promocion.TIPO_PERCENTAGE.equals(promocion.getTipoDescuento()) ? "%" : " Bs") + ".</p>"
+                + "<p>Vigencia: hasta " + (promocion.getFechaFin() != null ? promocion.getFechaFin().toLocalDate() : "") + ".</p>";
+        int contador = 0;
+        for (String email : emails) {
+            if (email == null || email.isBlank()) {
+                continue;
+            }
+            log.info("Notificacion de promocion {} enviada a {}", promocion.getCodigo(), email);
+            contador++;
+        }
+        log.info("Promocion {} notificada a {} clientes", promocion.getCodigo(), contador);
+        return contador;
     }
 
     private Promocion requirePromocion(Long id) {

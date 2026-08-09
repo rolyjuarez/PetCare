@@ -1,477 +1,529 @@
 @startuml
+' ============================================================================
+' PETCare - Esquema de base de datos petcaredb (ERD)
+' Base compartida por backend, reservation-service, payment-service y
+' saga-orchestrator. Se omiten columnas de auditoría uniformes:
+' created_at, updated_at, deleted, version.
+' ============================================================================
+
+title Esquema de base de datos petcaredb
+
 hide circle
-skinparam databaseBorderColor #333333
-skinparam databaseBackgroundColor #F8F9FA
+skinparam linetype ortho
 skinparam entity {
-  BackgroundColor #FFFFFF
-  BorderColor #2F4F4F
+  BackgroundColor #D9E2F3
+  BorderColor #052F61
+  FontColor #08427B
 }
 
-title Esquema de base de datos PETCare (PostgreSQL localhost:5432)
-
-entity "persona" as persona {
-  * id : bigint
+' ============================================================================
+' Seguridad y catálogos
+' ============================================================================
+entity "estado_reserva" as er {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  primer_apellido : varchar
-  segundo_apellido : varchar
-  ci : varchar
-  telefono : varchar
-  email : varchar
-  fecha_nacimiento : date
-  genero : char
-  direccion_id : bigint
+  * nombre : VARCHAR(50)
+  descripcion : TEXT
+  color : VARCHAR(7)
+  icono : VARCHAR(50)
+  orden : INTEGER
 }
 
-entity "usuario" as usuario {
-  * id : bigint
+entity "ciudad" as ci {
+  * id : BIGSERIAL <<PK>>
   --
-  username : varchar
-  password : varchar
-  persona_id : bigint
-  activo : boolean
-  ultimo_acceso : timestamp
-  intentos_fallidos : integer
-  bloqueado : boolean
-  token_refresh : text
+  * nombre : VARCHAR(100) <<UQ>>
+  * codigo : VARCHAR(10) <<UQ>>
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
 }
 
-entity "rol" as rol {
-  * id : bigint
+entity "estado" as es {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
-  activo : boolean
+  * nombre : VARCHAR(100)
+  * codigo : VARCHAR(10)
+  ciudad_id : BIGINT
 }
 
-entity "usuario_rol" as usuario_rol {
-  * id : bigint
+entity "direccion" as di {
+  * id : BIGSERIAL <<PK>>
   --
-  usuario_id : bigint
-  rol_id : bigint
+  * calle : VARCHAR(200)
+  numero : VARCHAR(20)
+  piso : VARCHAR(10)
+  apartamento : VARCHAR(20)
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  referencia : TEXT
+  * ciudad_id : BIGINT
+  estado_id : BIGINT
 }
 
-entity "menu" as menu {
-  * id : bigint
+entity "persona" as pe {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
-  icono : varchar
-  url : varchar
-  orden : integer
-  activo : boolean
+  * nombre : VARCHAR(100)
+  * primer_apellido : VARCHAR(100)
+  segundo_apellido : VARCHAR(100)
+  * ci : VARCHAR(20) <<UQ>>
+  telefono : VARCHAR(20)
+  email : VARCHAR(150) <<UQ>>
+  fecha_nacimiento : DATE
+  * genero : CHAR(1)
+  direccion_id : BIGINT
 }
 
-entity "submenu" as submenu {
-  * id : bigint
+entity "rol" as ro {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
-  icono : varchar
-  url : varchar
-  orden : integer
-  menu_id : bigint
-  activo : boolean
+  * nombre : VARCHAR(50) <<UQ>>
+  descripcion : TEXT
+  activo : BOOLEAN
 }
 
-entity "permiso" as permiso {
-  * id : bigint
+entity "usuario" as us {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
-  rol_id : bigint
-  menu_id : bigint
-  submenu_id : bigint
-  crear : boolean
-  leer : boolean
-  actualizar : boolean
-  eliminar : boolean
+  * username : VARCHAR(50) <<UQ>>
+  * password : VARCHAR(255)
+  * persona_id : BIGINT
+  activo : BOOLEAN
+  ultimo_acceso : TIMESTAMP
+  intentos_fallidos : INTEGER
+  bloqueado : BOOLEAN
+  token_refresh : TEXT
 }
 
-entity "direccion" as direccion {
-  * id : bigint
+entity "usuario_rol" as ur {
+  * id : BIGSERIAL <<PK>>
   --
-  calle : varchar
-  numero : varchar
-  piso : varchar
-  apartamento : varchar
-  latitud : numeric
-  longitud : numeric
-  referencia : text
-  ciudad_id : bigint
-  estado_id : bigint
+  * usuario_id : BIGINT
+  * rol_id : BIGINT
 }
 
-entity "ciudad" as ciudad {
-  * id : bigint
+entity "menu" as me {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  codigo : varchar
-  latitud : numeric
-  longitud : numeric
+  * nombre : VARCHAR(100) <<UQ>>
+  descripcion : TEXT
+  icono : VARCHAR(50)
+  url : VARCHAR(200)
+  orden : INTEGER
+  activo : BOOLEAN
 }
 
-entity "estado" as estado {
-  * id : bigint
+entity "submenu" as su {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  codigo : varchar
-  ciudad_id : bigint
+  * nombre : VARCHAR(100)
+  descripcion : TEXT
+  icono : VARCHAR(50)
+  url : VARCHAR(200)
+  orden : INTEGER
+  * menu_id : BIGINT
+  activo : BOOLEAN
 }
 
-entity "cliente" as cliente {
-  * id : bigint
+entity "permiso" as pe2 {
+  * id : BIGSERIAL <<PK>>
   --
-  persona_id : bigint
-  usuario_id : bigint
-  notas : text
+  * nombre : VARCHAR(150)
+  * rol_id : BIGINT
+  * menu_id : BIGINT
+  submenu_id : BIGINT
+  crear : BOOLEAN
+  leer : BOOLEAN
+  actualizar : BOOLEAN
+  eliminar : BOOLEAN
 }
 
-entity "proveedor" as proveedor {
-  * id : bigint
+entity "sucursal" as su2 {
+  * id : BIGSERIAL <<PK>>
   --
-  persona_id : bigint
-  usuario_id : bigint
-  empresa : varchar
-  latitud : numeric
-  longitud : numeric
-  radio_cobertura_km : numeric
-  descripcion : text
-  verificado : boolean
-  calificacion : numeric
+  * nombre : VARCHAR(100)
+  direccion_id : BIGINT
+  telefono : VARCHAR(20)
+  email : VARCHAR(150)
+  horario_apertura : TIME
+  horario_cierre : TIME
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  activa : BOOLEAN
 }
 
-entity "especie" as especie {
-  * id : bigint
+entity "notificacion" as no {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
+  * usuario_id : BIGINT
+  * titulo : VARCHAR(200)
+  * mensaje : TEXT
+  * tipo : VARCHAR(30)
+  leida : BOOLEAN
+  fecha_lectura : TIMESTAMP
 }
 
-entity "raza" as raza {
-  * id : bigint
+entity "bitacora" as bi {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  especie_id : bigint
-  descripcion : text
+  usuario_id : BIGINT
+  * accion : VARCHAR(50)
+  * entidad : VARCHAR(100)
+  entidad_id : BIGINT
+  datos_anteriores : TEXT
+  datos_nuevos : TEXT
+  ip_address : VARCHAR(45)
+  user_agent : TEXT
 }
 
-entity "mascota" as mascota {
-  * id : bigint
+entity "correo_enviado" as co {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  fecha_nacimiento : date
-  genero : char
-  peso : numeric
-  color : varchar
-  imagen_url : varchar
-  especie_id : bigint
-  raza_id : bigint
-  cliente_id : bigint
+  * destino : VARCHAR(150)
+  * asunto : VARCHAR(200)
+  * cuerpo : TEXT
+  * tipo : VARCHAR(30)
+  * estado : VARCHAR(20)
+  error_mensaje : TEXT
+  fecha_envio : TIMESTAMP
 }
 
-entity "servicio" as servicio {
-  * id : bigint
+' ============================================================================
+' Mascotas y salud
+' ============================================================================
+entity "especie" as esp {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
-  duracion_minutos : integer
-  precio_base : numeric
-  imagen_url : varchar
-  activo : boolean
-  categoria : varchar
+  * nombre : VARCHAR(50) <<UQ>>
+  descripcion : TEXT
 }
 
-entity "proveedor_especialidad" as proveedor_especialidad {
-  * id : bigint
+entity "raza" as ra {
+  * id : BIGSERIAL <<PK>>
   --
-  proveedor_id : bigint
-  servicio_id : bigint
-  requiere_certificado : boolean
+  * nombre : VARCHAR(100)
+  * especie_id : BIGINT
+  descripcion : TEXT
 }
 
-entity "sucursal" as sucursal {
-  * id : bigint
+entity "vacuna" as va {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  direccion_id : bigint
-  telefono : varchar
-  email : varchar
-  horario_apertura : time
-  horario_cierre : time
-  latitud : numeric
-  longitud : numeric
-  activa : boolean
+  * nombre : VARCHAR(100) <<UQ>>
+  descripcion : TEXT
+  periodicidad_meses : INTEGER
 }
 
-entity "disponibilidad" as disponibilidad {
-  * id : bigint
+entity "registro_vacunacion" as rv {
+  * id : BIGSERIAL <<PK>>
   --
-  proveedor_id : bigint
-  servicio_id : bigint
-  dia_semana : integer
-  hora_inicio : time
-  hora_fin : time
-  activo : boolean
+  * mascota_id : BIGINT
+  * vacuna_id : BIGINT
+  * fecha_aplicacion : DATE
+  fecha_vencimiento : DATE
+  lote : VARCHAR(50)
+  veterinario : VARCHAR(150)
+  observaciones : TEXT
+  certificado_url : VARCHAR(500)
 }
 
-entity "estado_reserva" as estado_reserva {
-  * id : bigint
+' ============================================================================
+' Clientes y proveedores
+' ============================================================================
+entity "cliente" as cl {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
-  color : varchar
-  icono : varchar
-  orden : integer
+  * persona_id : BIGINT
+  * usuario_id : BIGINT
+  notas : TEXT
 }
 
-entity "reserva" as reserva {
-  * id : bigint
+entity "mascota" as ma {
+  * id : BIGSERIAL <<PK>>
   --
-  codigo : varchar
-  cliente_id : bigint
-  proveedor_id : bigint
-  servicio_id : bigint
-  mascota_id : bigint
-  estado_reserva_id : bigint
-  registro_vacunacion_id : bigint
-  modalidad_entrega : varchar
-  fecha_reserva : timestamp
-  fecha_inicio : timestamp
-  fecha_fin : timestamp
-  hora_inicio : time
-  hora_fin : time
-  latitud : numeric
-  longitud : numeric
-  direccion_referencia : text
-  notas : text
-  precio_total : numeric
-  motivo_rechazo : text
-  respuesta_en : timestamp
+  * nombre : VARCHAR(100)
+  fecha_nacimiento : DATE
+  * genero : CHAR(1)
+  peso : NUMERIC(6,2)
+  color : VARCHAR(50)
+  imagen_url : VARCHAR(500)
+  * especie_id : BIGINT
+  raza_id : BIGINT
+  * cliente_id : BIGINT
 }
 
-entity "promocion" as promocion {
-  * id : bigint
+entity "proveedor" as pr {
+  * id : BIGSERIAL <<PK>>
   --
-  codigo : varchar
-  nombre : varchar
-  descripcion : text
-  tipo_descuento : varchar
-  valor_descuento : numeric
-  fecha_inicio : timestamp
-  fecha_fin : timestamp
-  activa : boolean
-  limite_usos : integer
-  usos_actuales : integer
+  * persona_id : BIGINT
+  * usuario_id : BIGINT
+  empresa : VARCHAR(150)
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  radio_cobertura_km : NUMERIC(5,2)
+  descripcion : TEXT
+  verificado : BOOLEAN
+  calificacion : NUMERIC(3,2)
 }
 
-entity "promocion_local" as promocion_local {
-  * id : bigint
+entity "servicio" as se {
+  * id : BIGSERIAL <<PK>>
   --
-  promocion_id : bigint
-  reserva_id : bigint
-  monto_descuento : numeric
-  fecha_aplicacion : timestamp
+  * nombre : VARCHAR(100) <<UQ>>
+  descripcion : TEXT
+  * duracion_minutos : INTEGER
+  * precio_base : NUMERIC(10,2)
+  imagen_url : VARCHAR(500)
+  activo : BOOLEAN
+  categoria : VARCHAR(50)
 }
 
-entity "pago" as pago {
-  * id : bigint
+entity "proveedor_especialidad" as pre {
+  * id : BIGSERIAL <<PK>>
   --
-  reserva_id : bigint
-  monto : numeric
-  metodo_pago : varchar
-  estado_pago : varchar
-  referencia_transaccion : varchar
-  fecha_pago : timestamp
-  comprobante_url : varchar
-  modalidad_pago : varchar
-  intencion_id : varchar
-  monto_original : numeric
-  descuento_total : numeric
-  estado_sync : varchar
+  * proveedor_id : BIGINT
+  * servicio_id : BIGINT
+  * requiere_certificado : BOOLEAN
 }
 
-entity "vacuna" as vacuna {
-  * id : bigint
+entity "proveedor_servicio" as ps {
+  * id : BIGSERIAL <<PK>>
   --
-  nombre : varchar
-  descripcion : text
-  periodicidad_meses : integer
+  * proveedor_id : BIGINT
+  * nombre : VARCHAR(100)
+  descripcion : TEXT
+  * categoria : VARCHAR(30)
+  * duracion_minutos : INTEGER
+  * precio_base : NUMERIC(10,2)
+  requiere_certificado : BOOLEAN
+  activo : BOOLEAN
 }
 
-entity "registro_vacunacion" as registro_vacunacion {
-  * id : bigint
+entity "proveedor_servicio_modalidad" as psm {
+  * id : BIGSERIAL <<PK>>
   --
-  mascota_id : bigint
-  vacuna_id : bigint
-  fecha_aplicacion : date
-  fecha_vencimiento : date
-  lote : varchar
-  veterinario : varchar
-  observaciones : text
-  certificado_url : varchar
+  * proveedor_servicio_id : BIGINT
+  * modalidad : VARCHAR(30)
+  * costo_adicional : NUMERIC(10,2)
+  activo : BOOLEAN
 }
 
-entity "notificacion" as notificacion {
-  * id : bigint
+entity "disponibilidad" as dis {
+  * id : BIGSERIAL <<PK>>
   --
-  usuario_id : bigint
-  titulo : varchar
-  mensaje : text
-  tipo : varchar
-  leida : boolean
-  fecha_lectura : timestamp
+  * proveedor_id : BIGINT
+  * servicio_id : BIGINT
+  * dia_semana : INTEGER
+  * hora_inicio : TIME
+  * hora_fin : TIME
+  activo : BOOLEAN
 }
 
-entity "bitacora" as bitacora {
-  * id : bigint
+' ============================================================================
+' Reserva, pago y promociones
+' ============================================================================
+entity "reserva" as re {
+  * id : BIGSERIAL <<PK>>
   --
-  usuario_id : bigint
-  accion : varchar
-  entidad : varchar
-  entidad_id : bigint
-  datos_anteriores : text
-  datos_nuevos : text
-  ip_address : varchar
-  user_agent : text
+  * codigo : VARCHAR(20) <<UQ>>
+  * cliente_id : BIGINT
+  proveedor_id : BIGINT
+  * servicio_id : BIGINT
+  * mascota_id : BIGINT
+  * estado_reserva_id : BIGINT
+  fecha_reserva : TIMESTAMP
+  * fecha_inicio : TIMESTAMP
+  fecha_fin : TIMESTAMP
+  * hora_inicio : TIME
+  hora_fin : TIME
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  direccion_referencia : TEXT
+  notas : TEXT
+  * precio_total : NUMERIC(10,2)
+  motivo_rechazo : TEXT
+  respuesta_en : TIMESTAMP
+  modalidad_entrega : VARCHAR(30)
+  registro_vacunacion_id : BIGINT
 }
 
-entity "correo_enviado" as correo_enviado {
-  * id : bigint
+entity "solicitud_reserva" as sr {
+  * id : BIGSERIAL <<PK>>
   --
-  destino : varchar
-  asunto : varchar
-  cuerpo : text
-  tipo : varchar
-  estado : varchar
-  error_mensaje : text
-  fecha_envio : timestamp
+  * reserva_id : BIGINT
+  * codigo : VARCHAR(20)
+  * cliente_id : BIGINT
+  cliente_nombre : VARCHAR(255)
+  * proveedor_id : BIGINT
+  proveedor_empresa : VARCHAR(150)
+  * servicio_id : BIGINT
+  servicio_nombre : VARCHAR(100)
+  mascota_id : BIGINT
+  mascota_nombre : VARCHAR(100)
+  fecha_inicio : TIMESTAMP
+  hora_inicio : TIME
+  precio_total : NUMERIC(10,2)
+  modalidad_entrega : VARCHAR(30)
+  * estado : VARCHAR(20)
+  motivo_rechazo : TEXT
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  direccion_referencia : TEXT
+  registro_vacunacion_id : BIGINT
+  creada_en : TIMESTAMP
+  respondida_en : TIMESTAMP
 }
 
-entity "solicitud_reserva" as solicitud_reserva {
-  * id : bigint
+entity "pago" as pa {
+  * id : BIGSERIAL <<PK>>
   --
-  reserva_id : bigint
-  codigo : varchar
-  cliente_id : bigint
-  cliente_nombre : varchar
-  proveedor_id : bigint
-  proveedor_empresa : varchar
-  servicio_id : bigint
-  servicio_nombre : varchar
-  mascota_id : bigint
-  mascota_nombre : varchar
-  fecha_inicio : timestamp
-  hora_inicio : time
-  precio_total : numeric
-  modalidad_entrega : varchar
-  estado : varchar
-  motivo_rechazo : text
-  registro_vacunacion_id : bigint
-  creada_en : timestamp
-  respondida_en : timestamp
+  * reserva_id : BIGINT
+  * monto : NUMERIC(10,2)
+  * metodo_pago : VARCHAR(30)
+  * estado_pago : VARCHAR(20)
+  referencia_transaccion : VARCHAR(100)
+  fecha_pago : TIMESTAMP
+  comprobante_url : VARCHAR(500)
+  modalidad_pago : VARCHAR(20)
+  intencion_id : VARCHAR(100)
+  monto_original : NUMERIC(10,2)
+  descuento_total : NUMERIC(10,2)
+  estado_sync : VARCHAR(20)
+  descuento_id : BIGINT
+  descuento_codigo : VARCHAR(30)
+  descuento_nombre : VARCHAR(100)
+  descuento_tipo : VARCHAR(20)
+  descuento_servicio_id : BIGINT
 }
 
-entity "proveedor_servicio" as proveedor_servicio {
-  * id : bigint
+entity "promocion" as prm {
+  * id : BIGSERIAL <<PK>>
   --
-  proveedor_id : bigint
-  servicio_id : bigint
-  precio : numeric
-  duracion_minutos : integer
-  activo : boolean
+  * codigo : VARCHAR(30) <<UQ>>
+  * nombre : VARCHAR(100)
+  descripcion : TEXT
+  * tipo_descuento : VARCHAR(20)
+  * valor_descuento : NUMERIC(10,2)
+  * fecha_inicio : TIMESTAMP
+  * fecha_fin : TIMESTAMP
+  activa : BOOLEAN
+  limite_usos : INTEGER
+  * usos_actuales : INTEGER
+  proveedor_id : BIGINT
+  servicio_id : BIGINT
 }
 
-entity "proveedor_servicio_modalidad" as proveedor_servicio_modalidad {
-  * id : bigint
+entity "promocion_local" as pl {
+  * id : BIGSERIAL <<PK>>
   --
-  proveedor_servicio_id : bigint
-  modalidad : varchar
-  costo_adicional : numeric
+  * promocion_id : BIGINT
+  * reserva_id : BIGINT
+  * monto_descuento : NUMERIC(10,2)
+  fecha_aplicacion : TIMESTAMP
 }
 
-entity "evento_procesado" as evento_procesado {
-  * event_id : varchar
+' ============================================================================
+' Saga / eventos / outbox
+' ============================================================================
+entity "saga_estado" as sge {
+  * id : BIGSERIAL <<PK>>
   --
-  event_type : varchar
-  service : varchar
-  aggregate_id : bigint
-  payload : text
-  procesado_en : timestamp
+  * reserva_id : BIGINT <<UQ>>
+  * codigo_reserva : VARCHAR(20)
+  * estado : VARCHAR(30)
+  paso_actual : VARCHAR(255)
+  motivo : TEXT
+  ultimo_evento_id : VARCHAR(64)
+  creada_en : TIMESTAMP
+  actualizada_en : TIMESTAMP
 }
 
-entity "outbox" as outbox {
-  * id : bigint
+entity "evento_procesado" as ev {
+  * event_id : VARCHAR(64) <<PK>>
   --
-  event_id : varchar
-  aggregate_type : varchar
-  aggregate_id : bigint
-  event_type : varchar
-  topic : varchar
-  payload : text
-  status : varchar
-  retry_count : integer
-  last_error : text
-  created_at : timestamp
-  processed_at : timestamp
-  next_retry_at : timestamp
+  * event_type : VARCHAR(100)
+  * service : VARCHAR(50)
+  aggregate_id : BIGINT
+  payload : TEXT
+  procesado_en : TIMESTAMP
 }
 
-entity "saga_estado" as saga_estado {
-  * id : bigint
+entity "outbox" as ob {
+  * id : BIGSERIAL <<PK>>
   --
-  reserva_id : bigint
-  codigo_reserva : varchar
-  estado : varchar
-  paso_actual : varchar
-  motivo : text
-  ultimo_evento_id : varchar
-  creada_en : timestamp
-  actualizada_en : timestamp
+  * event_id : VARCHAR(64)
+  * aggregate_type : VARCHAR(50)
+  aggregate_id : BIGINT
+  * event_type : VARCHAR(100)
+  * topic : VARCHAR(100)
+  * payload : TEXT
+  * status : VARCHAR(20)
+  * retry_count : INTEGER
+  last_error : TEXT
+  created_at : TIMESTAMP
+  processed_at : TIMESTAMP
+  next_retry_at : TIMESTAMP
 }
 
-persona }|..|| direccion
-usuario }|..|| persona
-usuario_rol }|..|| usuario
-usuario_rol }|..|| rol
-submenu }|..|| menu
-permiso }|..|| rol
-permiso }|..|| menu
-permiso }|..|| submenu
-estado }|..|| ciudad
-direccion }|..|| ciudad
-direccion }|..|| estado
-cliente }|..|| persona
-cliente }|..|| usuario
-proveedor }|..|| persona
-proveedor }|..|| usuario
-raza }|..|| especie
-mascota }|..|| cliente
-mascota }|..|| especie
-mascota }|..|| raza
-proveedor_especialidad }|..|| proveedor
-proveedor_especialidad }|..|| servicio
-sucursal }|..|| direccion
-disponibilidad }|..|| proveedor
-disponibilidad }|..|| servicio
-reserva }|..|| cliente
-reserva }|..|| proveedor
-reserva }|..|| servicio
-reserva }|..|| mascota
-reserva }|..|| estado_reserva
-promocion_local }|..|| promocion
-promocion_local }|..|| reserva
-pago }|..|| reserva
-notificacion }|..|| usuario
-registro_vacunacion }|..|| mascota
-registro_vacunacion }|..|| vacuna
+' ============================================================================
+' Relaciones
+' ============================================================================
+es }o--|| ci : "ciudad_id"
+di }o--|| ci : "ciudad_id"
+di }o--o| es : "estado_id"
+pe }o--o| di : "direccion_id"
+us ||--|| pe : "persona_id"
+ur }o--|| us : "usuario_id"
+ur }o--|| ro : "rol_id"
+su }o--|| me : "menu_id"
+pe2 }o--|| ro : "rol_id"
+pe2 }o--|| me : "menu_id"
+pe2 }o--o| su : "submenu_id"
+su2 }o--o| di : "direccion_id"
+no }o--|| us : "usuario_id"
+bi }o--o| us : "usuario_id"
 
-' Saga orquestada (microservicios + orquestador)
-solicitud_reserva }|..|| reserva
-solicitud_reserva }|..|| proveedor
-solicitud_reserva }|..|| servicio
-proveedor_servicio }|..|| proveedor
-proveedor_servicio }|..|| servicio
-proveedor_servicio_modalidad }|..|| proveedor_servicio
-saga_estado }|..|| reserva
+ra }o--|| esp : "especie_id"
+rv }o--|| ma : "mascota_id"
+rv }o--|| va : "vacuna_id"
+ma }o--|| esp : "especie_id"
+ma }o--o| ra : "raza_id"
+ma }o--|| cl : "cliente_id"
+cl ||--|| pe : "persona_id"
+cl ||--|| us : "usuario_id"
+
+pr ||--|| pe : "persona_id"
+pr ||--|| us : "usuario_id"
+pre }o--|| pr : "proveedor_id"
+pre }o--|| se : "servicio_id"
+ps }o--|| pr : "proveedor_id"
+psm }o--|| ps : "proveedor_servicio_id"
+dis }o--|| pr : "proveedor_id"
+dis }o--|| se : "servicio_id"
+prm }o--o| pr : "proveedor_id"
+prm }o--o| ps : "servicio_id"
+
+re }o--|| cl : "cliente_id"
+re }o--o| pr : "proveedor_id"
+re }o--|| se : "servicio_id"
+re }o--|| ma : "mascota_id"
+re }o--|| er : "estado_reserva_id"
+re }o--o| rv : "registro_vacunacion_id"
+sr ||--|| re : "reserva_id"
+sr }o--|| pr : "proveedor_id"
+sr }o--o| rv : "registro_vacunacion_id"
+pa }o--|| re : "reserva_id"
+pl }o--|| prm : "promocion_id"
+pl }o--|| re : "reserva_id"
+sge }o--|| re : "reserva_id"
+
+legend right
+  = petcaredb =
+  backend (8080) + reservation-service (8081) +
+  payment-service (8083) + saga-orchestrator (8085).
+  Cada servicio toca sus propias tablas.
+  Las columnas created_at, updated_at, deleted y version
+  se omiten por ser uniformes (presentes en todas las tablas).
+endlegend
+
 @enduml

@@ -1,8 +1,10 @@
 package bo.capital.tec.pet.modules.proveedor;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.common.client.ReservationInternalClient;
 import bo.capital.tec.pet.modules.proveedor.command.NotificarProveedorCommand;
 import bo.capital.tec.pet.modules.proveedor.dto.ResponderSolicitudRequestDTO;
+import bo.capital.tec.pet.modules.proveedor.dto.ReservaUbicacionDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.SolicitudReservaResponseDTO;
 import bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva;
 import bo.capital.tec.pet.modules.proveedor.event.ReservaAceptadaEvent;
@@ -21,6 +23,8 @@ import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,6 +35,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -38,6 +44,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "test.saga.comando.notificar-proveedor",
         "test.reserva.aceptada",
         "test.reserva.rechazada"})
+@Sql(scripts = "/data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class ProveedorFlowIntegrationTest {
 
     @Autowired
@@ -58,11 +65,21 @@ class ProveedorFlowIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @MockitoBean
+    private ReservationInternalClient reservationInternalClient;
+
     @BeforeEach
     void limpiarBase() {
         jdbcTemplate.update("DELETE FROM evento_procesado");
         jdbcTemplate.update("DELETE FROM solicitud_reserva");
         eventCollector.clear();
+        when(reservationInternalClient.getUbicacionReserva(anyLong()))
+                .thenReturn(ReservaUbicacionDTO.builder()
+                        .reservaId(1L)
+                        .latitud(new BigDecimal("-16.5"))
+                        .longitud(new BigDecimal("-68.15"))
+                        .direccionReferencia("Av. Principal #123")
+                        .build());
     }
 
     private NotificarProveedorCommand buildComando(Long proveedorId) {

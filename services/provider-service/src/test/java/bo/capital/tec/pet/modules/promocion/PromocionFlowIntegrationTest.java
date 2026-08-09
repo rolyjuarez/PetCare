@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @SpringBootTest
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1)
+@Sql(scripts = "/data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 class PromocionFlowIntegrationTest {
 
     @Autowired
@@ -148,5 +150,71 @@ class PromocionFlowIntegrationTest {
                 .isInstanceOf(EntityNotFoundException.class);
         PagedResponse<PromocionSummaryDTO> pagina = promocionService.listar(1L, 0, 20);
         assertThat(pagina.getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void crearPromocionGlobalSinProveedor() {
+        PromocionResponseDTO creada = promocionService.crearGlobal(buildDTO("GLOBAL-10", null));
+
+        assertThat(creada.getId()).isNotNull();
+        assertThat(creada.getProveedorId()).isNull();
+        assertThat(creada.getCodigo()).isEqualTo("GLOBAL-10");
+    }
+
+    @Test
+    void listarTodasIncluyeGlobalesYDeProveedor() {
+        promocionService.crearGlobal(buildDTO("GLOBAL-15", null));
+
+        PagedResponse<PromocionSummaryDTO> todas = promocionService.listarTodas(0, 20);
+
+        assertThat(todas.getTotalElements()).isEqualTo(4);
+        assertThat(todas.getContent())
+                .extracting(PromocionSummaryDTO::getCodigo)
+                .contains("GLOBAL-15", "TEST-10", "TEST-FIX", "TEST-EXP");
+    }
+
+    @Test
+    void listarActivasGlobalesSoloDevuelveGlobalesVigentes() {
+        assertThat(promocionService.listarActivasGlobales()).isEmpty();
+
+        promocionService.crearGlobal(buildDTO("GLOBAL-20", null));
+
+        List<PromocionSummaryDTO> activas = promocionService.listarActivasGlobales();
+        assertThat(activas).hasSize(1);
+        assertThat(activas.get(0).getCodigo()).isEqualTo("GLOBAL-20");
+        assertThat(activas.get(0).getProveedorId()).isNull();
+    }
+
+    @Test
+    void actualizarYEliminarGlobal() {
+        PromocionResponseDTO creada = promocionService.crearGlobal(buildDTO("GLOBAL-25", null));
+
+        PromocionRequestDTO cambios = buildDTO("GLOBAL-25", null);
+        cambios.setNombre("Global 30%");
+        cambios.setValorDescuento(new BigDecimal("30.00"));
+        PromocionResponseDTO actualizada = promocionService.actualizarGlobal(creada.getId(), cambios);
+
+        assertThat(actualizada.getNombre()).isEqualTo("Global 30%");
+        assertThat(actualizada.getValorDescuento()).isEqualByComparingTo("30.00");
+
+        promocionService.eliminarGlobal(creada.getId());
+        assertThatThrownBy(() -> promocionService.obtenerPorId(creada.getId()))
+                .isInstanceOf(EntityNotFoundException.class);
+    }
+
+    @Test
+    void notificarClientesDevuelveCantidadDeCorreos() {
+        int enviados = promocionService.notificarClientes(1L);
+
+        assertThat(enviados).isEqualTo(1);
+    }
+
+    @Test
+    void obtenerPorIdDevuelveDetalle() {
+        PromocionResponseDTO detalle = promocionService.obtenerPorId(1L);
+
+        assertThat(detalle.getCodigo()).isEqualTo("TEST-10");
+        assertThat(detalle.getServicioNombre()).isEqualTo("Consulta general");
+        assertThat(detalle.getUsosActuales()).isZero();
     }
 }

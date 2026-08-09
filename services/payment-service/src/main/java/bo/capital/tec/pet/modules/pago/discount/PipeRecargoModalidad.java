@@ -1,6 +1,6 @@
 package bo.capital.tec.pet.modules.pago.discount;
 
-import bo.capital.tec.pet.modules.pago.mapper.PagoCatalogMapper;
+import bo.capital.tec.pet.common.client.PagoProviderClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PipeRecargoModalidad extends AbstractDescuentoPipe {
 
-    private final PagoCatalogMapper catalogMapper;
+    private final PagoProviderClient providerClient;
 
     @Override
     public void procesar(PagoContext context) {
@@ -22,7 +22,7 @@ public class PipeRecargoModalidad extends AbstractDescuentoPipe {
         String modalidad = context.getReserva() != null ? context.getReserva().getModalidadEntrega() : null;
         if (servicioId != null && modalidad != null
                 && !"EN_ESTABLECIMIENTO".equals(modalidad)) {
-            BigDecimal recargo = catalogMapper.selectModalidadCostoAdicional(servicioId, modalidad);
+            BigDecimal recargo = providerClient.getCostoAdicionalModalidad(servicioId, modalidad);
             if (recargo != null && recargo.compareTo(BigDecimal.ZERO) > 0) {
                 context.aplicarRecargo(recargo);
                 log.debug("Recargo por modalidad {}: +{}", modalidad, recargo);

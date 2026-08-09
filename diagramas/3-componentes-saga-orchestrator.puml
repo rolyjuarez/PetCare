@@ -32,7 +32,7 @@ ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "saga_estado, evento_pr
 ' Componentes internos
 ' ---------------------------------------------------------------------------
 Container_Boundary(sa, "saga-orchestrator (8085)") {
-    Component(sa_domain, "domain/model", "POJOs", "Eventos de dominio, comandos, EstadoSaga, SagaEstado")
+    Component(sa_domain, "domain/model", "POJOs", "Eventos de dominio, comandos (incl. LiberarDescuentoCommand), EstadoSaga, SagaEstado")
     Component(sa_portin, "domain/port/in", "Interfaz", "SagaCoordinator")
     Component(sa_portout, "domain/port/out", "Interfaces", "SagaEstadoRepository, SagaCommandPublisher, EventoProcesadoRepository")
 
@@ -66,7 +66,7 @@ Rel(kafka, sa_reserva_in, "Consume eventos de dominio", "reserva.*, pago.*")
 Rel(sa_pub, kafka, "Publica comandos", "saga.comando.*")
 Rel(sa_pub, rs, "Confirmar/Rechazar/CancelarReservaCommand", "Kafka")
 Rel(sa_pub, ps, "NotificarProveedorCommand", "Kafka")
-Rel(sa_pub, ms, "CrearPagoCommand", "Kafka")
+Rel(sa_pub, ms, "CrearPagoCommand / LiberarDescuentoCommand", "Kafka")
 Rel(sa_saga_repo, db, "Persiste saga_estado", "JDBC / MyBatis")
 Rel(sa_ep_repo, db, "Persiste evento_procesado", "JDBC / MyBatis")
 
@@ -74,8 +74,9 @@ note bottom of sa_app
   Máquina de estados por reserva (tabla saga_estado):
   INICIADA -> PROVEEDOR_NOTIFICADO -> RESERVA_ACEPTADA ->
   RESERVA_CONFIRMADA -> PAGO_SOLICITADO -> COMPLETADA.
-  Fallos: PAGO_FALLIDO -> CancelarReservaCommand -> CANCELADA;
-  rechazo del proveedor -> RECHAZADA; reembolso -> PAGO_REEMBOLSADO.
+  Fallos: PAGO_FALLIDO -> CancelarReservaCommand + LiberarDescuentoCommand
+  -> CANCELADA; rechazo del proveedor -> RECHAZADA; reembolso ->
+  PAGO_REEMBOLSADO + LiberarDescuentoCommand.
 end note
 
 LAYOUT_WITH_LEGEND()

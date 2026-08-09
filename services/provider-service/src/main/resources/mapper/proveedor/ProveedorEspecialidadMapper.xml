@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.proveedor.mapper.ProveedorEspecialidadMapper">
+    <sql id="baseColumns">
+        pe.id, pe.proveedor_id, pe.servicio_id, pe.requiere_certificado, pe.created_at, pe.updated_at, pe.deleted, pe.version
+    </sql>
+    <sql id="table">proveedor_especialidad pe</sql>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.proveedor.entity.ProveedorEspecialidad">
+        INSERT INTO proveedor_especialidad (proveedor_id, servicio_id, requiere_certificado)
+        VALUES (#{proveedorId}, #{servicioId}, #{requiereCertificado})
+    </insert>
+
+    <resultMap id="especialidadServicioResultMap" type="bo.capital.tec.pet.modules.proveedor.entity.ProveedorEspecialidad">
+        <id property="id" column="id"/>
+        <result property="proveedorId" column="proveedor_id"/>
+        <result property="servicioId" column="servicio_id"/>
+        <result property="requiereCertificado" column="requiere_certificado"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <select id="selectByProveedorId" resultMap="especialidadServicioResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE pe.proveedor_id = #{proveedorId} AND pe.deleted = FALSE
+    </select>
+
+    <select id="selectByProveedorYServicio" resultMap="especialidadServicioResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE pe.proveedor_id = #{proveedorId} AND pe.servicio_id = #{servicioId} AND pe.deleted = FALSE
+    </select>
+
+    <update id="updateRequiereCertificado">
+        UPDATE proveedor_especialidad
+        SET requiere_certificado = #{requiere}, updated_at = NOW(), version = version + 1
+        WHERE proveedor_id = #{proveedorId} AND servicio_id = #{servicioId} AND deleted = FALSE
+    </update>
+
+    <update id="deleteByProveedorId">
+        UPDATE proveedor_especialidad SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE proveedor_id = #{proveedorId} AND deleted = FALSE
+    </update>
+</mapper>

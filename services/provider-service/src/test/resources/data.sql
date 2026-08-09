@@ -4,6 +4,8 @@
 DELETE FROM evento_procesado;
 DELETE FROM solicitud_reserva;
 DELETE FROM promocion;
+DELETE FROM disponibilidad;
+DELETE FROM proveedor_servicio_modalidad;
 DELETE FROM proveedor_servicio;
 DELETE FROM proveedor_especialidad;
 DELETE FROM proveedor;
@@ -12,12 +14,23 @@ DELETE FROM usuario_rol;
 DELETE FROM usuario;
 DELETE FROM rol;
 DELETE FROM persona;
+DELETE FROM direccion;
+DELETE FROM ciudad;
+DELETE FROM estado;
+
+INSERT INTO estado (id, nombre) VALUES (1, 'La Paz');
+INSERT INTO ciudad (id, nombre) VALUES (1, 'La Paz');
+
+INSERT INTO direccion (id, calle, numero, ciudad_id, estado_id, referencia) VALUES
+    (1, 'Av. Arce', '100', 1, 1, 'Oficina 5');
 
 INSERT INTO persona (id, nombre, primer_apellido, ci, telefono, email) VALUES
     (1, 'Juan', 'Perez', '123456', '77711122', 'juan@petcare.bo'),
     (2, 'Ana', 'Gomez', '654321', '77722233', 'ana@petcare.bo'),
     (3, 'Maria', 'Lopez', '111222', '77733344', 'maria@petcare.bo'),
     (4, 'Carlos', 'Torres', '333444', '77755566', 'carlos@petcare.bo');
+
+UPDATE persona SET direccion_id = 1 WHERE id = 3;
 
 INSERT INTO rol (id, nombre) VALUES (1, 'ADMINISTRADOR'), (2, 'CLIENTE'), (3, 'PROVEEDOR');
 
@@ -27,7 +40,7 @@ INSERT INTO usuario (id, username, password, persona_id) VALUES
     (3, 'maria', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 3),
     (4, 'carlos', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', 4);
 
-INSERT INTO usuario_rol (usuario_id, rol_id) VALUES (1, 1), (2, 2), (3, 3), (4, 3);
+INSERT INTO usuario_rol (id, usuario_id, rol_id) VALUES (1, 1, 1), (2, 2, 2), (3, 3, 3), (4, 4, 3);
 
 INSERT INTO proveedor (id, persona_id, usuario_id, empresa) VALUES
     (1, 3, 3, 'VetPet SRL'),
@@ -37,12 +50,20 @@ INSERT INTO servicio (id, nombre, duracion_minutos, precio_base) VALUES
     (1, 'Consulta general', 30, 80.00),
     (2, 'Peluqueria', 60, 150.00);
 
-INSERT INTO proveedor_especialidad (proveedor_id, servicio_id) VALUES
-    (1, 1), (1, 2), (2, 1);
+INSERT INTO proveedor_especialidad (id, proveedor_id, servicio_id) VALUES
+    (1, 1, 1), (2, 1, 2), (3, 2, 1);
 
 INSERT INTO proveedor_servicio (id, proveedor_id, nombre, categoria, precio_base) VALUES
     (1, 1, 'Consulta general', 'VETERINARIA', 80.00),
     (2, 1, 'Peluqueria', 'PELUQUERIA', 150.00);
+
+INSERT INTO proveedor_servicio_modalidad (id, proveedor_servicio_id, modalidad, costo_adicional) VALUES
+    (1, 1, 'DOMICILIO', 30.00),
+    (2, 2, 'PRESENCIAL', 0.00);
+
+INSERT INTO disponibilidad (id, proveedor_id, servicio_id, dia_semana, hora_inicio, hora_fin) VALUES
+    (1, 1, 1, 1, '08:00', '12:00'),
+    (2, 1, 1, 3, '14:00', '18:00');
 
 INSERT INTO promocion (id, proveedor_id, servicio_id, codigo, nombre, descripcion, tipo_descuento, valor_descuento,
                        fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales) VALUES
@@ -54,3 +75,12 @@ INSERT INTO promocion (id, proveedor_id, servicio_id, codigo, nombre, descripcio
      DATEADD('DAY', -30, NOW()), DATEADD('DAY', -1, NOW()), TRUE, NULL, 0);
 
 ALTER TABLE promocion ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE disponibilidad ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE proveedor_servicio_modalidad ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE proveedor_servicio ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE proveedor_especialidad ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE proveedor ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE persona ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE usuario ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE usuario_rol ALTER COLUMN id RESTART WITH 100;
+ALTER TABLE direccion ALTER COLUMN id RESTART WITH 100;

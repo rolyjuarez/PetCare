@@ -1,11 +1,13 @@
 package bo.capital.tec.pet.modules.pago;
 
+import bo.capital.tec.pet.common.client.PagoProviderClient;
 import bo.capital.tec.pet.common.kafka.IdempotencyService;
 import bo.capital.tec.pet.modules.pago.command.CrearPagoCommand;
 import bo.capital.tec.pet.modules.pago.command.LiberarDescuentoCommand;
 import bo.capital.tec.pet.modules.pago.dto.DatosTarjetaDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
+import bo.capital.tec.pet.modules.pago.dto.PromocionInfoDTO;
 import bo.capital.tec.pet.modules.pago.entity.Pago;
 import bo.capital.tec.pet.modules.pago.event.PagoFallidoEvent;
 import bo.capital.tec.pet.modules.pago.event.PagoProcesadoEvent;
@@ -24,6 +26,7 @@ import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,6 +36,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -65,11 +71,47 @@ class PagoFlowIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @MockitoBean
+    private PagoProviderClient providerClient;
+
     @BeforeEach
     void limpiarBase() {
         jdbcTemplate.update("DELETE FROM evento_procesado");
         jdbcTemplate.update("DELETE FROM pago");
         eventCollector.clear();
+        jdbcTemplate.update("UPDATE promocion SET usos_actuales = 0");
+        stubPromocion(1L, 1L, "PROMO-10", "PERCENTAGE", "10.00");
+        stubPromocion(2L, 2L, "PROMO-20", "FIXED", "20.00");
+        when(providerClient.getCostoAdicionalModalidad(1L, "DOMICILIO"))
+                .thenReturn(new BigDecimal("20.00"));
+        when(providerClient.getCostoAdicionalModalidad(1L, "EN_ESTABLECIMIENTO"))
+                .thenReturn(BigDecimal.ZERO);
+        when(providerClient.getCostoAdicionalModalidad(2L, "EN_ESTABLECIMIENTO"))
+                .thenReturn(BigDecimal.ZERO);
+        doAnswer(inv -> {
+            jdbcTemplate.update("UPDATE promocion SET usos_actuales = usos_actuales + 1 WHERE id = ?",
+                    (Long) inv.getArgument(0));
+            return null;
+        }).when(providerClient).incrementarUsosPromocion(anyLong());
+        doAnswer(inv -> {
+            jdbcTemplate.update(
+                    "UPDATE promocion SET usos_actuales = GREATEST(usos_actuales - 1, 0) WHERE id = ?",
+                    (Long) inv.getArgument(0));
+            return null;
+        }).when(providerClient).decrementarUsosPromocion(anyLong());
+    }
+
+    private void stubPromocion(Long id, Long servicioId, String codigo, String tipo, String valor) {
+        when(providerClient.getPromocionActiva(1L, servicioId)).thenReturn(
+                PromocionInfoDTO.builder()
+                        .id(id)
+                        .codigo(codigo)
+                        .proveedorId(1L)
+                        .servicioId(servicioId)
+                        .nombre(codigo)
+                        .tipo(tipo)
+                        .valor(new BigDecimal(valor))
+                        .build());
     }
 
     private CrearPagoCommand buildComando(Long reservaId, String modalidad) {

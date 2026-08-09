@@ -12,43 +12,6 @@
         WHERE c.id = #{clienteId} AND c.deleted = FALSE AND p.deleted = FALSE
     </select>
 
-    <select id="selectProveedor" resultType="bo.capital.tec.pet.modules.reserva.dto.ProveedorInfoDTO">
-        SELECT pr.id,
-               CONCAT_WS(' ', p.nombre, p.primer_apellido) AS nombre,
-               p.telefono,
-               pr.empresa
-        FROM proveedor pr
-        JOIN persona p ON p.id = pr.persona_id
-        WHERE pr.id = #{proveedorId} AND pr.deleted = FALSE AND p.deleted = FALSE
-    </select>
-
-    <select id="selectServicio" resultType="bo.capital.tec.pet.modules.reserva.dto.ServicioInfoDTO">
-        SELECT id, nombre, duracion_minutos AS duracionMinutos, precio_base AS precioBase,
-               categoria, requiere_certificado AS requiereCertificado
-        FROM proveedor_servicio
-        WHERE id = #{servicioId} AND deleted = FALSE AND activo = TRUE
-    </select>
-
-    <select id="selectModalidadesByServicio" resultType="bo.capital.tec.pet.modules.reserva.dto.ModalidadInfoDTO">
-        SELECT m.id, m.modalidad, m.costo_adicional AS costoAdicional
-        FROM proveedor_servicio_modalidad m
-        JOIN proveedor_servicio ps ON ps.id = m.proveedor_servicio_id
-            AND ps.deleted = FALSE AND ps.activo = TRUE
-        WHERE m.proveedor_servicio_id = #{servicioId}
-          AND m.deleted = FALSE AND m.activo = TRUE
-        ORDER BY m.modalidad
-    </select>
-
-    <select id="selectModalidadValida" resultType="boolean">
-        SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
-        FROM proveedor_servicio_modalidad m
-        JOIN proveedor_servicio ps ON ps.id = m.proveedor_servicio_id
-            AND ps.deleted = FALSE AND ps.activo = TRUE
-        WHERE m.proveedor_servicio_id = #{servicioId}
-          AND m.modalidad = #{modalidad}
-          AND m.deleted = FALSE AND m.activo = TRUE
-    </select>
-
     <select id="selectMascota" resultType="bo.capital.tec.pet.modules.reserva.dto.MascotaInfoDTO">
         SELECT m.id,
                m.nombre,

@@ -9,7 +9,7 @@ spring:
   profiles:
     active: dev
   datasource:
-    url: jdbc:postgresql://localhost:5432/petcaredb
+    url: jdbc:postgresql://localhost:5432/petcaredb_provider
     username: postgres
     password: 123qwe
     driver-class-name: org.postgresql.Driver
@@ -35,6 +35,9 @@ jwt:
   refresh-expiration: 604800000
 
 app:
+  microservices:
+    reservation:
+      base-url: ${RESERVATION_SERVICE_URL:http://localhost:8081}
   kafka:
     bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9094}
     group-id: provider-service

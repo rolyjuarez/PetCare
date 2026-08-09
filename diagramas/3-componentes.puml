@@ -29,7 +29,7 @@ Person(proveedor, "Proveedor", "Responde solicitudes de reserva")
 ' ---------------------------------------------------------------------------
 ' Kafka y base de datos (compartidos)
 ' ---------------------------------------------------------------------------
-ContainerQueue(kafka, "Kafka", "Topics", "reserva.creada, reserva.aceptada, reserva.rechazada, reserva.confirmada, reserva.cancelada, pago.completado, pago.fallido, pago.reembolsado, saga.comando.*, saga.dlt.v1")
+ContainerQueue(kafka, "Kafka", "Topics", "reserva.creada, reserva.aceptada, reserva.rechazada, reserva.confirmada, reserva.cancelada, pago.completado, pago.fallido, pago.reembolsado, saga.comando.notificar-proveedor, saga.comando.confirmar/rechazar/cancelar-reserva, saga.comando.crear-pago, saga.comando.liberar-descuento, saga.dlt.v1")
 ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "reserva, pago, solicitud_reserva, saga_estado, evento_procesado, catálogos")
 
 ' ---------------------------------------------------------------------------
@@ -70,13 +70,19 @@ Container_Boundary(rs, "reservation-service (8081)") {
 ' ---------------------------------------------------------------------------
 Container_Boundary(ps, "provider-service (8082)") {
     Component(ps_consumer, "NotificarProveedorCommandConsumer", "Kafka listener", "Recibe el comando y crea las solicitudes PENDIENTE")
-    Component(ps_svc, "ProveedorService / ProveedorServiceImpl", "Service", "Crea solicitudes, acepta y rechaza")
+    Component(ps_svc, "ProveedorService / ProveedorCrudService / DisponibilidadService / ProveedorServicioService", "Services", "Solicitudes, CRUD de proveedor, disponibilidad y servicios propios")
     Component(ps_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica ReservaAceptadaEvent, ReservaRechazadaEvent")
-    Component(ps_api, "SolicitudReservaController", "Spring MVC", "El proveedor acepta/rechaza vía REST")
+    Component(ps_api, "ProveedorController / SolicitudReservaController / DisponibilidadController / ProveedorServicioController", "Spring MVC", "CRUD, disponibilidad, servicios y aceptar/rechazar vía REST")
+    Component(ps_promo, "PromocionService + PromocionesController", "Spring MVC + Service", "Promociones propias y globales; expone catálogo /interna para payment")
+    Component(ps_interna, "CatalogoInternoController", "Spring MVC", "Endpoints /interna/** para reservation y payment")
+    Component(ps_rs, "ReservationInternalClient", "HTTP client", "Consulta vacuna, ubicación y has-reservas a reservation-service")
+    Component(ps_idem, "IdempotencyService", "MyBatis", "Registra command_id en evento_procesado")
 
     Rel(ps_consumer, ps_svc, "Crea solicitudes")
-    Rel(ps_api, ps_svc, "Acepta / rechaza")
+    Rel(ps_api, ps_svc, "Acepta / rechaza y gestiona catálogo")
     Rel(ps_svc, ps_pub, "Publica eventos de aceptación/rechazo")
+    Rel(ps_svc, ps_rs, "Valida datos contra reservation-service")
+    Rel(ps_consumer, ps_idem, "Verifica/registra duplicados")
 }
 
 ' ---------------------------------------------------------------------------
@@ -84,8 +90,8 @@ Container_Boundary(ps, "provider-service (8082)") {
 ' ---------------------------------------------------------------------------
 Container_Boundary(ms, "payment-service (8083)") {
     Component(ms_consumer, "CrearPagoCommandConsumer", "Kafka listener", "Recibe el comando y crea el pago (PENDIENTE)")
-    Component(ms_svc, "PagoService / PagoServiceImpl", "Service", "Crea, procesa y reembolsa pagos")
-    Component(ms_pasarela, "PasarelaSimuladaService", "Mock", "Simula la pasarela de pago en desarrollo")
+    Component(ms_lib, "LiberarDescuentoCommandConsumer", "Kafka listener", "Revierte el cupo de la promoción por compensación")
+    Component(ms_svc, "PagoService / PagoServiceImpl", "Service", "Crea, procesa y reembolsa pagos; aplica descuentos")
     Component(ms_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica PagoProcesadoEvent, PagoFallidoEvent, PagoReembolsadoEvent")
     Component(ms_idem, "IdempotencyService", "MyBatis", "Registra command_id en evento_procesado")
 
@@ -125,14 +131,23 @@ Rel(kafka, sa_in, "18. Consume el resultado", "pago.*")
 Rel(sa_out, kafka, "19. CancelarReservaCommand (si pago fallido)", "saga.comando.cancelar-reserva")
 Rel(kafka, rs_consumer, "20. Consume el comando de compensación", "saga.comando.cancelar-reserva")
 Rel(rs_pub, kafka, "21. ReservaCanceladaEvent", "reserva.cancelada")
+Rel(sa_out, kafka, "22. LiberarDescuentoCommand (si pago fallido/reembolsado)", "saga.comando.liberar-descuento")
+Rel(kafka, ms_lib, "23. Revierte el cupo de la promoción", "saga.comando.liberar-descuento")
+
+' ---------------------------------------------------------------------------
+' REST entre microservicios (catálogo interno)
+' ---------------------------------------------------------------------------
+Rel(rs_api, ps_interna, "Obtiene proveedor, servicio, modalidades y disponibilidad", "HTTP /interna/**")
+Rel(ps_rs, rs_api, "Obtiene vacuna, ubicación y has-reservas", "HTTP /interna/**")
+Rel(ms_svc, ps_interna, "Obtiene promoción activa, usos y costo adicional", "HTTP /interna/**")
 
 ' ---------------------------------------------------------------------------
 ' Persistencia
 ' ---------------------------------------------------------------------------
 Rel(sa_out, db, "Persiste saga_estado + evento_procesado", "JDBC / MyBatis")
 Rel(rs_api, db, "Persiste reserva y notificaciones", "JDBC / MyBatis")
-Rel(ps_svc, db, "Persiste solicitud_reserva", "JDBC / MyBatis")
-Rel(ms_svc, db, "Persiste pago", "JDBC / MyBatis")
+Rel(ps_svc, db, "Persiste proveedor, solicitud_reserva, disponibilidad y promociones", "JDBC / MyBatis")
+Rel(ms_svc, db, "Persiste pago (con descuentos)", "JDBC / MyBatis")
 
 note bottom of sa_app
   Máquina de estados por reserva (tabla saga_estado):

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.proveedorservicio.mapper.ProveedorServicioModalidadMapper">
+
+    <sql id="baseColumns">
+        m.id, m.proveedor_servicio_id, m.modalidad, m.costo_adicional, m.activo,
+        m.created_at, m.updated_at, m.deleted, m.version
+    </sql>
+    <sql id="table">proveedor_servicio_modalidad m</sql>
+
+    <resultMap id="modalidadResultMap" type="bo.capital.tec.pet.modules.proveedorservicio.entity.ProveedorServicioModalidad">
+        <id property="id" column="id"/>
+        <result property="proveedorServicioId" column="proveedor_servicio_id"/>
+        <result property="modalidad" column="modalidad"/>
+        <result property="costoAdicional" column="costo_adicional"/>
+        <result property="activo" column="activo"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="deleted" column="deleted"/>
+        <result property="version" column="version"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="bo.capital.tec.pet.modules.proveedorservicio.entity.ProveedorServicioModalidad">
+        INSERT INTO proveedor_servicio_modalidad (proveedor_servicio_id, modalidad, costo_adicional, activo)
+        VALUES (#{proveedorServicioId}, #{modalidad}, #{costoAdicional}, #{activo})
+    </insert>
+
+    <select id="selectByProveedorServicioId" resultMap="modalidadResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        WHERE m.proveedor_servicio_id = #{proveedorServicioId} AND m.deleted = FALSE
+        ORDER BY m.modalidad
+    </select>
+
+    <update id="deleteByProveedorServicioId">
+        UPDATE proveedor_servicio_modalidad
+        SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE proveedor_servicio_id = #{proveedorServicioId} AND deleted = FALSE
+    </update>
+</mapper>

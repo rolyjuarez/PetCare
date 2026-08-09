@@ -1,0 +1,260 @@
+@startuml
+' ============================================================================
+' PETCare - Esquema de base de datos petcaredb_provider (ERD)
+' Base propia del microservicio provider-service (8082).
+' Contiene el dominio del proveedor más copias de solo-lectura de tablas
+' compartidas (persona, rol, usuario, usuario_rol, ciudad, estado, direccion,
+' servicio) necesarias para JWT y nombres de catálogo.
+' Se omiten columnas de auditoría uniformes: created_at, updated_at, deleted, version.
+' ============================================================================
+
+title Esquema de base de datos petcaredb_provider
+
+hide circle
+skinparam linetype ortho
+skinparam entity {
+  BackgroundColor #FDE7D3
+  BorderColor #963B00
+  FontColor #5D2C00
+}
+
+' ============================================================================
+' Copias de solo-lectura (desde petcaredb) - usadas para JWT y catálogos
+' ============================================================================
+entity "persona" as pe {
+  * id : BIGSERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100)
+  * primer_apellido : VARCHAR(100)
+  segundo_apellido : VARCHAR(100)
+  * ci : VARCHAR(20) <<UQ>>
+  telefono : VARCHAR(20)
+  email : VARCHAR(150)
+  fecha_nacimiento : DATE
+  * genero : CHAR(1)
+  direccion_id : BIGINT
+}
+
+entity "rol" as ro {
+  * id : BIGSERIAL <<PK>>
+  --
+  * nombre : VARCHAR(50) <<UQ>>
+  descripcion : TEXT
+  activo : BOOLEAN
+}
+
+entity "usuario" as us {
+  * id : BIGSERIAL <<PK>>
+  --
+  * username : VARCHAR(50) <<UQ>>
+  * password : VARCHAR(255)
+  * persona_id : BIGINT
+  activo : BOOLEAN
+  ultimo_acceso : TIMESTAMP
+  intentos_fallidos : INTEGER
+  bloqueado : BOOLEAN
+  token_refresh : TEXT
+}
+
+entity "usuario_rol" as ur {
+  * id : BIGSERIAL <<PK>>
+  --
+  * usuario_id : BIGINT
+  * rol_id : BIGINT
+}
+
+entity "ciudad" as ci {
+  * id : BIGSERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100) <<UQ>>
+  * codigo : VARCHAR(10) <<UQ>>
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+}
+
+entity "estado" as es {
+  * id : BIGSERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100)
+  * codigo : VARCHAR(10)
+  ciudad_id : BIGINT
+}
+
+entity "direccion" as di {
+  * id : BIGSERIAL <<PK>>
+  --
+  * calle : VARCHAR(200)
+  numero : VARCHAR(20)
+  piso : VARCHAR(10)
+  apartamento : VARCHAR(20)
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  referencia : TEXT
+  * ciudad_id : BIGINT
+  estado_id : BIGINT
+}
+
+entity "servicio" as se {
+  * id : BIGSERIAL <<PK>>
+  --
+  * nombre : VARCHAR(100) <<UQ>>
+  descripcion : TEXT
+  * duracion_minutos : INTEGER
+  * precio_base : NUMERIC(10,2)
+  imagen_url : VARCHAR(500)
+  activo : BOOLEAN
+  categoria : VARCHAR(50)
+}
+
+' ============================================================================
+' Dominio del proveedor (tablas propias, persistidas por provider-service)
+' ============================================================================
+entity "proveedor" as pr {
+  * id : BIGSERIAL <<PK>>
+  --
+  * persona_id : BIGINT
+  * usuario_id : BIGINT
+  empresa : VARCHAR(150)
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  radio_cobertura_km : NUMERIC(5,2)
+  descripcion : TEXT
+  verificado : BOOLEAN
+  calificacion : NUMERIC(3,2)
+}
+
+entity "proveedor_especialidad" as pre {
+  * id : BIGSERIAL <<PK>>
+  --
+  * proveedor_id : BIGINT
+  * servicio_id : BIGINT
+  * requiere_certificado : BOOLEAN
+}
+
+entity "proveedor_servicio" as ps {
+  * id : BIGSERIAL <<PK>>
+  --
+  * proveedor_id : BIGINT
+  * nombre : VARCHAR(100)
+  descripcion : TEXT
+  * categoria : VARCHAR(30)
+  * duracion_minutos : INTEGER
+  * precio_base : NUMERIC(10,2)
+  requiere_certificado : BOOLEAN
+  activo : BOOLEAN
+}
+
+entity "proveedor_servicio_modalidad" as psm {
+  * id : BIGSERIAL <<PK>>
+  --
+  * proveedor_servicio_id : BIGINT
+  * modalidad : VARCHAR(30)
+  * costo_adicional : NUMERIC(10,2)
+  activo : BOOLEAN
+}
+
+entity "disponibilidad" as dis {
+  * id : BIGSERIAL <<PK>>
+  --
+  * proveedor_id : BIGINT
+  * servicio_id : BIGINT
+  * dia_semana : INTEGER
+  * hora_inicio : TIME
+  * hora_fin : TIME
+  activo : BOOLEAN
+}
+
+entity "promocion" as prm {
+  * id : BIGSERIAL <<PK>>
+  --
+  * codigo : VARCHAR(30) <<UQ>>
+  * nombre : VARCHAR(100)
+  descripcion : TEXT
+  * tipo_descuento : VARCHAR(20)
+  * valor_descuento : NUMERIC(10,2)
+  * fecha_inicio : TIMESTAMP
+  * fecha_fin : TIMESTAMP
+  activa : BOOLEAN
+  limite_usos : INTEGER
+  * usos_actuales : INTEGER
+  proveedor_id : BIGINT
+  servicio_id : BIGINT
+}
+
+entity "solicitud_reserva" as sr {
+  * id : BIGSERIAL <<PK>>
+  --
+  * reserva_id : BIGINT
+  * codigo : VARCHAR(20)
+  * cliente_id : BIGINT
+  cliente_nombre : VARCHAR(255)
+  * proveedor_id : BIGINT
+  proveedor_empresa : VARCHAR(150)
+  * servicio_id : BIGINT
+  servicio_nombre : VARCHAR(100)
+  mascota_id : BIGINT
+  mascota_nombre : VARCHAR(100)
+  fecha_inicio : TIMESTAMP
+  hora_inicio : TIME
+  precio_total : NUMERIC(10,2)
+  modalidad_entrega : VARCHAR(30)
+  * estado : VARCHAR(20)
+  motivo_rechazo : TEXT
+  latitud : NUMERIC(10,7)
+  longitud : NUMERIC(10,7)
+  direccion_referencia : TEXT
+  registro_vacunacion_id : BIGINT
+  creada_en : TIMESTAMP
+  respondida_en : TIMESTAMP
+}
+
+entity "evento_procesado" as ev {
+  * event_id : VARCHAR(64) <<PK>>
+  --
+  * event_type : VARCHAR(100)
+  * service : VARCHAR(50)
+  aggregate_id : BIGINT
+  payload : TEXT
+  procesado_en : TIMESTAMP
+}
+
+' ============================================================================
+' Relaciones (dominio propio)
+' ============================================================================
+pr ||--|| pe : "persona_id"
+pr ||--|| us : "usuario_id"
+pre }o--|| pr : "proveedor_id"
+pre }o--|| se : "servicio_id"
+ps }o--|| pr : "proveedor_id"
+psm }o--|| ps : "proveedor_servicio_id"
+dis }o--|| pr : "proveedor_id"
+dis }o--|| ps : "proveedor_servicio_id"
+prm }o--o| pr : "proveedor_id"
+prm }o--o| ps : "proveedor_servicio_id"
+sr }o--|| pr : "proveedor_id"
+sr }o--|| ps : "proveedor_servicio_id"
+
+' ============================================================================
+' Relaciones de las copias de solo-lectura (mismas FK que petcaredb)
+' ============================================================================
+us ||--|| pe : "persona_id"
+ur }o--|| us : "usuario_id"
+ur }o--|| ro : "rol_id"
+es }o--|| ci : "ciudad_id"
+di }o--|| ci : "ciudad_id"
+di }o--o| es : "estado_id"
+pe }o--o| di : "direccion_id"
+
+legend right
+  = petcaredb_provider =
+  Base propia de provider-service (8082).
+  Naranja = tablas del dominio proveedor.
+  La fila "copias de solo-lectura" replica tablas de petcaredb
+  para JWT y nombres de catálogo (no las persiste este servicio).
+  reserva, pago, cliente y mascota viven en petcaredb y se consultan
+  por HTTP interno hacia reservation-service/payment-service.
+  Las columnas created_at, updated_at, deleted y version se omiten
+  por ser uniformes (presentes en todas las tablas).
+endlegend
+
+@enduml

@@ -43,6 +43,9 @@ jwt:
   refresh-expiration: 604800000
 
 app:
+  microservices:
+    provider:
+      base-url: ${PROVIDER_SERVICE_URL:http://localhost:8082}
   email:
     enabled: ${APP_EMAIL_ENABLED:true}
     from: ${MAIL_FROM:roly.juarez@gmail.com}

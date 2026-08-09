@@ -24,7 +24,7 @@ Person(admin, "Administrador", "Administra usuarios, roles, menús y la operaci�
 ' ---------------------------------------------------------------------------
 ' Sistema
 ' ---------------------------------------------------------------------------
-System(petcare, "PetCare", "Plataforma de reserva de servicios veterinarios: frontend Angular, backend Spring Boot y cuatro microservicios (reservas, proveedores, pagos y orquestador de la saga)")
+System(petcare, "PetCare", "Plataforma de reserva de servicios veterinarios: frontend Angular, backend Spring Boot (auth, catálogos, clientes, mascotas) y microservicios de reservas (8081), proveedores (8082), pagos (8083) y orquestador de la saga (8085) con Kafka")
 
 ' ---------------------------------------------------------------------------
 ' Sistemas externos

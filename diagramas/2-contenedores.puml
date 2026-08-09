@@ -30,14 +30,15 @@ System_Boundary(petcare, "PetCare") {
 
     Container(frontend, "Frontend", "Angular SPA (Nginx)", "Interfaz web para clientes, proveedores y administradores")
 
-    Container(backend, "backend", "Spring Boot 8080", "API REST /api/v1, auth JWT, catálogos, promociones, notificaciones")
+    Container(backend, "backend", "Spring Boot 8080", "API REST /api/v1, auth JWT, catálogos, promociones, notificaciones; MicroserviceRoutingFilter reenvía reservas/proveedor/pagos a los microservicios")
 
-    Container(rs, "reservation-service", "Spring Boot 8081", "Dueño de la reserva: crea, confirma, rechaza y compensa")
-    Container(ps, "provider-service", "Spring Boot 8082", "Crea solicitudes de reserva y responde aceptación/rechazo")
-    Container(ms, "payment-service", "Spring Boot 8083", "Crea, procesa y reembolsa pagos")
+    Container(rs, "reservation-service", "Spring Boot 8081", "Dueño de la reserva: crea, confirma, rechaza y compensa; expone /interna (vacunas, ubicación, has-reservas)")
+    Container(ps, "provider-service", "Spring Boot 8082", "CRUD de proveedores, servicios, disponibilidad, promociones y solicitudes de reserva; expone /interna (catálogo, promoción, usos)")
+    Container(ms, "payment-service", "Spring Boot 8083", "Crea, procesa y reembolsa pagos con pipeline de descuentos")
     Container(sa, "saga-orchestrator", "Spring Boot 8085", "Orquesta la saga: máquina de estados y compensación centralizada")
 
-    ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Base compartida: reserva, pago, solicitud_reserva, evento_procesado, saga_estado, catálogos")
+    ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Base compartida: reserva, pago, notificacion, saga_estado, evento_procesado y catálogos")
+    ContainerDb(dbProvider, "PostgreSQL petcaredb_provider", "PostgreSQL 18", "Base propia de provider-service: proveedor, proveedor_servicio, disponibilidad, promocion, solicitud_reserva, evento_procesado y copias de solo-lectura (persona, usuario, ciudad, estado, servicio)")
     ContainerQueue(kafka, "Kafka", "Confluent 7.7", "Topics de dominio (reserva.*, pago.*) y de comandos (saga.comando.*), DLT saga.dlt.v1")
 }
 
@@ -51,19 +52,25 @@ System_Ext(maps, "Google Maps API", "Mapas y geolocalización")
 System_Ext(pgadmin, "pgAdmin", "Administración de la base de datos")
 
 ' ---------------------------------------------------------------------------
-' Relaciones de usuario y frontend
+' Usuarios
 ' ---------------------------------------------------------------------------
 Rel(cliente, frontend, "Usa la aplicación web", "HTTPS")
 Rel(proveedor, frontend, "Publica servicios y responde reservas", "HTTPS")
 Rel(frontend, backend, "Consume API REST", "HTTP /api/v1")
-Rel(frontend, rs, "Crea y consulta reservas", "HTTP")
-Rel(frontend, ps, "Responde solicitudes de reserva", "HTTP")
 
 ' ---------------------------------------------------------------------------
-' Backend -> microservicios
+' Backend -> microservicios (routing por filtro)
 ' ---------------------------------------------------------------------------
-Rel(backend, rs, "Llama al microservicio de reservas", "HTTP")
-Rel(backend, ps, "Llama al microservicio de proveedores", "HTTP")
+Rel(backend, rs, "Enruta /reservas** al dueño de la reserva", "HTTP")
+Rel(backend, ps, "Enruta /proveedor** al servicio de proveedores", "HTTP")
+Rel(backend, ms, "Enruta /pagos** (procesar/reembolsar/reserva)", "HTTP")
+
+' ---------------------------------------------------------------------------
+' REST entre microservicios (catálogo interno /interna/**)
+' ---------------------------------------------------------------------------
+Rel(rs, ps, "Catálogo y disponibilidad del proveedor", "HTTP /interna/**")
+Rel(ps, rs, "Vacunas, ubicación y has-reservas", "HTTP /interna/**")
+Rel(ms, ps, "Promoción activa, usos y costo adicional de modalidad", "HTTP /interna/**")
 
 ' ---------------------------------------------------------------------------
 ' Saga: Kafka (eventos y comandos)
@@ -73,17 +80,17 @@ Rel(rs, kafka, "Consume saga.comando.confirmar/rechazar/cancelar-reserva", "Kafk
 Rel(ps, kafka, "Publica reserva.aceptada, reserva.rechazada", "Kafka")
 Rel(ps, kafka, "Consume saga.comando.notificar-proveedor", "Kafka")
 Rel(ms, kafka, "Publica pago.completado, pago.fallido, pago.reembolsado", "Kafka")
-Rel(ms, kafka, "Consume saga.comando.crear-pago", "Kafka")
+Rel(ms, kafka, "Consume saga.comando.crear-pago, saga.comando.liberar-descuento", "Kafka")
 Rel(sa, kafka, "Consume los eventos de dominio y publica los comandos de la saga", "Kafka")
 
 ' ---------------------------------------------------------------------------
-' Persistencia
+' Persistencia (base compartida)
 ' ---------------------------------------------------------------------------
 Rel(sa, db, "Persiste saga_estado y evento_procesado", "JDBC / MyBatis")
 Rel(rs, db, "Persiste reserva y notificacion", "JDBC / MyBatis")
-Rel(ps, db, "Persiste solicitud_reserva", "JDBC / MyBatis")
+Rel(ps, dbProvider, "Persiste proveedor, proveedor_servicio, disponibilidad, promocion, solicitud_reserva, evento_procesado", "JDBC / MyBatis")
 Rel(ms, db, "Persiste pago", "JDBC / MyBatis")
-Rel(backend, db, "Persiste catálogos, usuarios y promociones", "JDBC / MyBatis")
+Rel(backend, db, "Persiste catálogos, usuarios, clientes y mascotas", "JDBC / MyBatis")
 
 ' ---------------------------------------------------------------------------
 ' Externos
@@ -92,14 +99,28 @@ Rel(ms, pasarela, "Procesa / reembolsa el pago", "REST/HTTPS")
 Rel(backend, smtp, "Envía correos transaccionales", "SMTP")
 Rel(frontend, maps, "Mapas y geolocalización", "HTTPS")
 
-
-Rel(pgadmin, db, "Administra la base de datos", "JDBC")
+Rel(pgadmin, db, "Administra petcaredb", "JDBC")
+Rel(pgadmin, dbProvider, "Administra petcaredb_provider", "JDBC")
 
 note bottom of sa
   Clean Architecture: domain (model + ports), application
   (SagaOrquestadorService, IdempotenciaSagaService) e
   infrastructure (listeners Kafka, publisher de comandos,
   mappers MyBatis de saga_estado y evento_procesado).
+end note
+
+note bottom of db
+  Base compartida por backend, reservation-service,
+  payment-service y saga-orchestrator (petcaredb).
+  Cada servicio toca sus propias tablas.
+end note
+
+note bottom of dbProvider
+  Base propia del dominio proveedor (petcaredb_provider):
+  solo provider-service la persiste. Incluye copias de
+  solo-lectura (persona, usuario, ciudad, estado, servicio)
+  para JWT y nombres de catálogo; el resto lo consulta por
+  HTTP interno hacia reservation-service/payment-service.
 end note
 
 LAYOUT_WITH_LEGEND()

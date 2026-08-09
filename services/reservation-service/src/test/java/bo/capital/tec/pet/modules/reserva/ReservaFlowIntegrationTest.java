@@ -1,11 +1,13 @@
 package bo.capital.tec.pet.modules.reserva;
 
+import bo.capital.tec.pet.common.client.ProviderCatalogClient;
 import bo.capital.tec.pet.common.kafka.IdempotencyService;
 import bo.capital.tec.pet.modules.reserva.command.CancelarReservaCommand;
 import bo.capital.tec.pet.modules.reserva.command.ConfirmarReservaCommand;
 import bo.capital.tec.pet.modules.reserva.command.RechazarReservaCommand;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaRequestDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaResponseDTO;
+import bo.capital.tec.pet.modules.reserva.dto.ServicioInfoDTO;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCreadaEvent;
@@ -21,6 +23,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,6 +33,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -62,12 +66,19 @@ class ReservaFlowIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @MockitoBean
+    private ProviderCatalogClient providerCatalogClient;
+
     @BeforeEach
     void limpiarBase() {
         jdbcTemplate.update("DELETE FROM evento_procesado");
         jdbcTemplate.update("DELETE FROM reserva");
         jdbcTemplate.update("DELETE FROM notificacion");
         eventCollector.clear();
+        when(providerCatalogClient.isModalidadValida(1L, "EN_ESTABLECIMIENTO")).thenReturn(true);
+        when(providerCatalogClient.getServicio(1L))
+                .thenReturn(new ServicioInfoDTO(1L, "Consulta general", 30,
+                        new BigDecimal("80.00"), "VETERINARIA", false));
     }
 
     private ReservaRequestDTO buildRequest() {

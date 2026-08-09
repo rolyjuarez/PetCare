@@ -38,6 +38,8 @@ ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "reserva, notificacion,
 ' ---------------------------------------------------------------------------
 Container_Boundary(rs, "reservation-service (8081)") {
     Component(rs_api, "ReservaController / ReservaService", "Spring MVC + Service", "Crea la reserva (PENDIENTE), confirma, rechaza y compensa")
+    Component(rs_interna, "ReservaInternaController", "Spring MVC", "Expone /interna/** a provider-service: registro de vacunación, ubicación y count-by-proveedor")
+    Component(rs_provider, "ProviderCatalogClient (REST)", "HTTP client", "Obtiene proveedor, servicio, modalidades y disponibilidad del provider-service (/interna/**)")
     Component(rs_confirmar, "ConfirmarRechazarCommandConsumer", "Kafka listener", "Ejecuta ConfirmarReservaCommand y RechazarReservaCommand")
     Component(rs_cancelar, "CancelarReservaCommandConsumer", "Kafka listener", "Ejecuta CancelarReservaCommand (compensación)")
     Component(rs_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica ReservaCreadaEvent, ReservaConfirmadaEvent, ReservaCanceladaEvent")
@@ -46,6 +48,8 @@ Container_Boundary(rs, "reservation-service (8081)") {
 
     Rel(rs_api, rs_pub, "Publica eventos de dominio")
     Rel(rs_api, rs_email, "Envía notificaciones")
+    Rel(rs_api, rs_provider, "Valida servicio, modalidad y disponibilidad")
+    Rel(rs_interna, rs_api, "Sirve datos de reserva/vacuna a provider-service")
     Rel(rs_confirmar, rs_api, "Aplica confirmación/rechazo")
     Rel(rs_cancelar, rs_api, "Aplica compensación")
     Rel(rs_confirmar, rs_idem, "Verifica/registra duplicados")
@@ -56,7 +60,9 @@ Container_Boundary(rs, "reservation-service (8081)") {
 ' Relaciones con el exterior
 ' ---------------------------------------------------------------------------
 Rel(cliente, rs_api, "1. Crea la reserva (PENDIENTE)", "REST /reservas")
-Rel(backend, rs_api, "Consulta y administra reservas", "HTTP")
+Rel(backend, rs_api, "Enruta y consulta /reservas**", "HTTP")
+Rel(rs_provider, ps, "Catálogo y disponibilidad del proveedor", "HTTP /interna/**")
+Rel(ps, rs_interna, "Vacuna, ubicación y has-reservas", "HTTP /interna/**")
 Rel(rs_api, kafka, "Publica eventos de reserva", "reserva.*")
 Rel(kafka, rs_confirmar, "Consume comandos del orquestador", "saga.comando.confirmar/rechazar-reserva")
 Rel(kafka, rs_cancelar, "Consume el comando de compensación", "saga.comando.cancelar-reserva")

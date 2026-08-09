@@ -19,6 +19,12 @@ public interface PromocionMapper {
 
     long countByProveedorId(@Param("proveedorId") Long proveedorId);
 
+    List<Promocion> selectAll(@Param("offset") int offset, @Param("limit") int limit);
+
+    long countAll();
+
+    List<Promocion> selectActive();
+
     List<Promocion> selectActivasByProveedorId(@Param("proveedorId") Long proveedorId);
 
     boolean existeServicioDelProveedor(@Param("proveedorId") Long proveedorId,

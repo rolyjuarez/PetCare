@@ -2,15 +2,6 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.VacunaCatalogMapper">
 
-    <select id="selectRequiereCertificado" resultType="boolean">
-        SELECT COALESCE(ps.requiere_certificado, FALSE)
-        FROM proveedor_servicio ps
-        WHERE ps.proveedor_id = #{proveedorId}
-          AND ps.id = #{servicioId}
-          AND ps.deleted = FALSE
-        LIMIT 1
-    </select>
-
     <select id="selectRegistroVacunacion" resultType="bo.capital.tec.pet.modules.reserva.dto.RegistroVacunacionInfoDTO">
         SELECT rv.id,
                rv.mascota_id,

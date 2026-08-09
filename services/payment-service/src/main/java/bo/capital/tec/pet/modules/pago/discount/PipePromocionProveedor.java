@@ -1,8 +1,8 @@
 package bo.capital.tec.pet.modules.pago.discount;
 
+import bo.capital.tec.pet.common.client.PagoProviderClient;
 import bo.capital.tec.pet.modules.pago.dto.DescuentoAplicadoDTO;
 import bo.capital.tec.pet.modules.pago.dto.PromocionInfoDTO;
-import bo.capital.tec.pet.modules.pago.mapper.PagoCatalogMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,14 +19,14 @@ public class PipePromocionProveedor extends AbstractDescuentoPipe {
     public static final String TIPO_PERCENTAGE = "PERCENTAGE";
     public static final String TIPO_FIXED = "FIXED";
 
-    private final PagoCatalogMapper catalogMapper;
+    private final PagoProviderClient providerClient;
 
     @Override
     public void procesar(PagoContext context) {
         Long proveedorId = context.getReserva() != null ? context.getReserva().getProveedorId() : null;
         Long servicioId = context.getReserva() != null ? context.getReserva().getServicioId() : null;
         PromocionInfoDTO promocion = proveedorId != null
-                ? catalogMapper.selectPromocionActivaByProveedorYServicio(proveedorId, servicioId) : null;
+                ? providerClient.getPromocionActiva(proveedorId, servicioId) : null;
         if (promocion != null && promocion.getValor() != null
                 && promocion.getValor().compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal descuento = TIPO_PERCENTAGE.equals(promocion.getTipo())
@@ -46,7 +46,7 @@ public class PipePromocionProveedor extends AbstractDescuentoPipe {
                     .servicioId(promocion.getServicioId() != null
                             ? promocion.getServicioId() : servicioId)
                     .build());
-            catalogMapper.incrementarUsosPromocion(promocion.getId());
+            providerClient.incrementarUsosPromocion(promocion.getId());
             log.debug("Promoción '{}' aplicada: -{}", promocion.getNombre(), descuento);
         }
         delegar(context);

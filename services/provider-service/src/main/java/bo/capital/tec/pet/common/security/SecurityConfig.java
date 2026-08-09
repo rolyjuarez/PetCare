@@ -33,11 +33,16 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/actuator/health").permitAll()
+                        .requestMatchers("/auth/**", "/actuator/health", "/interna/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/proveedor/**").hasAnyRole("CLIENTE", "ADMIN", "PROVEEDOR")
                         .requestMatchers("/proveedor/**").hasRole("PROVEEDOR")
+                        .requestMatchers("/proveedores/my/**").hasRole("PROVEEDOR")
                         .requestMatchers(HttpMethod.GET, "/proveedores/**").hasAnyRole("CLIENTE", "ADMIN", "PROVEEDOR")
                         .requestMatchers("/proveedores/**").hasRole("PROVEEDOR")
+                        .requestMatchers(HttpMethod.GET, "/disponibilidades/**").hasAnyRole("CLIENTE", "ADMIN", "PROVEEDOR")
+                        .requestMatchers("/disponibilidades/**").hasRole("PROVEEDOR")
+                        .requestMatchers(HttpMethod.GET, "/promociones/**").authenticated()
+                        .requestMatchers("/promociones/**").hasRole("ADMIN")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

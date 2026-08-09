@@ -38,6 +38,28 @@
         WHERE p.proveedor_id = #{proveedorId} AND p.deleted = FALSE
     </select>
 
+    <select id="selectAll" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.deleted = FALSE
+        ORDER BY p.created_at DESC, p.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM promocion p
+        WHERE p.deleted = FALSE
+    </select>
+
+    <select id="selectActive" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.deleted = FALSE
+          AND p.proveedor_id IS NULL
+          AND p.activa = TRUE
+          AND NOW() BETWEEN p.fecha_inicio AND p.fecha_fin
+          AND (p.limite_usos IS NULL OR p.usos_actuales &lt; p.limite_usos)
+        ORDER BY p.fecha_fin ASC, p.id ASC
+    </select>
+
     <select id="selectActivasByProveedorId" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE p.proveedor_id = #{proveedorId}

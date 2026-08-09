@@ -1,0 +1,1092 @@
+{
+	"info": {
+		"_postman_id": "petcare-provider-service",
+		"name": "PetCare - provider-service",
+		"description": "Colección de endpoints del microservicio provider-service.\n\nBase URL: http://localhost:8082/api/v1\n\nAutenticación: usar el token JWT en la variable `token` (Authorization: Bearer {{token}}). El login NO se hace en este microservicio (ruta `/auth/**` queda permitida, pero el endpoint de login vive en otro servicio).\n\nRoles: CLIENTE/ADMIN/PROVEEDOR pueden consultar catálogo y disponibilidades; las escrituras de proveedor requieren rol PROVEEDOR; las promociones globales requieren rol ADMIN.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8082/api/v1"
+		},
+		{
+			"key": "token",
+			"value": ""
+		},
+		{
+			"key": "proveedorId",
+			"value": "1"
+		},
+		{
+			"key": "servicioId",
+			"value": "1"
+		}
+	],
+	"item": [
+		{
+			"name": "Proveedores (CRUD)",
+			"item": [
+				{
+					"name": "Registrar proveedor completo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"laura\",\n  \"password\": \"pass1234\",\n  \"nombre\": \"Laura\",\n  \"primerApellido\": \"Flores\",\n  \"segundoApellido\": null,\n  \"ci\": \"777000111\",\n  \"telefono\": \"77700011\",\n  \"email\": \"laura@petcare.bo\",\n  \"fechaNacimiento\": \"1990-05-12\",\n  \"genero\": \"F\",\n  \"calle\": \"Av. 6 de Agosto\",\n  \"numero\": \"250\",\n  \"referencia\": \"Piso 2\",\n  \"ciudadId\": 1,\n  \"latitud\": -16.49,\n  \"longitud\": -68.12,\n  \"empresa\": \"PetBien SRL\",\n  \"radioCoberturaKm\": 8.0,\n  \"descripcion\": \"Atencion domiciliaria\",\n  \"servicioIds\": [1],\n  \"disponibilidades\": [\n    {\n      \"servicioId\": 1,\n      \"diaSemana\": 2,\n      \"horaInicio\": \"09:00:00\",\n      \"horaFin\": \"13:00:00\"\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/full",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "full"]
+						},
+						"description": "Crea persona, usuario, dirección y proveedor en una sola operación. Requiere rol PROVEEDOR."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar proveedores (paginado)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores?page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Lista proveedores (paginado). Opcional: ?nombre=..."
+					},
+					"response": []
+				},
+				{
+					"name": "Obtener proveedor por id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mi proveedor (token)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar proveedor (simple)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"personaId\": 1,\n  \"usuarioId\": 1,\n  \"empresa\": \"VetPet SRL\",\n  \"radioCoberturaKm\": 10.0,\n  \"descripcion\": \"Atencion de calidad\",\n  \"servicioIds\": [1, 2]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar proveedor completo",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Maria\",\n  \"primerApellido\": \"Rojas\",\n  \"segundoApellido\": null,\n  \"ci\": \"111222\",\n  \"telefono\": \"77733344\",\n  \"email\": \"maria2@petcare.bo\",\n  \"calle\": \"Calle 21\",\n  \"numero\": \"15\",\n  \"referencia\": \"\",\n  \"ciudadId\": 1,\n  \"latitud\": -16.49,\n  \"longitud\": -68.12,\n  \"empresa\": \"VetPet Actualizado\",\n  \"radioCoberturaKm\": 12.0,\n  \"descripcion\": \"Nueva descripcion\",\n  \"servicioIds\": [1, 2],\n  \"disponibilidades\": []\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/full",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}", "full"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Configurar certificado de especialidad",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"requiereCertificado\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/especialidad/{{servicioId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}", "especialidad", "{{servicioId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Tiene reservas?",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/has-reservas",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}", "has-reservas"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar proveedor (soft)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Servicios del proveedor",
+			"item": [
+				{
+					"name": "Crear servicio (my)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Paseo por 30 min\",\n  \"descripcion\": \"Paseo a domicilio\",\n  \"categoria\": \"PASEO\",\n  \"duracionMinutos\": 30,\n  \"precioBase\": 40.00,\n  \"requiereCertificado\": false,\n  \"activo\": true,\n  \"modalidades\": [\n    {\n      \"modalidad\": \"RECOGIDA_ENTREGA\",\n      \"costoAdicional\": 10.00\n    },\n    {\n      \"modalidad\": \"DOMICILIO\",\n      \"costoAdicional\": 15.00\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/servicios",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "servicios"]
+						},
+						"description": "Categorias: PELUQUERIA, PASEO, ALOJAMIENTO, VETERINARIA. Modalidades: EN_ESTABLECIMIENTO, RECOGIDA_ENTREGA, DOMICILIO."
+					},
+					"response": []
+				},
+				{
+					"name": "Mis servicios",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/servicios",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "servicios"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar servicio",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"nombre\": \"Paseo premium\",\n  \"descripcion\": \"Paseo con fotos\",\n  \"categoria\": \"PASEO\",\n  \"duracionMinutos\": 45,\n  \"precioBase\": 60.00,\n  \"requiereCertificado\": false,\n  \"activo\": true,\n  \"modalidades\": [\n    {\n      \"modalidad\": \"EN_ESTABLECIMIENTO\",\n      \"costoAdicional\": 0.00\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/servicios/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "servicios", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Activar/desactivar servicio",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"activo\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/servicios/1/activo",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "servicios", "1", "activo"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar servicio (soft)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/servicios/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "servicios", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicios publicos de un proveedor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/servicios",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}", "servicios"]
+						},
+						"description": "Solo servicios activos (catálogo público)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Disponibilidad",
+			"item": [
+				{
+					"name": "Crear disponibilidad",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"proveedorId\": 1,\n  \"servicioId\": 1,\n  \"diaSemana\": 4,\n  \"horaInicio\": \"10:00:00\",\n  \"horaFin\": \"14:00:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/disponibilidades",
+							"host": ["{{baseUrl}}"],
+							"path": ["disponibilidades"]
+						},
+						"description": "diaSemana: 0=Domingo ... 6=Sabado"
+					},
+					"response": []
+				},
+				{
+					"name": "Listar disponibilidades (paginado)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/disponibilidades?proveedorId={{proveedorId}}&servicioId={{servicioId}}&page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["disponibilidades"],
+							"query": [
+								{
+									"key": "proveedorId",
+									"value": "{{proveedorId}}"
+								},
+								{
+									"key": "servicioId",
+									"value": "{{servicioId}}"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Disponibilidad por id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/disponibilidades/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["disponibilidades", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Disponibilidades por proveedor y servicio",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/disponibilidades/by-proveedor-servicio/{{proveedorId}}/{{servicioId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["disponibilidades", "by-proveedor-servicio", "{{proveedorId}}", "{{servicioId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Disponibilidades por servicio",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/disponibilidades/by-servicio/{{servicioId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["disponibilidades", "by-servicio", "{{servicioId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar disponibilidad",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"proveedorId\": 1,\n  \"servicioId\": 1,\n  \"diaSemana\": 5,\n  \"horaInicio\": \"16:00:00\",\n  \"horaFin\": \"20:00:00\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/disponibilidades/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["disponibilidades", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar disponibilidad (soft)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/disponibilidades/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["disponibilidades", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Promociones del proveedor",
+			"item": [
+				{
+					"name": "Crear promocion (my)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"PASE-10\",\n  \"servicioId\": 1,\n  \"nombre\": \"Paseo 10%\",\n  \"descripcion\": \"10% en paseos\",\n  \"tipoDescuento\": \"PERCENTAGE\",\n  \"valorDescuento\": 10.00,\n  \"fechaInicio\": \"2026-08-01T00:00:00\",\n  \"fechaFin\": \"2026-12-31T23:59:59\",\n  \"activa\": true,\n  \"limiteUsos\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/promociones",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "promociones"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mis promociones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/promociones?page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "promociones"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar promocion",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"PASE-10\",\n  \"servicioId\": 1,\n  \"nombre\": \"Paseo 15%\",\n  \"descripcion\": \"15% en paseos\",\n  \"tipoDescuento\": \"PERCENTAGE\",\n  \"valorDescuento\": 15.00,\n  \"fechaInicio\": \"2026-08-01T00:00:00\",\n  \"fechaFin\": \"2026-12-31T23:59:59\",\n  \"activa\": true,\n  \"limiteUsos\": 100\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/promociones/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "promociones", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar promocion (soft)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/promociones/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "promociones", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Notificar promocion a clientes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/my/promociones/1/notificar",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "my", "promociones", "1", "notificar"]
+						},
+						"description": "Devuelve la cantidad de correos de clientes notificados."
+					},
+					"response": []
+				},
+				{
+					"name": "Descuentos de un proveedor (paginado)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/descuentos?page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}", "descuentos"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Descuentos activos de un proveedor",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedores/{{proveedorId}}/descuentos/activos",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedores", "{{proveedorId}}", "descuentos", "activos"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Promociones globales (Admin)",
+			"item": [
+				{
+					"name": "Crear promocion global",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"GLOBAL-20\",\n  \"servicioId\": null,\n  \"nombre\": \"Bienvenida 20%\",\n  \"descripcion\": \"Descuento global de bienvenida\",\n  \"tipoDescuento\": \"PERCENTAGE\",\n  \"valorDescuento\": 20.00,\n  \"fechaInicio\": \"2026-08-01T00:00:00\",\n  \"fechaFin\": \"2026-12-31T23:59:59\",\n  \"activa\": true,\n  \"limiteUsos\": 500\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/promociones",
+							"host": ["{{baseUrl}}"],
+							"path": ["promociones"]
+						},
+						"description": "Requerido rol ADMIN."
+					},
+					"response": []
+				},
+				{
+					"name": "Listar todas las promociones",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/promociones?page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["promociones"],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Promocion global por id",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/promociones/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["promociones", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Promociones globales activas",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/promociones/active",
+							"host": ["{{baseUrl}}"],
+							"path": ["promociones", "active"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar promocion global",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"codigo\": \"GLOBAL-20\",\n  \"servicioId\": null,\n  \"nombre\": \"Bienvenida 25%\",\n  \"descripcion\": \"Descuento global actualizado\",\n  \"tipoDescuento\": \"PERCENTAGE\",\n  \"valorDescuento\": 25.00,\n  \"fechaInicio\": \"2026-08-01T00:00:00\",\n  \"fechaFin\": \"2026-12-31T23:59:59\",\n  \"activa\": true,\n  \"limiteUsos\": 500\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/promociones/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["promociones", "1"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eliminar promocion global",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/promociones/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["promociones", "1"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Solicitudes de reserva",
+			"item": [
+				{
+					"name": "Listar solicitudes (por estado)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/proveedor/solicitudes?estado=PENDIENTE&page=0&size=20",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedor", "solicitudes"],
+							"query": [
+								{
+									"key": "estado",
+									"value": "PENDIENTE"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Estados: PENDIENTE, ACEPTADA, RECHAZADA"
+					},
+					"response": []
+				},
+				{
+					"name": "Aceptar solicitud",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"motivoRechazo\": null,\n  \"comentario\": \"Mascota en buen estado\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedor/solicitudes/1/aceptar",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedor", "solicitudes", "1", "aceptar"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Rechazar solicitud",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"motivoRechazo\": \"Horario no disponible\",\n  \"comentario\": null\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/proveedor/solicitudes/1/rechazar",
+							"host": ["{{baseUrl}}"],
+							"path": ["proveedor", "solicitudes", "1", "rechazar"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Catálogo interno (entre servicios)",
+			"item": [
+				{
+					"name": "Proveedor interno",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/proveedores/{{proveedorId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "proveedores", "{{proveedorId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Servicio interno",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/servicios/{{servicioId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "servicios", "{{servicioId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Modalidades de un servicio",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/servicios/{{servicioId}}/modalidades",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "servicios", "{{servicioId}}", "modalidades"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Valida modalidad",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/servicios/{{servicioId}}/modalidades/DOMICILIO/valida",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "servicios", "{{servicioId}}", "modalidades", "DOMICILIO", "valida"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Costo adicional de modalidad",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/servicios/{{servicioId}}/modalidades/DOMICILIO/costo-adicional",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "servicios", "{{servicioId}}", "modalidades", "DOMICILIO", "costo-adicional"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Requiere certificado",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/proveedores/{{proveedorId}}/servicios/{{servicioId}}/requiere-certificado",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "proveedores", "{{proveedorId}}", "servicios", "{{servicioId}}", "requiere-certificado"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Disponibilidades internas",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/proveedores/{{proveedorId}}/servicios/{{servicioId}}/disponibilidades",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "proveedores", "{{proveedorId}}", "servicios", "{{servicioId}}", "disponibilidades"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Promocion activa para proveedor+servicio",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{baseUrl}}/interna/promociones/activa?proveedorId={{proveedorId}}&servicioId={{servicioId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "promociones", "activa"],
+							"query": [
+								{
+									"key": "proveedorId",
+									"value": "{{proveedorId}}"
+								},
+								{
+									"key": "servicioId",
+									"value": "{{servicioId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Incrementar usos de promocion",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{baseUrl}}/interna/promociones/1/usos/incrementar",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "promociones", "1", "usos", "incrementar"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Decrementar usos de promocion",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{baseUrl}}/interna/promociones/1/usos/decrementar",
+							"host": ["{{baseUrl}}"],
+							"path": ["interna", "promociones", "1", "usos", "decrementar"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

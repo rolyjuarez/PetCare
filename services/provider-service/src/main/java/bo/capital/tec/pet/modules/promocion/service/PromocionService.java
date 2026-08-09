@@ -18,4 +18,18 @@ public interface PromocionService {
     PromocionResponseDTO actualizar(Long proveedorId, Long id, PromocionRequestDTO dto);
 
     void eliminar(Long proveedorId, Long id);
+
+    PromocionResponseDTO crearGlobal(PromocionRequestDTO dto);
+
+    PromocionResponseDTO obtenerPorId(Long id);
+
+    PagedResponse<PromocionSummaryDTO> listarTodas(int page, int size);
+
+    List<PromocionSummaryDTO> listarActivasGlobales();
+
+    PromocionResponseDTO actualizarGlobal(Long id, PromocionRequestDTO dto);
+
+    void eliminarGlobal(Long id);
+
+    int notificarClientes(Long promocionId);
 }

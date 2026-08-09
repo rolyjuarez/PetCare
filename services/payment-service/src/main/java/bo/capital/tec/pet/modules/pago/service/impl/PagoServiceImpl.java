@@ -1,6 +1,7 @@
 package bo.capital.tec.pet.modules.pago.service.impl;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.common.client.PagoProviderClient;
 import bo.capital.tec.pet.common.event.DomainEventPublisher;
 import bo.capital.tec.pet.common.exception.BusinessException;
 import bo.capital.tec.pet.common.exception.EntityNotFoundException;
@@ -48,6 +49,7 @@ public class PagoServiceImpl implements PagoService {
 
     private final PagoMapper pagoMapper;
     private final PagoCatalogMapper catalogMapper;
+    private final PagoProviderClient providerClient;
     private final DescuentoPipeline descuentoPipeline;
     private final SimulatedPaymentGateway pasarela;
     private final DomainEventPublisher eventPublisher;
@@ -193,7 +195,7 @@ public class PagoServiceImpl implements PagoService {
             log.debug("No hay descuento que liberar para reserva {}", reservaId);
             return;
         }
-        catalogMapper.decrementarUsosPromocion(pago.getDescuentoId());
+        providerClient.decrementarUsosPromocion(pago.getDescuentoId());
         log.info("Descuento {} liberado por compensación para reserva {}",
                 pago.getDescuentoId(), reservaId);
     }

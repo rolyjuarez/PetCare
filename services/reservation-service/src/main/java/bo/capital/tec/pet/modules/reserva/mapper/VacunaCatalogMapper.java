@@ -6,6 +6,5 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface VacunaCatalogMapper {
-    Boolean selectRequiereCertificado(@Param("proveedorId") Long proveedorId, @Param("servicioId") Long servicioId);
     RegistroVacunacionInfoDTO selectRegistroVacunacion(@Param("id") Long id);
 }

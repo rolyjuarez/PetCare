@@ -54,6 +54,9 @@ app:
     retention-ms: 604800000
   pasarela:
     prefijo-referencia: PTC
+  microservices:
+    provider:
+      base-url: ${PROVIDER_SERVICE_URL:http://localhost:8082}
 
 logging:
   level:

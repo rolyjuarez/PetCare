@@ -1,5 +1,6 @@
 package bo.capital.tec.pet.modules.reserva.service.impl;
 
+import bo.capital.tec.pet.common.client.ProviderCatalogClient;
 import bo.capital.tec.pet.common.exception.BusinessException;
 import bo.capital.tec.pet.modules.reserva.dto.DisponibilidadSlotsDTO;
 import bo.capital.tec.pet.modules.reserva.dto.RegistroVacunacionInfoDTO;
@@ -8,7 +9,6 @@ import bo.capital.tec.pet.modules.reserva.dto.ServicioInfoDTO;
 import bo.capital.tec.pet.modules.reserva.dto.SlotDTO;
 import bo.capital.tec.pet.modules.reserva.entity.Disponibilidad;
 import bo.capital.tec.pet.modules.reserva.entity.Reserva;
-import bo.capital.tec.pet.modules.reserva.mapper.DisponibilidadMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaCatalogMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
 import bo.capital.tec.pet.modules.reserva.mapper.VacunaCatalogMapper;
@@ -35,7 +35,7 @@ class ReservaServiceImplSlotsTest {
     @Mock
     private ReservaCatalogMapper catalogMapper;
     @Mock
-    private DisponibilidadMapper disponibilidadMapper;
+    private ProviderCatalogClient providerCatalogClient;
     @Mock
     private VacunaCatalogMapper vacunaCatalogMapper;
 
@@ -52,11 +52,11 @@ class ReservaServiceImplSlotsTest {
                 .diaSemana(1)
                 .horaInicio(LocalTime.of(8, 0)).horaFin(LocalTime.of(12, 0))
                 .build();
-        when(disponibilidadMapper.selectByProveedorServicio(1L, 1L)).thenReturn(List.of(window));
-        when(vacunaCatalogMapper.selectRequiereCertificado(1L, 1L)).thenReturn(false);
+        when(providerCatalogClient.getDisponibilidades(1L, 1L)).thenReturn(List.of(window));
+        when(providerCatalogClient.getRequiereCertificado(1L, 1L)).thenReturn(false);
 
         ServicioInfoDTO servicio = new ServicioInfoDTO(1L, "Peluquería", 60, new BigDecimal("50.00"), "PELUQUERIA", false);
-        when(catalogMapper.selectServicio(1L)).thenReturn(servicio);
+        when(providerCatalogClient.getServicio(1L)).thenReturn(servicio);
 
         Reserva booked = Reserva.builder()
                 .id(1L)
@@ -84,11 +84,11 @@ class ReservaServiceImplSlotsTest {
                 .diaSemana(3)
                 .horaInicio(LocalTime.of(9, 0)).horaFin(LocalTime.of(11, 0))
                 .build();
-        when(disponibilidadMapper.selectByProveedorServicio(1L, 1L)).thenReturn(List.of(window));
-        when(vacunaCatalogMapper.selectRequiereCertificado(1L, 1L)).thenReturn(false);
+        when(providerCatalogClient.getDisponibilidades(1L, 1L)).thenReturn(List.of(window));
+        when(providerCatalogClient.getRequiereCertificado(1L, 1L)).thenReturn(false);
 
         ServicioInfoDTO servicio = new ServicioInfoDTO(1L, "Baño", 120, new BigDecimal("80.00"), "PELUQUERIA", false);
-        when(catalogMapper.selectServicio(1L)).thenReturn(servicio);
+        when(providerCatalogClient.getServicio(1L)).thenReturn(servicio);
 
         when(reservaMapper.selectBooked(1L, 1L, desde, hasta, null)).thenReturn(List.of());
 
@@ -107,8 +107,8 @@ class ReservaServiceImplSlotsTest {
         when(reservaMapper.selectByClienteId(1L, 0, 100)).thenReturn(List.of());
         when(reservaMapper.selectBooked(1L, 1L, dto.getFechaInicio(), dto.getFechaInicio(), null))
                 .thenReturn(List.of());
-        when(disponibilidadMapper.selectByProveedorServicio(1L, 1L)).thenReturn(List.of());
-        when(vacunaCatalogMapper.selectRequiereCertificado(1L, 1L)).thenReturn(true);
+        when(providerCatalogClient.getDisponibilidades(1L, 1L)).thenReturn(List.of());
+        when(providerCatalogClient.getRequiereCertificado(1L, 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> reservaService.create(dto))
                 .isInstanceOf(BusinessException.class)
@@ -122,8 +122,8 @@ class ReservaServiceImplSlotsTest {
         when(reservaMapper.selectByClienteId(1L, 0, 100)).thenReturn(List.of());
         when(reservaMapper.selectBooked(1L, 1L, dto.getFechaInicio(), dto.getFechaInicio(), null))
                 .thenReturn(List.of());
-        when(disponibilidadMapper.selectByProveedorServicio(1L, 1L)).thenReturn(List.of());
-        when(vacunaCatalogMapper.selectRequiereCertificado(1L, 1L)).thenReturn(true);
+        when(providerCatalogClient.getDisponibilidades(1L, 1L)).thenReturn(List.of());
+        when(providerCatalogClient.getRequiereCertificado(1L, 1L)).thenReturn(true);
         when(vacunaCatalogMapper.selectRegistroVacunacion(10L)).thenReturn(
                 RegistroVacunacionInfoDTO.builder()
                         .id(10L).mascotaId(1L).vacunaId(1L)
@@ -146,11 +146,11 @@ class ReservaServiceImplSlotsTest {
                 .diaSemana(3)
                 .horaInicio(LocalTime.of(9, 0)).horaFin(LocalTime.of(10, 0))
                 .build();
-        when(disponibilidadMapper.selectByProveedorServicio(1L, 1L)).thenReturn(List.of(window));
-        when(vacunaCatalogMapper.selectRequiereCertificado(1L, 1L)).thenReturn(true);
+        when(providerCatalogClient.getDisponibilidades(1L, 1L)).thenReturn(List.of(window));
+        when(providerCatalogClient.getRequiereCertificado(1L, 1L)).thenReturn(true);
 
         ServicioInfoDTO servicio = new ServicioInfoDTO(1L, "Baño", 60, new BigDecimal("80.00"), "PELUQUERIA", true);
-        when(catalogMapper.selectServicio(1L)).thenReturn(servicio);
+        when(providerCatalogClient.getServicio(1L)).thenReturn(servicio);
 
         when(reservaMapper.selectBooked(1L, 1L, desde, hasta, null)).thenReturn(List.of());
 
@@ -168,9 +168,9 @@ class ReservaServiceImplSlotsTest {
         when(reservaMapper.selectByClienteId(1L, 0, 100)).thenReturn(List.of());
         when(reservaMapper.selectBooked(1L, 1L, dto.getFechaInicio(), dto.getFechaInicio(), null))
                 .thenReturn(List.of());
-        when(disponibilidadMapper.selectByProveedorServicio(1L, 1L)).thenReturn(List.of());
-        when(vacunaCatalogMapper.selectRequiereCertificado(1L, 1L)).thenReturn(false);
-        when(catalogMapper.selectModalidadValida(1L, "DOMICILIO")).thenReturn(true);
+        when(providerCatalogClient.getDisponibilidades(1L, 1L)).thenReturn(List.of());
+        when(providerCatalogClient.getRequiereCertificado(1L, 1L)).thenReturn(false);
+        when(providerCatalogClient.isModalidadValida(1L, "DOMICILIO")).thenReturn(true);
 
         assertThatThrownBy(() -> reservaService.create(dto))
                 .isInstanceOf(BusinessException.class)
@@ -185,8 +185,8 @@ class ReservaServiceImplSlotsTest {
         when(reservaMapper.selectByClienteId(1L, 0, 100)).thenReturn(List.of());
         when(reservaMapper.selectBooked(1L, 1L, dto.getFechaInicio(), dto.getFechaInicio(), null))
                 .thenReturn(List.of());
-        when(disponibilidadMapper.selectByProveedorServicio(1L, 1L)).thenReturn(List.of());
-        when(vacunaCatalogMapper.selectRequiereCertificado(1L, 1L)).thenReturn(false);
+        when(providerCatalogClient.getDisponibilidades(1L, 1L)).thenReturn(List.of());
+        when(providerCatalogClient.getRequiereCertificado(1L, 1L)).thenReturn(false);
 
         assertThatThrownBy(() -> reservaService.create(dto))
                 .isInstanceOf(BusinessException.class)

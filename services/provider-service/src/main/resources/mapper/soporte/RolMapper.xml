@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.soporte.mapper.RolMapper">
+
+    <sql id="baseColumns">
+        id, nombre, descripcion, activo, created_at, updated_at, deleted, version
+    </sql>
+    <sql id="table">rol</sql>
+
+    <select id="selectByNombre" resultType="bo.capital.tec.pet.modules.soporte.entity.Rol">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE nombre = #{nombre} AND deleted = FALSE
+    </select>
+</mapper>
