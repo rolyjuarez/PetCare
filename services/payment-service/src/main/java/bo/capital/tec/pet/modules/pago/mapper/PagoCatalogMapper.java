@@ -12,7 +12,12 @@ public interface PagoCatalogMapper {
 
     ReservaInfoDTO selectReservaInfo(@Param("reservaId") Long reservaId);
 
-    PromocionInfoDTO selectPromocionActivaByProveedor(@Param("proveedorId") Long proveedorId);
+    PromocionInfoDTO selectPromocionActivaByProveedorYServicio(@Param("proveedorId") Long proveedorId,
+                                                               @Param("servicioId") Long servicioId);
+
+    void incrementarUsosPromocion(@Param("promocionId") Long promocionId);
+
+    void decrementarUsosPromocion(@Param("promocionId") Long promocionId);
 
     BigDecimal selectModalidadCostoAdicional(@Param("servicioId") Long servicioId,
                                              @Param("modalidad") String modalidad);

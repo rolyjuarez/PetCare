@@ -51,4 +51,24 @@ export class PromocionService {
   notificar(id: number): Observable<ApiResponse<{ enviados: number }>> {
     return this.api.post(`/proveedores/my/promociones/${id}/notificar`, {});
   }
+
+  getByProveedor(proveedorId: number, page = 0, size = 50): Observable<ApiResponse<PagedResponse<PromocionSummary>>> {
+    return this.api.getPaged(`/proveedores/${proveedorId}/descuentos`, page, size);
+  }
+
+  getActivosByProveedor(proveedorId: number): Observable<ApiResponse<PromocionSummary[]>> {
+    return this.api.get(`/proveedores/${proveedorId}/descuentos/activos`);
+  }
+
+  createByProveedor(proveedorId: number, data: PromocionRequest): Observable<ApiResponse<Promocion>> {
+    return this.api.post(`/proveedores/${proveedorId}/descuentos`, data);
+  }
+
+  updateByProveedor(proveedorId: number, id: number, data: PromocionRequest): Observable<ApiResponse<Promocion>> {
+    return this.api.put(`/proveedores/${proveedorId}/descuentos/${id}`, data);
+  }
+
+  deleteByProveedor(proveedorId: number, id: number): Observable<ApiResponse<void>> {
+    return this.api.delete(`/proveedores/${proveedorId}/descuentos/${id}`);
+  }
 }

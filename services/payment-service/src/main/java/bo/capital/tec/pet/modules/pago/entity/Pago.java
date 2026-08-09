@@ -25,6 +25,11 @@ public class Pago {
     private String intencionId;
     private BigDecimal montoOriginal;
     private BigDecimal descuentoTotal;
+    private Long descuentoId;
+    private String descuentoCodigo;
+    private String descuentoNombre;
+    private String descuentoTipo;
+    private Long descuentoServicioId;
     private String estadoSync;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

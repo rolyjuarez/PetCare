@@ -2,6 +2,7 @@ package bo.capital.tec.pet.modules.pago;
 
 import bo.capital.tec.pet.common.kafka.IdempotencyService;
 import bo.capital.tec.pet.modules.pago.command.CrearPagoCommand;
+import bo.capital.tec.pet.modules.pago.command.LiberarDescuentoCommand;
 import bo.capital.tec.pet.modules.pago.dto.DatosTarjetaDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
@@ -37,6 +38,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @EmbeddedKafka(partitions = 1, topics = {
         "test.saga.comando.crear-pago",
+        "test.saga.comando.liberar-descuento",
         "test.pago.completado",
         "test.pago.fallido",
         "test.pago.reembolsado"})
@@ -101,6 +103,8 @@ class PagoFlowIntegrationTest {
 
     @Test
     void procesarPagoOnlineAplicaPromocionYRecargo() {
+        int usosPromo1Antes = usosPromocion(1L);
+        int usosPromo2Antes = usosPromocion(2L);
         PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
 
         PagoResponseDTO procesado = pagoService.procesar(creado.getId(), buildRequest("4242424242424242"));
@@ -110,9 +114,36 @@ class PagoFlowIntegrationTest {
         assertThat(procesado.getMonto()).isEqualByComparingTo("110.00");
         assertThat(procesado.getMontoOriginal()).isEqualByComparingTo("100.00");
         assertThat(procesado.getDescuentoTotal()).isEqualByComparingTo("10.00");
+        assertThat(procesado.getDescuentosAplicados()).hasSize(1);
+        assertThat(procesado.getDescuentosAplicados().get(0).getId()).isEqualTo(1L);
+        assertThat(procesado.getDescuentosAplicados().get(0).getCodigo()).isEqualTo("PROMO-10");
+        assertThat(procesado.getDescuentosAplicados().get(0).getTipo()).isEqualTo("PERCENTAGE");
+        assertThat(procesado.getDescuentosAplicados().get(0).getServicioId()).isEqualTo(1L);
         assertThat(procesado.getReferenciaTransaccion()).isNotBlank();
         assertThat(procesado.getIntencionId()).startsWith("INT-");
         assertThat(procesado.getFechaPago()).isNotNull();
+        assertThat(usosPromocion(1L)).isEqualTo(usosPromo1Antes + 1);
+        assertThat(usosPromocion(2L)).isEqualTo(usosPromo2Antes);
+    }
+
+    @Test
+    void promocionSeFiltraPorServicioDeLaReserva() {
+        int usosPromo1Antes = usosPromocion(1L);
+        int usosPromo2Antes = usosPromocion(2L);
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(3L, "EN_ESTABLECIMIENTO"));
+
+        PagoResponseDTO procesado = pagoService.procesar(creado.getId(),
+                ProcesarPagoRequestDTO.builder().metodoPago("EFECTIVO").build());
+
+        assertThat(procesado.getEstadoSync()).isEqualTo("COMPLETADO");
+        assertThat(procesado.getMonto()).isEqualByComparingTo("80.00");
+        assertThat(procesado.getDescuentoTotal()).isEqualByComparingTo("20.00");
+        assertThat(procesado.getDescuentosAplicados()).hasSize(1);
+        assertThat(procesado.getDescuentosAplicados().get(0).getId()).isEqualTo(2L);
+        assertThat(procesado.getDescuentosAplicados().get(0).getCodigo()).isEqualTo("PROMO-20");
+        assertThat(procesado.getDescuentosAplicados().get(0).getServicioId()).isEqualTo(2L);
+        assertThat(usosPromocion(2L)).isEqualTo(usosPromo2Antes + 1);
+        assertThat(usosPromocion(1L)).isEqualTo(usosPromo1Antes);
     }
 
     @Test
@@ -207,6 +238,67 @@ class PagoFlowIntegrationTest {
         assertThat(pago.getVersion()).isEqualTo(1);
     }
 
+    @Test
+    void liberarDescuentoRevierteUsosDirectamente() {
+        int usosAntes = usosPromocion(1L);
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
+        pagoService.procesar(creado.getId(), buildRequest("4242424242424242"));
+        assertThat(usosPromocion(1L)).isEqualTo(usosAntes + 1);
+
+        pagoService.liberarDescuento(1L);
+
+        assertThat(usosPromocion(1L)).isEqualTo(usosAntes);
+    }
+
+    @Test
+    void liberarDescuentoSinDescuentoEsInofensivo() {
+        pagoService.liberarDescuento(999L);
+        pagoService.liberarDescuento(2L);
+        assertThat(usosPromocion(2L)).isEqualTo(jdbcTemplate.queryForObject(
+                "SELECT usos_actuales FROM promocion WHERE id = ?", Integer.class, 2L));
+    }
+
+    @Test
+    void pagoFallidoConDescuentoCompensadoPorComando() throws Exception {
+        int usosAntes = usosPromocion(1L);
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
+
+        PagoResponseDTO procesado = pagoService.procesar(creado.getId(), buildRequest("4000000000000000"));
+
+        assertThat(procesado.getEstadoSync()).isEqualTo("FALLIDO");
+        assertThat(procesado.getDescuentoTotal()).isEqualByComparingTo("10.00");
+        assertThat(usosPromocion(1L)).isEqualTo(usosAntes + 1);
+
+        LiberarDescuentoCommand comando = new LiberarDescuentoCommand(creado.getId(), 1L, "Pago fallido");
+        kafkaTemplate.send("test.saga.comando.liberar-descuento",
+                String.valueOf(comando.getReservaId()), comando)
+                .get(10, TimeUnit.SECONDS);
+
+        awaitUsos(1L, usosAntes);
+        assertThat(idempotencyService.isProcessed(comando.getCommandId())).isTrue();
+    }
+
+    @Test
+    void comandoLiberarDescuentoDuplicadoSeIgnora() throws Exception {
+        int usosAntes = usosPromocion(1L);
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
+        pagoService.procesar(creado.getId(), buildRequest("4000000000000000"));
+        assertThat(usosPromocion(1L)).isEqualTo(usosAntes + 1);
+
+        LiberarDescuentoCommand comando = new LiberarDescuentoCommand(creado.getId(), 1L, "Pago fallido");
+        kafkaTemplate.send("test.saga.comando.liberar-descuento",
+                String.valueOf(comando.getReservaId()), comando)
+                .get(10, TimeUnit.SECONDS);
+        awaitUsos(1L, usosAntes);
+
+        kafkaTemplate.send("test.saga.comando.liberar-descuento",
+                String.valueOf(comando.getReservaId()), comando)
+                .get(10, TimeUnit.SECONDS);
+        TimeUnit.SECONDS.sleep(2);
+
+        assertThat(usosPromocion(1L)).isEqualTo(usosAntes);
+    }
+
     private Pago awaitPago(Long reservaId) throws InterruptedException {
         Pago pago = null;
         for (int i = 0; i < 50; i++) {
@@ -217,6 +309,21 @@ class PagoFlowIntegrationTest {
             TimeUnit.MILLISECONDS.sleep(200);
         }
         return null;
+    }
+
+    private int usosPromocion(Long promocionId) {
+        return jdbcTemplate.queryForObject(
+                "SELECT usos_actuales FROM promocion WHERE id = ?", Integer.class, promocionId);
+    }
+
+    private void awaitUsos(Long promocionId, int esperado) throws InterruptedException {
+        for (int i = 0; i < 50; i++) {
+            if (usosPromocion(promocionId) == esperado) {
+                return;
+            }
+            TimeUnit.MILLISECONDS.sleep(200);
+        }
+        assertThat(usosPromocion(promocionId)).isEqualTo(esperado);
     }
 
     @org.springframework.boot.test.context.TestConfiguration

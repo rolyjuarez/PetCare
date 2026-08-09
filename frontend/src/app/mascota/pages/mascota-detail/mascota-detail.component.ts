@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MascotaService } from '../../../core/services/mascota.service';
 import { ServicioService, Servicio, ProveedorSummary } from '../../../core/services/servicio.service';
+import { PromocionService } from '../../../core/services/promocion.service';
+import { PromocionSummary } from '../../../core/models/promocion.model';
 import { DisponibilidadService, Disponibilidad } from '../../../core/services/disponibilidad.service';
 import { ReservaService, Reserva } from '../../../core/services/reserva.service';
 import { RegistroVacunacionService, RegistroVacunacion } from '../../../core/services/registro-vacunacion.service';
@@ -25,6 +27,7 @@ export class MascotaDetailComponent implements OnInit {
   servicios = signal<Servicio[]>([]);
   proveedores = signal<ProveedorSummary[]>([]);
   disponibilidades = signal<Disponibilidad[]>([]);
+  promosActivas = signal<PromocionSummary[]>([]);
   vacunasCatalog = signal<Vacuna[]>([]);
   activeTab = signal<'info' | 'vacunas' | 'reservar'>('info');
   showReservaForm = signal(false);
@@ -58,6 +61,7 @@ export class MascotaDetailComponent implements OnInit {
     private reservaService: ReservaService,
     private registroVacService: RegistroVacunacionService,
     private vacunaCatalogService: VacunaCatalogService,
+    private promocionService: PromocionService,
     private toast: ToastService,
     private auth: AuthService
   ) {}
@@ -105,6 +109,7 @@ export class MascotaDetailComponent implements OnInit {
   onServicioChange(): void {
     this.reservaForm.proveedorId = null;
     this.disponibilidades.set([]);
+    this.promosActivas.set([]);
     if (this.reservaForm.servicioId) {
       this.servicioService.getProveedoresByServicio(this.reservaForm.servicioId).subscribe({
         next: (res) => {
@@ -118,13 +123,23 @@ export class MascotaDetailComponent implements OnInit {
 
   onProveedorChange(): void {
     this.disponibilidades.set([]);
+    this.promosActivas.set([]);
     if (this.reservaForm.proveedorId && this.reservaForm.servicioId) {
       this.disponibilidadService.getByProveedorServicio(this.reservaForm.proveedorId, this.reservaForm.servicioId).subscribe({
         next: (res) => {
           if (res.success) this.disponibilidades.set(res.data);
         }
       });
+      this.promocionService.getActivosByProveedor(this.reservaForm.proveedorId).subscribe({
+        next: (res) => {
+          if (res.success) this.promosActivas.set(res.data);
+        }
+      });
     }
+  }
+
+  descuentoTexto(p: PromocionSummary): string {
+    return p.tipoDescuento === 'PERCENTAGE' ? `${p.valorDescuento}%` : `Bs. ${p.valorDescuento}`;
   }
 
   onSubmitReserva(): void {
@@ -209,6 +224,7 @@ export class MascotaDetailComponent implements OnInit {
     this.reservaForm = { servicioId: null, proveedorId: null, fechaReserva: '', horaInicio: '', horaFin: '', notas: '' };
     this.proveedores.set([]);
     this.disponibilidades.set([]);
+    this.promosActivas.set([]);
   }
 
   private resetVacunaForm(): void {

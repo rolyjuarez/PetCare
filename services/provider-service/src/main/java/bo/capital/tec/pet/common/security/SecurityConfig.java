@@ -34,8 +34,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/actuator/health").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/proveedor/**").hasAnyRole("CLIENTE", "ADMINISTRADOR", "PROVEEDOR")
+                        .requestMatchers(HttpMethod.GET, "/proveedor/**").hasAnyRole("CLIENTE", "ADMIN", "PROVEEDOR")
                         .requestMatchers("/proveedor/**").hasRole("PROVEEDOR")
+                        .requestMatchers(HttpMethod.GET, "/proveedores/**").hasAnyRole("CLIENTE", "ADMIN", "PROVEEDOR")
+                        .requestMatchers("/proveedores/**").hasRole("PROVEEDOR")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

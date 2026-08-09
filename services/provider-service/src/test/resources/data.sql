@@ -1,4 +1,17 @@
 -- Datos semilla para tests de provider-service
+-- Idempotente: limpia primero (dos contextos de test comparten la misma H2)
+
+DELETE FROM evento_procesado;
+DELETE FROM solicitud_reserva;
+DELETE FROM promocion;
+DELETE FROM proveedor_servicio;
+DELETE FROM proveedor_especialidad;
+DELETE FROM proveedor;
+DELETE FROM servicio;
+DELETE FROM usuario_rol;
+DELETE FROM usuario;
+DELETE FROM rol;
+DELETE FROM persona;
 
 INSERT INTO persona (id, nombre, primer_apellido, ci, telefono, email) VALUES
     (1, 'Juan', 'Perez', '123456', '77711122', 'juan@petcare.bo'),
@@ -26,3 +39,18 @@ INSERT INTO servicio (id, nombre, duracion_minutos, precio_base) VALUES
 
 INSERT INTO proveedor_especialidad (proveedor_id, servicio_id) VALUES
     (1, 1), (1, 2), (2, 1);
+
+INSERT INTO proveedor_servicio (id, proveedor_id, nombre, categoria, precio_base) VALUES
+    (1, 1, 'Consulta general', 'VETERINARIA', 80.00),
+    (2, 1, 'Peluqueria', 'PELUQUERIA', 150.00);
+
+INSERT INTO promocion (id, proveedor_id, servicio_id, codigo, nombre, descripcion, tipo_descuento, valor_descuento,
+                       fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales) VALUES
+    (1, 1, 1, 'TEST-10', 'Consulta 10%', '10% en consulta general', 'PERCENTAGE', 10.00,
+     DATEADD('DAY', -1, NOW()), DATEADD('DAY', 30, NOW()), TRUE, 100, 0),
+    (2, 1, 2, 'TEST-FIX', 'Peluqueria 20 Bs', '20 Bs en peluqueria', 'FIXED', 20.00,
+     DATEADD('DAY', -1, NOW()), DATEADD('DAY', 30, NOW()), TRUE, NULL, 0),
+    (3, 2, 1, 'TEST-EXP', 'Expirada', 'Promocion expirada', 'PERCENTAGE', 5.00,
+     DATEADD('DAY', -30, NOW()), DATEADD('DAY', -1, NOW()), TRUE, NULL, 0);
+
+ALTER TABLE promocion ALTER COLUMN id RESTART WITH 100;

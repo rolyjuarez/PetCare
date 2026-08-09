@@ -29,5 +29,10 @@ public interface PagoMapper {
 
     void updateDescuentos(@Param("id") Long id, @Param("monto") java.math.BigDecimal monto,
                           @Param("montoOriginal") java.math.BigDecimal montoOriginal,
-                          @Param("descuentoTotal") java.math.BigDecimal descuentoTotal);
+                          @Param("descuentoTotal") java.math.BigDecimal descuentoTotal,
+                          @Param("descuentoId") Long descuentoId,
+                          @Param("descuentoCodigo") String descuentoCodigo,
+                          @Param("descuentoNombre") String descuentoNombre,
+                          @Param("descuentoTipo") String descuentoTipo,
+                          @Param("descuentoServicioId") Long descuentoServicioId);
 }

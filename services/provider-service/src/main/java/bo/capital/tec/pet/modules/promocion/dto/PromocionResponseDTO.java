@@ -1,4 +1,4 @@
-package bo.capital.tec.pet.modules.pago.dto;
+package bo.capital.tec.pet.modules.promocion.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,15 +12,21 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PromocionInfoDTO {
+public class PromocionResponseDTO {
+
     private Long id;
-    private String codigo;
     private Long proveedorId;
     private Long servicioId;
+    private String servicioNombre;
+    private String codigo;
     private String nombre;
     private String descripcion;
-    private String tipo;
-    private BigDecimal valor;
+    private String tipoDescuento;
+    private BigDecimal valorDescuento;
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
+    private Boolean activa;
+    private Integer limiteUsos;
+    private Integer usosActuales;
+    private LocalDateTime createdAt;
 }

@@ -23,6 +23,7 @@ export class PromocionListComponent implements OnInit {
   private allItems: Promocion[] = [];
 
   form: PromocionRequest = {
+    servicioId: 0,
     codigo: '',
     nombre: '',
     descripcion: '',
@@ -84,6 +85,7 @@ export class PromocionListComponent implements OnInit {
         if (res.success) {
           const full = res.data;
           this.form = {
+            servicioId: full.servicioId || 0,
             codigo: full.codigo,
             nombre: full.nombre,
             descripcion: full.descripcion || '',
@@ -121,6 +123,7 @@ export class PromocionListComponent implements OnInit {
     this.loading.set(true);
 
     const body: PromocionRequest = {
+      servicioId: this.form.servicioId,
       codigo: this.form.codigo,
       nombre: this.form.nombre,
       descripcion: this.form.descripcion,
@@ -190,6 +193,7 @@ export class PromocionListComponent implements OnInit {
 
   private resetForm(): void {
     this.form = {
+      servicioId: 0,
       codigo: '',
       nombre: '',
       descripcion: '',

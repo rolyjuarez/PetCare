@@ -12,7 +12,10 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DescuentoAplicadoDTO {
+    private Long id;
+    private String codigo;
     private String nombre;
     private String tipo;
     private BigDecimal monto;
+    private Long servicioId;
 }

@@ -24,8 +24,9 @@ public class PipePromocionProveedor extends AbstractDescuentoPipe {
     @Override
     public void procesar(PagoContext context) {
         Long proveedorId = context.getReserva() != null ? context.getReserva().getProveedorId() : null;
+        Long servicioId = context.getReserva() != null ? context.getReserva().getServicioId() : null;
         PromocionInfoDTO promocion = proveedorId != null
-                ? catalogMapper.selectPromocionActivaByProveedor(proveedorId) : null;
+                ? catalogMapper.selectPromocionActivaByProveedorYServicio(proveedorId, servicioId) : null;
         if (promocion != null && promocion.getValor() != null
                 && promocion.getValor().compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal descuento = TIPO_PERCENTAGE.equals(promocion.getTipo())
@@ -37,10 +38,15 @@ public class PipePromocionProveedor extends AbstractDescuentoPipe {
                 descuento = context.getMontoActual();
             }
             context.aplicarDescuento(DescuentoAplicadoDTO.builder()
+                    .id(promocion.getId())
+                    .codigo(promocion.getCodigo())
                     .nombre(promocion.getNombre())
                     .tipo(promocion.getTipo())
                     .monto(descuento)
+                    .servicioId(promocion.getServicioId() != null
+                            ? promocion.getServicioId() : servicioId)
                     .build());
+            catalogMapper.incrementarUsosPromocion(promocion.getId());
             log.debug("Promoción '{}' aplicada: -{}", promocion.getNombre(), descuento);
         }
         delegar(context);

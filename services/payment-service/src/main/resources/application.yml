@@ -47,6 +47,7 @@ app:
       pago-fallido: pago.fallido
       pago-reembolsado: pago.reembolsado
       comando-crear-pago: saga.comando.crear-pago
+      comando-liberar-descuento: saga.comando.liberar-descuento
       dlt: saga.dlt.v1
     partitions: 3
     replication-factor: 1

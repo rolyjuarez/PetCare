@@ -4,6 +4,7 @@ import bo.capital.tec.pet.saga.domain.model.CancelarReservaCommand;
 import bo.capital.tec.pet.saga.domain.model.ConfirmarReservaCommand;
 import bo.capital.tec.pet.saga.domain.model.CrearPagoCommand;
 import bo.capital.tec.pet.saga.domain.model.EstadoSaga;
+import bo.capital.tec.pet.saga.domain.model.LiberarDescuentoCommand;
 import bo.capital.tec.pet.saga.domain.model.NotificarProveedorCommand;
 import bo.capital.tec.pet.saga.domain.model.PagoFallidoEvent;
 import bo.capital.tec.pet.saga.domain.model.PagoProcesadoEvent;
@@ -121,8 +122,9 @@ public class SagaOrquestadorService implements SagaCoordinator {
         String motivo = evento.getMotivo() != null && !evento.getMotivo().isBlank()
                 ? evento.getMotivo() : COMPENSACION_PAGO_FALLIDO;
         transicion(evento.getReservaId(), EstadoSaga.PAGO_FALLIDO,
-                "Pago fallido, compensación iniciada", motivo, evento.getEventId());
+                "Pago fallido, compensación iniciada (reserva + descuento)", motivo, evento.getEventId());
         commandPublisher.publicar(CancelarReservaCommand.desde(evento));
+        commandPublisher.publicar(LiberarDescuentoCommand.desde(evento));
     }
 
     @Override
@@ -134,6 +136,7 @@ public class SagaOrquestadorService implements SagaCoordinator {
         transicion(evento.getReservaId(), EstadoSaga.PAGO_REEMBOLSADO,
                 "Pago reembolsado, referencia " + evento.getReferenciaTransaccion(),
                 null, evento.getEventId());
+        commandPublisher.publicar(LiberarDescuentoCommand.desde(evento));
     }
 
     private boolean procesado(String eventId, String tipoEvento, Long reservaId) {

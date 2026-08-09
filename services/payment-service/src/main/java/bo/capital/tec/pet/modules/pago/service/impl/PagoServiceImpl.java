@@ -7,6 +7,7 @@ import bo.capital.tec.pet.common.exception.EntityNotFoundException;
 import bo.capital.tec.pet.common.util.PaginationUtil;
 import bo.capital.tec.pet.modules.pago.discount.DescuentoPipeline;
 import bo.capital.tec.pet.modules.pago.discount.PagoContext;
+import bo.capital.tec.pet.modules.pago.dto.DescuentoAplicadoDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
 import bo.capital.tec.pet.modules.pago.dto.ReservaInfoDTO;
@@ -28,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -121,8 +123,15 @@ public class PagoServiceImpl implements PagoService {
         }
         ReservaInfoDTO reserva = catalogMapper.selectReservaInfo(pago.getReservaId());
         PagoContext context = descuentoPipeline.ejecutar(reserva);
+        DescuentoAplicadoDTO descuento = context.getDescuentosAplicados().isEmpty()
+                ? null : context.getDescuentosAplicados().get(0);
         pagoMapper.updateDescuentos(pago.getId(), context.getMontoActual(),
-                context.getMontoOriginal(), context.getDescuentoTotal());
+                context.getMontoOriginal(), context.getDescuentoTotal(),
+                descuento != null ? descuento.getId() : null,
+                descuento != null ? descuento.getCodigo() : null,
+                descuento != null ? descuento.getNombre() : null,
+                descuento != null ? descuento.getTipo() : null,
+                descuento != null ? descuento.getServicioId() : null);
 
         if (MODALIDAD_EN_ESTABLECIMIENTO.equals(pago.getModalidadPago())) {
             pagoMapper.updateEstado(pago.getId(), ESTADO_COMPLETADO, ESTADO_COMPLETADO,
@@ -174,6 +183,19 @@ public class PagoServiceImpl implements PagoService {
         log.info("Pago {} reembolsado", pago.getId());
         publishReembolsado(pago);
         return getById(id);
+    }
+
+    @Override
+    @Transactional
+    public void liberarDescuento(Long reservaId) {
+        Pago pago = pagoMapper.selectByReservaId(reservaId);
+        if (pago == null || pago.getDescuentoId() == null) {
+            log.debug("No hay descuento que liberar para reserva {}", reservaId);
+            return;
+        }
+        catalogMapper.decrementarUsosPromocion(pago.getDescuentoId());
+        log.info("Descuento {} liberado por compensación para reserva {}",
+                pago.getDescuentoId(), reservaId);
     }
 
     private void publishProcesado(Pago pago, ProcesarPagoRequestDTO request) {
@@ -242,6 +264,22 @@ public class PagoServiceImpl implements PagoService {
                 .modalidadPago(pago.getModalidadPago())
                 .intencionId(pago.getIntencionId())
                 .estadoSync(pago.getEstadoSync())
+                .descuentosAplicados(descuentosAplicadosDe(pago))
                 .build();
+    }
+
+    private List<DescuentoAplicadoDTO> descuentosAplicadosDe(Pago pago) {
+        List<DescuentoAplicadoDTO> descuentos = new ArrayList<>();
+        if (pago.getDescuentoId() != null) {
+            descuentos.add(DescuentoAplicadoDTO.builder()
+                    .id(pago.getDescuentoId())
+                    .codigo(pago.getDescuentoCodigo())
+                    .nombre(pago.getDescuentoNombre())
+                    .tipo(pago.getDescuentoTipo())
+                    .monto(pago.getDescuentoTotal())
+                    .servicioId(pago.getDescuentoServicioId())
+                    .build());
+        }
+        return descuentos;
     }
 }

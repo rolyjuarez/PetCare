@@ -34,6 +34,9 @@ public class KafkaSagaCommandPublisher implements SagaCommandPublisher {
     @Value("${app.kafka.topic.comando-rechazar-reserva:saga.comando.rechazar-reserva}")
     private String rechazarReservaTopic;
 
+    @Value("${app.kafka.topic.comando-liberar-descuento:saga.comando.liberar-descuento}")
+    private String liberarDescuentoTopic;
+
     @Value("${app.kafka.topic.dlt:saga.dlt.v1}")
     private String deadLetterTopic;
 
@@ -51,6 +54,7 @@ public class KafkaSagaCommandPublisher implements SagaCommandPublisher {
             case "CrearPagoCommand" -> crearPagoTopic;
             case "CancelarReservaCommand" -> cancelarReservaTopic;
             case "RechazarReservaCommand" -> rechazarReservaTopic;
+            case "LiberarDescuentoCommand" -> liberarDescuentoTopic;
             default -> deadLetterTopic;
         };
     }

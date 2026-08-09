@@ -57,6 +57,9 @@ public class KafkaTopicConfig {
     @Value("${app.kafka.topic.comando-rechazar-reserva:saga.comando.rechazar-reserva}")
     private String rechazarReservaTopic;
 
+    @Value("${app.kafka.topic.comando-liberar-descuento:saga.comando.liberar-descuento}")
+    private String liberarDescuentoTopic;
+
     @Value("${app.kafka.topic.dlt:saga.dlt.v1}")
     private String deadLetterTopic;
 
@@ -142,6 +145,11 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic rechazarReservaTopic() {
         return buildTopic(rechazarReservaTopic);
+    }
+
+    @Bean
+    public NewTopic liberarDescuentoTopic() {
+        return buildTopic(liberarDescuentoTopic);
     }
 
     @Bean

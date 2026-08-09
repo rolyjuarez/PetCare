@@ -18,4 +18,6 @@ public interface PagoService {
     PagoResponseDTO procesar(Long id, ProcesarPagoRequestDTO request);
 
     PagoResponseDTO reembolsar(Long id);
+
+    void liberarDescuento(Long reservaId);
 }

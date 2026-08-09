@@ -1,6 +1,8 @@
 export interface Promocion {
   id: number;
   proveedorId?: number;
+  servicioId?: number;
+  servicioNombre?: string;
   codigo: string;
   nombre: string;
   descripcion: string;
@@ -15,6 +17,7 @@ export interface Promocion {
 }
 
 export interface PromocionRequest {
+  servicioId: number;
   codigo: string;
   nombre: string;
   descripcion: string;
@@ -28,10 +31,15 @@ export interface PromocionRequest {
 
 export interface PromocionSummary {
   id: number;
+  proveedorId: number;
+  servicioId: number;
+  servicioNombre: string;
   codigo: string;
   nombre: string;
+  descripcion: string;
   tipoDescuento: string;
   valorDescuento: number;
+  fechaInicio: string;
   fechaFin: string;
   activa: boolean;
 }

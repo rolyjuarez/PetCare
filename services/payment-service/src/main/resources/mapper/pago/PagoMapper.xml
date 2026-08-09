@@ -8,6 +8,9 @@
         p.fecha_pago AS fechaPago, p.comprobante_url AS comprobanteUrl,
         p.modalidad_pago AS modalidadPago, p.intencion_id AS intencionId,
         p.monto_original AS montoOriginal, p.descuento_total AS descuentoTotal,
+        p.descuento_id AS descuentoId, p.descuento_codigo AS descuentoCodigo,
+        p.descuento_nombre AS descuentoNombre, p.descuento_tipo AS descuentoTipo,
+        p.descuento_servicio_id AS descuentoServicioId,
         p.estado_sync AS estadoSync, p.created_at AS createdAt, p.updated_at AS updatedAt,
         p.deleted, p.version
     </sql>
@@ -17,10 +20,12 @@
             parameterType="bo.capital.tec.pet.modules.pago.entity.Pago">
         INSERT INTO pago (reserva_id, monto, metodo_pago, estado_pago, referencia_transaccion,
             fecha_pago, comprobante_url, modalidad_pago, intencion_id, monto_original,
-            descuento_total, estado_sync)
+            descuento_total, descuento_id, descuento_codigo, descuento_nombre,
+            descuento_tipo, descuento_servicio_id, estado_sync)
         VALUES (#{reservaId}, #{monto}, #{metodoPago}, #{estadoPago}, #{referenciaTransaccion},
             #{fechaPago}, #{comprobanteUrl}, #{modalidadPago}, #{intencionId}, #{montoOriginal},
-            #{descuentoTotal}, #{estadoSync})
+            #{descuentoTotal}, #{descuentoId}, #{descuentoCodigo}, #{descuentoNombre},
+            #{descuentoTipo}, #{descuentoServicioId}, #{estadoSync})
     </insert>
 
     <select id="selectById" resultType="bo.capital.tec.pet.modules.pago.entity.Pago">
@@ -63,6 +68,11 @@
         SET monto = #{monto},
             monto_original = #{montoOriginal},
             descuento_total = #{descuentoTotal},
+            descuento_id = #{descuentoId},
+            descuento_codigo = #{descuentoCodigo},
+            descuento_nombre = #{descuentoNombre},
+            descuento_tipo = #{descuentoTipo},
+            descuento_servicio_id = #{descuentoServicioId},
             updated_at = NOW(),
             version = version + 1
         WHERE id = #{id} AND deleted = FALSE

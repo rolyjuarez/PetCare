@@ -31,10 +31,10 @@ System_Ext(backend, "backend", "8080", "API REST principal / catálogos")
 System_Ext(rs, "reservation-service", "8081", "Dueño de la reserva")
 
 ContainerQueue(kafka, "Kafka", "Topics", "Consume: saga.comando.notificar-proveedor | Publica: reserva.aceptada, reserva.rechazada | DLT: saga.dlt.v1")
-ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "solicitud_reserva, evento_procesado")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "solicitud_reserva, evento_procesado, promocion")
 
 ' ---------------------------------------------------------------------------
-' Componentes internos
+' Componentes internos - solicitudes de reserva
 ' ---------------------------------------------------------------------------
 Container_Boundary(ps, "provider-service (8082)") {
     Component(ps_consumer, "NotificarProveedorCommandConsumer", "Kafka listener", "Recibe el comando y crea las solicitudes PENDIENTE")
@@ -50,19 +50,39 @@ Container_Boundary(ps, "provider-service (8082)") {
 }
 
 ' ---------------------------------------------------------------------------
+' Componentes internos - promociones / descuentos
+' ---------------------------------------------------------------------------
+Container_Boundary(pp, "módulo promocion") {
+    Component(pp_api, "PromocionController", "Spring MVC", "CRUD de descuentos del proveedor (/proveedores/{proveedorId}/descuentos)")
+    Component(pp_svc, "PromocionService / PromocionServiceImpl", "Service", "Reglas de alta, baja y validez de promociones")
+    Component(pp_mapper, "PromocionMapper / PromocionCatalogMapper", "MyBatis", "Persistencia y consultas de promociones")
+
+    Rel(pp_api, pp_svc, "Crea / actualiza / elimina / consulta")
+    Rel(pp_svc, pp_mapper, "Persiste promociones")
+}
+
+' ---------------------------------------------------------------------------
 ' Relaciones con el exterior
 ' ---------------------------------------------------------------------------
 Rel(sa, kafka, "Publica NotificarProveedorCommand", "saga.comando.notificar-proveedor")
 Rel(kafka, ps_consumer, "Consume el comando", "saga.comando.notificar-proveedor")
 Rel(proveedor, ps_api, "Acepta / rechaza la solicitud", "REST /aceptar /rechazar")
+Rel(proveedor, pp_api, "Gestiona sus descuentos", "REST /descuentos")
 Rel(backend, ps_api, "Consulta solicitudes del proveedor", "HTTP")
+Rel(backend, pp_api, "Consulta promociones activas del proveedor", "HTTP")
 Rel(ps_pub, kafka, "ReservaAceptadaEvent / ReservaRechazadaEvent", "Kafka")
 Rel(ps_svc, db, "Persiste solicitud_reserva", "JDBC / MyBatis")
 Rel(ps_idem, db, "Persiste evento_procesado", "JDBC / MyBatis")
+Rel(pp_mapper, db, "Persiste promocion", "JDBC / MyBatis")
 
 note bottom of ps_consumer
   Las solicitudes solo se crean cuando el orquestador lo ordena:
   provider-service ya no consume reserva.creada.
+end note
+
+note bottom of pp_svc
+  payment-service consume el cupo de la promoción (usos_actuales)
+  al procesar el pago de una reserva con descuento.
 end note
 
 LAYOUT_WITH_LEGEND()

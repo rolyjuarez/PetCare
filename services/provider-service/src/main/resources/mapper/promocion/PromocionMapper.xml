@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="bo.capital.tec.pet.modules.promocion.mapper.PromocionMapper">
+
+    <sql id="baseColumns">
+        p.id, p.proveedor_id AS proveedorId, p.servicio_id AS servicioId,
+        ps.nombre AS servicioNombre, p.codigo, p.nombre, p.descripcion,
+        p.tipo_descuento AS tipoDescuento, p.valor_descuento AS valorDescuento,
+        p.fecha_inicio AS fechaInicio, p.fecha_fin AS fechaFin, p.activa,
+        p.limite_usos AS limiteUsos, p.usos_actuales AS usosActuales,
+        p.created_at AS createdAt, p.updated_at AS updatedAt, p.deleted, p.version
+    </sql>
+
+    <sql id="table">
+        promocion p LEFT JOIN proveedor_servicio ps ON ps.id = p.servicio_id AND ps.deleted = FALSE
+    </sql>
+
+    <select id="selectById" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.id = #{id}
+    </select>
+
+    <select id="selectByCodigo" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.codigo = #{codigo} AND p.deleted = FALSE
+        LIMIT 1
+    </select>
+
+    <select id="selectByProveedorId" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.proveedor_id = #{proveedorId} AND p.deleted = FALSE
+        ORDER BY p.created_at DESC, p.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByProveedorId" resultType="long">
+        SELECT COUNT(*) FROM promocion p
+        WHERE p.proveedor_id = #{proveedorId} AND p.deleted = FALSE
+    </select>
+
+    <select id="selectActivasByProveedorId" resultType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
+        WHERE p.proveedor_id = #{proveedorId}
+          AND p.deleted = FALSE
+          AND p.activa = TRUE
+          AND NOW() BETWEEN p.fecha_inicio AND p.fecha_fin
+          AND (p.limite_usos IS NULL OR p.usos_actuales &lt; p.limite_usos)
+        ORDER BY p.fecha_fin ASC, p.id ASC
+    </select>
+
+    <select id="existeServicioDelProveedor" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN TRUE ELSE FALSE END
+        FROM proveedor_servicio ps
+        WHERE ps.id = #{servicioId}
+          AND ps.proveedor_id = #{proveedorId}
+          AND ps.deleted = FALSE
+          AND ps.activo = TRUE
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id"
+            parameterType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        INSERT INTO promocion (proveedor_id, servicio_id, codigo, nombre, descripcion,
+            tipo_descuento, valor_descuento, fecha_inicio, fecha_fin, activa, limite_usos, usos_actuales)
+        VALUES (#{proveedorId}, #{servicioId}, #{codigo}, #{nombre}, #{descripcion},
+            #{tipoDescuento}, #{valorDescuento}, #{fechaInicio}, #{fechaFin}, #{activa}, #{limiteUsos}, #{usosActuales})
+    </insert>
+
+    <update id="update" parameterType="bo.capital.tec.pet.modules.promocion.entity.Promocion">
+        UPDATE promocion
+        SET codigo = #{codigo},
+            servicio_id = #{servicioId},
+            nombre = #{nombre},
+            descripcion = #{descripcion},
+            tipo_descuento = #{tipoDescuento},
+            valor_descuento = #{valorDescuento},
+            fecha_inicio = #{fechaInicio},
+            fecha_fin = #{fechaFin},
+            activa = #{activa},
+            limite_usos = #{limiteUsos},
+            updated_at = NOW(),
+            version = version + 1
+        WHERE id = #{id}
+          AND deleted = FALSE
+    </update>
+
+    <update id="softDelete">
+        UPDATE promocion
+        SET deleted = TRUE, updated_at = NOW(), version = version + 1
+        WHERE id = #{id}
+    </update>
+</mapper>
