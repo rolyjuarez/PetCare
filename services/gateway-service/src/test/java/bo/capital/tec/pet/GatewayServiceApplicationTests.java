@@ -88,6 +88,46 @@ class GatewayServiceApplicationTests {
     }
 
     @Test
+    void validJwtPagoByIdRoute() {
+        webTestClient.get().uri("/api/v1/pagos/1")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    @Test
+    void validJwtPagoReservaRoute() {
+        webTestClient.get().uri("/api/v1/pagos/reserva/1")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    @Test
+    void validJwtDisponibilidadesRoute() {
+        webTestClient.get().uri("/api/v1/disponibilidades/by-servicio/1")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    @Test
+    void validJwtPromocionesRoute() {
+        webTestClient.get().uri("/api/v1/promociones/active")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    @Test
+    void validJwtProveedorSolicitudesRoute() {
+        webTestClient.get().uri("/api/v1/proveedor/solicitudes")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken())
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.BAD_GATEWAY);
+    }
+
+    @Test
     void unmatchedPathReturns404() {
         webTestClient.get().uri("/otra-cosa")
                 .exchange()

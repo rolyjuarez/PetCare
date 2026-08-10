@@ -38,12 +38,12 @@ spring:
         - id: provider-service
           uri: ${PROVIDER_SERVICE_URL:http://localhost:8082}
           predicates:
-            - Path=/api/v1/proveedor/**,/api/v1/proveedores/**
+            - Path=/api/v1/proveedor/**,/api/v1/proveedores/**,/api/v1/disponibilidades/**,/api/v1/promociones/**
 
         - id: payment-service
           uri: ${PAYMENT_SERVICE_URL:http://localhost:8083}
           predicates:
-            - Path=/api/v1/pagos/reserva/**,/api/v1/pagos/*/procesar,/api/v1/pagos/*/reembolsar
+            - Path=/api/v1/pagos/**
 
         - id: backend
           uri: ${BACKEND_SERVICE_URL:http://localhost:8080}
