@@ -6,7 +6,7 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface EventoProcesadoMapper {
 
-    Long exists(@Param("eventId") String eventId);
+    String exists(@Param("eventId") String eventId);
 
     int insert(EventoProcesadoRecord evento);
 }

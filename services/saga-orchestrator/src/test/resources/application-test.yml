@@ -32,6 +32,7 @@ app:
       comando-crear-pago: test.saga.comando.crear-pago
       comando-cancelar-reserva: test.saga.comando.cancelar-reserva
       comando-rechazar-reserva: test.saga.comando.rechazar-reserva
+      comando-liberar-descuento: test.saga.comando.liberar-descuento
       dlt: test.saga.dlt
     partitions: 3
     replication-factor: 1
