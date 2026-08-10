@@ -12,8 +12,6 @@ public interface ReservaMapper {
 
     bo.capital.tec.pet.modules.reserva.domain.model.Reserva selectById(@Param("id") Long id);
 
-    bo.capital.tec.pet.modules.reserva.domain.model.Reserva selectByCodigo(@Param("codigo") String codigo);
-
     List<bo.capital.tec.pet.modules.reserva.domain.model.Reserva> selectAll(@Param("offset") int offset, @Param("limit") int limit);
 
     long countAll();
@@ -21,17 +19,7 @@ public interface ReservaMapper {
     List<bo.capital.tec.pet.modules.reserva.domain.model.Reserva> selectByClienteId(
             @Param("clienteId") Long clienteId, @Param("offset") int offset, @Param("limit") int limit);
 
-    long countByClienteId(@Param("clienteId") Long clienteId);
-
-    List<bo.capital.tec.pet.modules.reserva.domain.model.Reserva> selectByProveedorId(
-            @Param("proveedorId") Long proveedorId, @Param("offset") int offset, @Param("limit") int limit);
-
     long countByProveedorId(@Param("proveedorId") Long proveedorId);
-
-    List<bo.capital.tec.pet.modules.reserva.domain.model.Reserva> selectByEstado(
-            @Param("estadoReservaId") Long estadoReservaId, @Param("offset") int offset, @Param("limit") int limit);
-
-    long countByEstado(@Param("estadoReservaId") Long estadoReservaId);
 
     List<bo.capital.tec.pet.modules.reserva.domain.model.Reserva> selectFiltered(
             @Param("clienteId") Long clienteId,

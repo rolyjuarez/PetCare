@@ -85,14 +85,6 @@ export class ReservaService {
     return this.api.getPaged('/reservas', params?.page, params?.size, params);
   }
 
-  getByCliente(clienteId: number): Observable<ApiResponse<PagedResponse<Reserva>>> {
-    return this.api.getPaged('/reservas', 0, 50, { clienteId });
-  }
-
-  getByMascota(mascotaId: number): Observable<ApiResponse<PagedResponse<Reserva>>> {
-    return this.api.getPaged('/reservas', 0, 50, { mascotaId });
-  }
-
   getSlots(proveedorId: number, servicioId: number, desde?: string, hasta?: string, excluirReservaId?: number): Observable<ApiResponse<DisponibilidadSlots[]>> {
     return this.api.get('/reservas/slots', { proveedorId, servicioId, desde, hasta, excluirReservaId });
   }

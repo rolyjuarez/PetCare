@@ -100,24 +100,6 @@ public class ReservaQueryServiceImpl implements ReservaQueryService {
         return buildPage(reservas, total, page, size);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public PagedResponse<ReservaSummaryDTO> getByClienteId(Long clienteId, int page, int size) {
-        page = PaginationUtil.safePage(page);
-        size = PaginationUtil.safeSize(size);
-        List<Reserva> reservas = queryRepository.findByClienteId(clienteId, page * size, size);
-        return buildPage(reservas, queryRepository.countByClienteId(clienteId), page, size);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PagedResponse<ReservaSummaryDTO> getByProveedorId(Long proveedorId, int page, int size) {
-        page = PaginationUtil.safePage(page);
-        size = PaginationUtil.safeSize(size);
-        List<Reserva> reservas = queryRepository.findByProveedorId(proveedorId, page * size, size);
-        return buildPage(reservas, queryRepository.countByProveedorId(proveedorId), page, size);
-    }
-
     private PagedResponse<ReservaSummaryDTO> buildPage(List<Reserva> reservas, long total, int page, int size) {
         List<ReservaSummaryDTO> content = reservas.stream().map(queryMapper::toSummaryDTO).toList();
         return PagedResponse.<ReservaSummaryDTO>builder()

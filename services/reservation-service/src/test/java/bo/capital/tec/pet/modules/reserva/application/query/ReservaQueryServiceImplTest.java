@@ -18,7 +18,6 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -77,7 +76,6 @@ class ReservaQueryServiceImplTest {
         assertThat(page.getContent()).hasSize(1);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.isLast()).isTrue();
-        verify(queryRepository, never()).findByClienteId(any(), anyInt(), anyInt());
         verify(queryRepository, never()).findAll(anyInt(), anyInt());
     }
 
@@ -107,34 +105,6 @@ class ReservaQueryServiceImplTest {
                 service.getAll(null, null, null, null, null, null, 0, 20);
 
         assertThat(page.getTotalElements()).isZero();
-        verify(queryRepository, never()).findByClienteId(any(), anyInt(), anyInt());
     }
 
-    @Test
-    void getByClienteIdDelegaEnRepo() {
-        when(queryRepository.findByClienteId(2L, 0, 5)).thenReturn(List.of());
-        when(queryRepository.countByClienteId(2L)).thenReturn(0L);
-
-        PagedResponse<ReservaSummaryDTO> page = service.getByClienteId(2L, 0, 5);
-
-        assertThat(page.getPage()).isZero();
-        assertThat(page.getSize()).isEqualTo(5);
-    }
-
-    @Test
-    void getByProveedorIdPaginaCorrectamente() {
-        Reserva r = Reserva.builder().id(3L).build();
-        when(queryRepository.findByProveedorId(9L, 10, 10)).thenReturn(List.of(r));
-        when(queryRepository.countByProveedorId(9L)).thenReturn(21L);
-        when(queryMapper.toSummaryDTO(r))
-                .thenReturn(ReservaSummaryDTO.builder().id(3L).build());
-
-        PagedResponse<ReservaSummaryDTO> page = service.getByProveedorId(9L, 1, 10);
-
-        assertThat(page.getPage()).isEqualTo(1);
-        assertThat(page.getTotalPages()).isEqualTo(3);
-        assertThat(page.getContent()).hasSize(1);
-        assertThat(page.isFirst()).isFalse();
-        assertThat(page.isLast()).isFalse();
-    }
 }

@@ -55,22 +55,4 @@ public class ReservaQueryController {
         return ResponseEntity.ok(ApiResponse.success(
                 reservaQueryService.getAll(clienteId, mascotaId, servicioId, estado, fechaDesde, fechaHasta, page, size)));
     }
-
-    @GetMapping("/cliente/{clienteId}")
-    public ResponseEntity<ApiResponse<PagedResponse<ReservaSummaryDTO>>> getByCliente(
-            @PathVariable Long clienteId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(
-                reservaQueryService.getByClienteId(clienteId, page, size)));
-    }
-
-    @GetMapping("/proveedor/{proveedorId}")
-    public ResponseEntity<ApiResponse<PagedResponse<ReservaSummaryDTO>>> getByProveedor(
-            @PathVariable Long proveedorId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(ApiResponse.success(
-                reservaQueryService.getByProveedorId(proveedorId, page, size)));
-    }
 }

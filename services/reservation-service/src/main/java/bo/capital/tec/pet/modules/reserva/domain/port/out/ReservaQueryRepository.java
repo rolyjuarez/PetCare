@@ -19,12 +19,6 @@ public interface ReservaQueryRepository {
 
     long countAll();
 
-    List<Reserva> findByClienteId(Long clienteId, int offset, int limit);
-
-    long countByClienteId(Long clienteId);
-
-    List<Reserva> findByProveedorId(Long proveedorId, int offset, int limit);
-
     long countByProveedorId(Long proveedorId);
 
     List<Reserva> findFiltered(Long clienteId, Long mascotaId, Long servicioId,

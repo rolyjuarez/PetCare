@@ -79,33 +79,9 @@
         ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
     </select>
 
-    <select id="countByClienteId" resultType="long">
-        SELECT COUNT(*) FROM reserva r
-        WHERE r.cliente_id = #{clienteId} AND r.deleted = FALSE
-    </select>
-
-    <select id="selectByProveedorId" resultMap="reservaResultMap">
-        SELECT <include refid="baseColumns"/>
-        FROM <include refid="table"/>
-        WHERE r.proveedor_id = #{proveedorId} AND r.deleted = FALSE
-        ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
-    </select>
-
     <select id="countByProveedorId" resultType="long">
         SELECT COUNT(*) FROM reserva r
         WHERE r.proveedor_id = #{proveedorId} AND r.deleted = FALSE
-    </select>
-
-    <select id="selectByEstado" resultMap="reservaResultMap">
-        SELECT <include refid="baseColumns"/>
-        FROM <include refid="table"/>
-        WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
-        ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
-    </select>
-
-    <select id="countByEstado" resultType="long">
-        SELECT COUNT(*) FROM reserva r
-        WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
     </select>
 
     <sql id="filtrosComunes">

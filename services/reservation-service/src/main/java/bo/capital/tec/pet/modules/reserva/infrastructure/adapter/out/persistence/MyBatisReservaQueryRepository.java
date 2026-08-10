@@ -33,21 +33,6 @@ public class MyBatisReservaQueryRepository implements ReservaQueryRepository {
     }
 
     @Override
-    public List<Reserva> findByClienteId(Long clienteId, int offset, int limit) {
-        return reservaMapper.selectByClienteId(clienteId, offset, limit);
-    }
-
-    @Override
-    public long countByClienteId(Long clienteId) {
-        return reservaMapper.countByClienteId(clienteId);
-    }
-
-    @Override
-    public List<Reserva> findByProveedorId(Long proveedorId, int offset, int limit) {
-        return reservaMapper.selectByProveedorId(proveedorId, offset, limit);
-    }
-
-    @Override
     public long countByProveedorId(Long proveedorId) {
         return reservaMapper.countByProveedorId(proveedorId);
     }

@@ -21,8 +21,4 @@ public interface ReservaQueryService {
     PagedResponse<ReservaSummaryDTO> getAll(Long clienteId, Long mascotaId, Long servicioId,
                                             String estado, LocalDate fechaDesde, LocalDate fechaHasta,
                                             int page, int size);
-
-    PagedResponse<ReservaSummaryDTO> getByClienteId(Long clienteId, int page, int size);
-
-    PagedResponse<ReservaSummaryDTO> getByProveedorId(Long proveedorId, int page, int size);
 }
