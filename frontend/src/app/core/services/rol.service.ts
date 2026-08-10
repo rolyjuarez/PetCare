@@ -12,10 +12,6 @@ export class RolService {
     return this.api.getPaged('/roles', params?.page, params?.size, params);
   }
 
-  getAllActivos(): Observable<ApiResponse<Rol[]>> {
-    return this.api.get('/roles/activos');
-  }
-
   getById(id: number): Observable<ApiResponse<Rol>> {
     return this.api.get(`/roles/${id}`);
   }

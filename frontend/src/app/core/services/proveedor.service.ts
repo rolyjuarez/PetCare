@@ -20,10 +20,6 @@ export class ProveedorService {
     return this.api.get('/proveedores/my');
   }
 
-  setRequiereCertificado(proveedorId: number, servicioId: number, requiereCertificado: boolean): Observable<ApiResponse<Proveedor>> {
-    return this.api.put(`/proveedores/${proveedorId}/especialidad/${servicioId}`, { requiereCertificado });
-  }
-
   createFull(data: ProveedorFullCreate): Observable<ApiResponse<Proveedor>> {
     return this.api.post('/proveedores/full', data);
   }

@@ -16,10 +16,6 @@ export class PermisoService {
     return this.api.get(`/permisos/${id}`);
   }
 
-  getByRolId(rolId: number): Observable<ApiResponse<Permiso[]>> {
-    return this.api.get(`/permisos/by-rol/${rolId}`);
-  }
-
   create(data: PermisoRequest): Observable<ApiResponse<Permiso>> {
     return this.api.post('/permisos', data);
   }

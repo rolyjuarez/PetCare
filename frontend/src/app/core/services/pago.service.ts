@@ -20,10 +20,6 @@ export class PagoService {
     return this.api.get(`/pagos/reserva/${reservaId}`);
   }
 
-  historial(reservaId: number, page = 0, size = 20): Observable<ApiResponse<PagedResponse<PagoResponse>>> {
-    return this.api.getPaged(`/pagos/reserva/${reservaId}/historial`, page, size);
-  }
-
   create(data: PagoRequest): Observable<ApiResponse<Pago>> {
     return this.api.post('/pagos', data);
   }

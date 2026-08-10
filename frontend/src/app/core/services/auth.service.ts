@@ -86,17 +86,6 @@ export class AuthService {
     }
   }
 
-  hasPermission(permission: string): boolean {
-    const user = this.currentUserSignal();
-    if (user?.permissions?.includes(permission)) return true;
-    try {
-      const stored = JSON.parse(localStorage.getItem('userInfo') ?? 'null');
-      return stored?.permissions?.includes(permission) ?? false;
-    } catch {
-      return false;
-    }
-  }
-
   getProfile(): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/me`);
   }

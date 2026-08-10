@@ -32,26 +32,6 @@ export class PromocionService {
     return this.api.delete(`/promociones/${id}`);
   }
 
-  getMyPromociones(page = 0, size = 50): Observable<ApiResponse<PagedResponse<PromocionSummary>>> {
-    return this.api.getPaged('/proveedores/my/promociones', page, size);
-  }
-
-  createMia(data: PromocionRequest): Observable<ApiResponse<Promocion>> {
-    return this.api.post('/proveedores/my/promociones', data);
-  }
-
-  updateMia(id: number, data: PromocionRequest): Observable<ApiResponse<Promocion>> {
-    return this.api.put(`/proveedores/my/promociones/${id}`, data);
-  }
-
-  deleteMia(id: number): Observable<ApiResponse<void>> {
-    return this.api.delete(`/proveedores/my/promociones/${id}`);
-  }
-
-  notificar(id: number): Observable<ApiResponse<{ enviados: number }>> {
-    return this.api.post(`/proveedores/my/promociones/${id}/notificar`, {});
-  }
-
   getByProveedor(proveedorId: number, page = 0, size = 50): Observable<ApiResponse<PagedResponse<PromocionSummary>>> {
     return this.api.getPaged(`/proveedores/${proveedorId}/descuentos`, page, size);
   }
