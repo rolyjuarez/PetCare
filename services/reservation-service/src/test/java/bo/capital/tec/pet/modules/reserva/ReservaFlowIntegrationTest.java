@@ -1,18 +1,22 @@
 package bo.capital.tec.pet.modules.reserva;
 
 import bo.capital.tec.pet.common.client.ProviderCatalogClient;
+import bo.capital.tec.pet.common.api.PagedResponse;
 import bo.capital.tec.pet.common.kafka.IdempotencyService;
-import bo.capital.tec.pet.modules.reserva.command.CancelarReservaCommand;
-import bo.capital.tec.pet.modules.reserva.command.ConfirmarReservaCommand;
-import bo.capital.tec.pet.modules.reserva.command.RechazarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.application.command.CancelarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.application.command.ConfirmarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.application.command.CrearReservaCommand;
+import bo.capital.tec.pet.modules.reserva.application.command.RechazarReservaCommand;
+import bo.capital.tec.pet.modules.reserva.application.command.ReservaCommandUseCase;
+import bo.capital.tec.pet.modules.reserva.application.query.ReservaQueryService;
+import bo.capital.tec.pet.modules.reserva.domain.model.Reserva;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaRequestDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ReservaResponseDTO;
+import bo.capital.tec.pet.modules.reserva.dto.ReservaSummaryDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ServicioInfoDTO;
-import bo.capital.tec.pet.modules.reserva.entity.Reserva;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCanceladaEvent;
 import bo.capital.tec.pet.modules.reserva.event.ReservaCreadaEvent;
-import bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper;
-import bo.capital.tec.pet.modules.reserva.service.ReservaService;
+import bo.capital.tec.pet.modules.reserva.infrastructure.adapter.out.persistence.ReservaMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +50,10 @@ import static org.mockito.Mockito.when;
 class ReservaFlowIntegrationTest {
 
     @Autowired
-    private ReservaService reservaService;
+    private ReservaCommandUseCase reservaCommandUseCase;
+
+    @Autowired
+    private ReservaQueryService reservaQueryService;
 
     @Autowired
     private ReservaMapper reservaMapper;
@@ -96,13 +103,13 @@ class ReservaFlowIntegrationTest {
 
     @Test
     void crearReservaPublicaReservaCreadaEvent() throws Exception {
-        ReservaResponseDTO creada = reservaService.create(buildRequest());
+        ReservaResponseDTO creada = reservaCommandUseCase.crear(CrearReservaCommand.desde(buildRequest()));
 
         assertThat(creada.getId()).isNotNull();
         assertThat(creada.getCodigo()).startsWith("RES-");
         assertThat(creada.getEstadoReservaNombre()).isEqualTo("PENDIENTE");
 
-        ReservaCreadaEvent event = eventCollector.creadas().poll(10, TimeUnit.SECONDS);
+        ReservaCreadaEvent event = awaitCreada(creada.getId());
         assertThat(event).isNotNull();
         assertThat(event.getReservaId()).isEqualTo(creada.getId());
         assertThat(event.getServicioId()).isEqualTo(1L);
@@ -110,8 +117,26 @@ class ReservaFlowIntegrationTest {
     }
 
     @Test
+    void getAllFiltraPorEstadoYFecha() {
+        ReservaResponseDTO creada = reservaCommandUseCase.crear(CrearReservaCommand.desde(buildRequest()));
+
+        PagedResponse<ReservaSummaryDTO> porEstado = reservaQueryService.getAll(
+                null, null, null, "PENDIENTE", null, null, 0, 20);
+        assertThat(porEstado.getTotalElements()).isEqualTo(1L);
+        assertThat(porEstado.getContent().get(0).getId()).isEqualTo(creada.getId());
+
+        PagedResponse<ReservaSummaryDTO> porFecha = reservaQueryService.getAll(
+                null, null, null, null, creada.getFechaInicio(), creada.getFechaInicio(), 0, 20);
+        assertThat(porFecha.getTotalElements()).isEqualTo(1L);
+
+        PagedResponse<ReservaSummaryDTO> sinResultado = reservaQueryService.getAll(
+                null, null, null, "CONFIRMADA", null, null, 0, 20);
+        assertThat(sinResultado.getTotalElements()).isZero();
+    }
+
+    @Test
     void consumirComandoConfirmarReservaActualizaReserva() throws Exception {
-        ReservaResponseDTO creada = reservaService.create(buildRequest());
+        ReservaResponseDTO creada = reservaCommandUseCase.crear(CrearReservaCommand.desde(buildRequest()));
 
         ConfirmarReservaCommand comando = new ConfirmarReservaCommand(
                 creada.getId(), creada.getCodigo(), 1L,
@@ -132,7 +157,7 @@ class ReservaFlowIntegrationTest {
 
     @Test
     void consumirComandoRechazarReservaGuardaMotivo() throws Exception {
-        ReservaResponseDTO creada = reservaService.create(buildRequest());
+        ReservaResponseDTO creada = reservaCommandUseCase.crear(CrearReservaCommand.desde(buildRequest()));
 
         RechazarReservaCommand comando = new RechazarReservaCommand(
                 creada.getId(), creada.getCodigo(), 1L,
@@ -152,7 +177,7 @@ class ReservaFlowIntegrationTest {
 
     @Test
     void comandoDuplicadoSeIgnora() throws Exception {
-        ReservaResponseDTO creada = reservaService.create(buildRequest());
+        ReservaResponseDTO creada = reservaCommandUseCase.crear(CrearReservaCommand.desde(buildRequest()));
 
         ConfirmarReservaCommand comando = new ConfirmarReservaCommand(
                 creada.getId(), creada.getCodigo(), 1L,
@@ -174,7 +199,7 @@ class ReservaFlowIntegrationTest {
 
     @Test
     void comandoCancelarReservaEjecutaCompensacionYPublica() throws Exception {
-        ReservaResponseDTO creada = reservaService.create(buildRequest());
+        ReservaResponseDTO creada = reservaCommandUseCase.crear(CrearReservaCommand.desde(buildRequest()));
 
         CancelarReservaCommand comando = new CancelarReservaCommand(
                 creada.getId(), creada.getCodigo(),
@@ -191,10 +216,32 @@ class ReservaFlowIntegrationTest {
                 Integer.class, creada.getClienteId());
         assertThat(notificaciones).isEqualTo(1);
 
-        ReservaCanceladaEvent compensacion = eventCollector.canceladas().poll(10, TimeUnit.SECONDS);
+        ReservaCanceladaEvent compensacion = awaitCancelada(creada.getId());
         assertThat(compensacion).isNotNull();
         assertThat(compensacion.getReservaId()).isEqualTo(creada.getId());
         assertThat(compensacion.getMotivo()).startsWith("Pago fallido");
+    }
+
+    private ReservaCreadaEvent awaitCreada(Long id) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (System.nanoTime() < deadline) {
+            ReservaCreadaEvent event = eventCollector.creadas().poll(200, TimeUnit.MILLISECONDS);
+            if (event != null && id.equals(event.getReservaId())) {
+                return event;
+            }
+        }
+        return null;
+    }
+
+    private ReservaCanceladaEvent awaitCancelada(Long id) throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+        while (System.nanoTime() < deadline) {
+            ReservaCanceladaEvent event = eventCollector.canceladas().poll(200, TimeUnit.MILLISECONDS);
+            if (event != null && id.equals(event.getReservaId())) {
+                return event;
+            }
+        }
+        return null;
     }
 
     private Reserva awaitReserva(Long id, String estadoNombre) throws InterruptedException {

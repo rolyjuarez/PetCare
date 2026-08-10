@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.ReservaMapper">
+<mapper namespace="bo.capital.tec.pet.modules.reserva.infrastructure.adapter.out.persistence.ReservaMapper">
 
-    <resultMap id="reservaResultMap" type="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+    <resultMap id="reservaResultMap" type="bo.capital.tec.pet.modules.reserva.domain.model.Reserva">
         <id property="id" column="id"/>
         <result property="codigo" column="codigo"/>
         <result property="clienteId" column="cliente_id"/>
@@ -40,7 +40,7 @@
     </sql>
     <sql id="table">reserva r</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.modules.reserva.domain.model.Reserva">
         INSERT INTO reserva (codigo, cliente_id, proveedor_id, servicio_id, mascota_id,
             estado_reserva_id, registro_vacunacion_id, modalidad_entrega, fecha_reserva, fecha_inicio, fecha_fin, hora_inicio, hora_fin,
             latitud, longitud, direccion_referencia, notas, precio_total)
@@ -108,7 +108,33 @@
         WHERE r.estado_reserva_id = #{estadoReservaId} AND r.deleted = FALSE
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.modules.reserva.entity.Reserva">
+    <sql id="filtrosComunes">
+        <if test="clienteId != null"> AND r.cliente_id = #{clienteId}</if>
+        <if test="mascotaId != null"> AND r.mascota_id = #{mascotaId}</if>
+        <if test="servicioId != null"> AND r.servicio_id = #{servicioId}</if>
+        <if test="estado != null and estado != ''"> AND e.nombre = #{estado}</if>
+        <if test="fechaDesde != null"> AND r.fecha_inicio &gt;= #{fechaDesde}</if>
+        <if test="fechaHasta != null"> AND r.fecha_inicio &lt;= #{fechaHasta}</if>
+    </sql>
+
+    <select id="selectFiltered" resultMap="reservaResultMap">
+        SELECT <include refid="baseColumns"/>
+        FROM <include refid="table"/>
+        LEFT JOIN estado_reserva e ON e.id = r.estado_reserva_id AND e.deleted = FALSE
+        WHERE r.deleted = FALSE
+        <include refid="filtrosComunes"/>
+        ORDER BY r.created_at DESC LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countFiltered" resultType="long">
+        SELECT COUNT(*)
+        FROM reserva r
+        LEFT JOIN estado_reserva e ON e.id = r.estado_reserva_id AND e.deleted = FALSE
+        WHERE r.deleted = FALSE
+        <include refid="filtrosComunes"/>
+    </select>
+
+    <update id="update" parameterType="bo.capital.tec.pet.modules.reserva.domain.model.Reserva">
         UPDATE reserva
         SET codigo = #{codigo}, cliente_id = #{clienteId}, proveedor_id = #{proveedorId},
             servicio_id = #{servicioId}, mascota_id = #{mascotaId}, estado_reserva_id = #{estadoReservaId},

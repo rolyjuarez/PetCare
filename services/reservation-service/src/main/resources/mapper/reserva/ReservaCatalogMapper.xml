@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.ReservaCatalogMapper">
+<mapper namespace="bo.capital.tec.pet.modules.reserva.infrastructure.adapter.out.persistence.ReservaCatalogMapper">
 
     <select id="selectCliente" resultType="bo.capital.tec.pet.modules.reserva.dto.ClienteInfoDTO">
         SELECT c.id,

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.modules.reserva.mapper.VacunaCatalogMapper">
+<mapper namespace="bo.capital.tec.pet.modules.reserva.infrastructure.adapter.out.persistence.VacunaCatalogMapper">
 
     <select id="selectRegistroVacunacion" resultType="bo.capital.tec.pet.modules.reserva.dto.RegistroVacunacionInfoDTO">
         SELECT rv.id,

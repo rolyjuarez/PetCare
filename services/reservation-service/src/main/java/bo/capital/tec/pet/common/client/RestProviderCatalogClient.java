@@ -3,7 +3,7 @@ package bo.capital.tec.pet.common.client;
 import bo.capital.tec.pet.modules.reserva.dto.ModalidadInfoDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ProveedorInfoDTO;
 import bo.capital.tec.pet.modules.reserva.dto.ServicioInfoDTO;
-import bo.capital.tec.pet.modules.reserva.entity.Disponibilidad;
+import bo.capital.tec.pet.modules.reserva.domain.model.Disponibilidad;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Component;
