@@ -1,0 +1,74 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: gateway-service
+  main:
+    web-application-type: reactive
+  cloud:
+    gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:4200"
+              - "http://localhost"
+              - "http://127.0.0.1:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - PATCH
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+              - X-Authenticated-User
+            allowCredentials: true
+            maxAge: 3600
+      routes:
+        - id: reservation-service
+          uri: ${RESERVATION_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/reservas/**
+
+        - id: provider-service
+          uri: ${PROVIDER_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/proveedor/**,/api/v1/proveedores/**
+
+        - id: payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/pagos/reserva/**,/api/v1/pagos/*/procesar,/api/v1/pagos/*/reembolsar
+
+        - id: backend
+          uri: ${BACKEND_SERVICE_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/v1/**,/uploads/**
+
+jwt:
+  secret: ${JWT_SECRET:PETCareSecretKeyForJWTTokenGeneration2024VeryLongAndSecureKeyMustBe256Bits}
+
+app:
+  rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
+    capacity: ${RATE_LIMIT_CAPACITY:120}
+    refill-per-second: ${RATE_LIMIT_REFILL_PER_SECOND:2.0}
+
+logging:
+  level:
+    bo.capital.tec.pet: DEBUG
+    org.springframework.cloud.gateway: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
