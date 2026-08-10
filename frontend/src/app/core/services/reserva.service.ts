@@ -101,10 +101,6 @@ export class ReservaService {
     return this.api.put(`/reservas/${id}`, data);
   }
 
-  asignarProveedor(id: number, proveedorId: number): Observable<ApiResponse<Reserva>> {
-    return this.api.put(`/reservas/${id}/asignar-proveedor/${proveedorId}`, {});
-  }
-
   cancelar(id: number, motivo?: string): Observable<ApiResponse<Reserva>> {
     return this.api.put(`/reservas/${id}/cancelar`, { motivo: motivo || '' });
   }
