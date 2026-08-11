@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableCaching
 @EnableAsync
 @EnableScheduling
-@MapperScan("bo.capital.tec.pet.*.mapper")
+@MapperScan("bo.capital.tec.pet.repository")
 public class PetCareApplication {
     public static void main(String[] args) {
         SpringApplication.run(PetCareApplication.class, args);

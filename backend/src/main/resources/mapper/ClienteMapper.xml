@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.cliente.mapper.ClienteMapper">
+<mapper namespace="bo.capital.tec.pet.repository.ClienteMapper">
     <sql id="baseColumns">
         c.id, c.persona_id, c.usuario_id, c.notas, c.created_at, c.updated_at, c.deleted, c.version
     </sql>
     <sql id="table">cliente c</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.cliente.entity.Cliente">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.domain.Cliente">
         INSERT INTO cliente (persona_id, usuario_id, notas)
         VALUES (#{personaId}, #{usuarioId}, #{notas})
     </insert>
 
-    <resultMap id="clienteResultMap" type="bo.capital.tec.pet.cliente.entity.Cliente">
+    <resultMap id="clienteResultMap" type="bo.capital.tec.pet.domain.Cliente">
         <id property="id" column="id"/>
         <result property="personaId" column="persona_id"/>
         <result property="usuarioId" column="usuario_id"/>
@@ -28,7 +28,7 @@
         WHERE c.id = #{id} AND c.deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.cliente.dto.ClienteSummaryDTO">
+    <select id="selectAll" resultType="bo.capital.tec.pet.dto.ClienteSummaryDTO">
         SELECT
             c.id,
             TRIM(p.nombre || ' ' || p.primer_apellido) AS nombreCompleto,
@@ -74,7 +74,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.cliente.entity.Cliente">
+    <update id="update" parameterType="bo.capital.tec.pet.domain.Cliente">
         UPDATE cliente
         SET persona_id = #{personaId}, usuario_id = #{usuarioId}, notas = #{notas},
             updated_at = NOW(), version = version + 1

@@ -1,24 +1,28 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 LAYOUT_WITH_LEGEND()
 
-Container(api, "API REST", "Spring Boot 3.4.1", "Lógica de negocio, seguridad y acceso a datos")
+Person(user, "Usuario", "Cliente de la aplicación web o móvil")
 
-Component(controller_component, "Controllers", "Spring MVC", "Expone endpoints REST para módulos del sistema")
-Component(auth_component, "Auth Component", "Spring Security + JWT", "Login, registro, refresh token y control de accesos")
-Component(service_component, "Domain Services", "Spring Services", "Implementan operaciones de negocio para personas, clientes, mascotas, reservas y pagos")
-Component(common_component, "Common Services", "Spring Components", "Manejo de archivos, email, excepciones y configuración")
-Component(persistence_component, "Persistence Layer", "MyBatis + Mappers", "Acceso a datos relacionales")
+System_Boundary(api_boundary, "Backend PetCare") {
+    Container(api, "API REST", "Spring Boot 3.4.1", "Expone endpoints REST y orquesta la lógica de negocio")
+    Container(controllers, "Controllers", "Spring MVC", "Acepta solicitudes HTTP y llama a los servicios de aplicación")
+    Container(services, "Service Layer", "Spring Services", "Implementa casos de uso y lógica de negocio")
+    Container(repositories, "Persistence Layer", "MyBatis + XML Mappers", "Acceso a datos y consultas SQL")
+    Container(common, "Common / Infra", "Spring Components", "Configuración compartida, manejo de errores y utilidades transversales")
+}
 
-System_Ext(db, "PostgreSQL", "Base de datos relacional")
-System_Ext(email, "SMTP Gmail", "Envio de correos")
-System_Ext(storage, "Almacenamiento local", "Archivos subidos por usuarios")
+ContainerDb(db, "PostgreSQL", "Base de datos relacional", "Almacena clientes, mascotas, reservas, pagos y usuarios")
+Container_Ext(email, "SMTP Gmail", "Servicio de correo", "Envía notificaciones y emails transaccionales")
+Container_Ext(storage, "Almacenamiento local", "File storage", "Guarda archivos y fotos de mascotas")
 
-Rel(controller_component, auth_component, "Valida autenticación y JWT")
-Rel(controller_component, service_component, "Invoca lógica de negocio")
-Rel(service_component, persistence_component, "Consulta y guarda datos")
-Rel(common_component, db, "Accede a configuraciones y logs")
-Rel(common_component, storage, "Guarda archivos y fotos")
-Rel(common_component, email, "Envía correos transaccionales")
-Rel(persistence_component, db, "Lee y escribe datos")
+Rel(user, api, "Consume API /api/v1")
+Rel(api, controllers, "Dirige solicitudes a")
+Rel(controllers, services, "Invoca")
+Rel(services, repositories, "Usa")
+Rel(services, common, "Usa para tareas transversales")
+Rel(repositories, db, "Lee y escribe datos")
+Rel(common, db, "Accede a configuración y datos auxiliares")
+Rel(common, storage, "Guarda archivos")
+Rel(common, email, "Envía correos")
 @enduml

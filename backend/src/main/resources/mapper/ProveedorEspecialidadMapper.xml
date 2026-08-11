@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.proveedor.mapper.ProveedorEspecialidadMapper">
+<mapper namespace="bo.capital.tec.pet.repository.ProveedorEspecialidadMapper">
     <sql id="baseColumns">
         id, proveedor_id, servicio_id, created_at, updated_at, deleted, version
     </sql>
     <sql id="table">proveedor_especialidad</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.proveedor.entity.ProveedorEspecialidad">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.domain.ProveedorEspecialidad">
         INSERT INTO <include refid="table"/> (proveedor_id, servicio_id)
         VALUES (#{proveedorId}, #{servicioId})
     </insert>
 
-    <resultMap id="especialidadServicioResultMap" type="bo.capital.tec.pet.proveedor.entity.ProveedorEspecialidad">
+    <resultMap id="especialidadServicioResultMap" type="bo.capital.tec.pet.domain.ProveedorEspecialidad">
         <id property="id" column="id"/>
         <result property="proveedorId" column="proveedor_id"/>
         <result property="servicioId" column="servicio_id"/>

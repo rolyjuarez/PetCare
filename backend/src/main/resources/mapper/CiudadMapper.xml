@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.direccion.mapper.CiudadMapper">
+<mapper namespace="bo.capital.tec.pet.repository.CiudadMapper">
     <sql id="baseColumns">
         id, nombre, codigo, latitud, longitud, created_at, updated_at, deleted, version
     </sql>
     <sql id="table">ciudad</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.direccion.entity.Ciudad">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.domain.Ciudad">
         INSERT INTO <include refid="table"/> (nombre, codigo, latitud, longitud)
         VALUES (#{nombre}, #{codigo}, #{latitud}, #{longitud})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.direccion.entity.Ciudad">
+    <select id="selectById" resultType="bo.capital.tec.pet.domain.Ciudad">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.direccion.entity.Ciudad">
+    <select id="selectAll" resultType="bo.capital.tec.pet.domain.Ciudad">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE deleted = FALSE
         ORDER BY nombre ASC
     </select>
 
-    <select id="selectByCodigo" resultType="bo.capital.tec.pet.direccion.entity.Ciudad">
+    <select id="selectByCodigo" resultType="bo.capital.tec.pet.domain.Ciudad">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE codigo = #{codigo} AND deleted = FALSE
     </select>

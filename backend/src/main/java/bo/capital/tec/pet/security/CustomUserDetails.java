@@ -1,6 +1,6 @@
 package bo.capital.tec.pet.security;
 
-import bo.capital.tec.pet.usuario.entity.Usuario;
+import bo.capital.tec.pet.domain.Usuario;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

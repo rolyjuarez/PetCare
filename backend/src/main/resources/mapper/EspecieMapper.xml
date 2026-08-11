@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.mascota.mapper.EspecieMapper">
+<mapper namespace="bo.capital.tec.pet.repository.EspecieMapper">
     <sql id="baseColumns">
         id, nombre, descripcion, created_at, updated_at, deleted, version
     </sql>
     <sql id="table">especie</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.mascota.entity.Especie">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.domain.Especie">
         INSERT INTO <include refid="table"/> (nombre, descripcion)
         VALUES (#{nombre}, #{descripcion})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.mascota.entity.Especie">
+    <select id="selectById" resultType="bo.capital.tec.pet.domain.Especie">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.mascota.entity.Especie">
+    <select id="selectAll" resultType="bo.capital.tec.pet.domain.Especie">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE deleted = FALSE
         ORDER BY nombre ASC
@@ -28,7 +28,7 @@
         WHERE deleted = FALSE
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.mascota.entity.Especie">
+    <update id="update" parameterType="bo.capital.tec.pet.domain.Especie">
         UPDATE <include refid="table"/>
         SET nombre = #{nombre}, descripcion = #{descripcion}, updated_at = NOW(), version = version + 1
         WHERE id = #{id} AND deleted = FALSE

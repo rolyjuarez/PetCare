@@ -13,7 +13,7 @@ jwt:
   refresh-expiration: 604800000
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
-  type-aliases-package: bo.capital.tec.pet.*.entity
+  type-aliases-package: bo.capital.tec.pet.domain
   configuration:
     map-underscore-to-camel-case: true
 logging:

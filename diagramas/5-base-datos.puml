@@ -1,0 +1,161 @@
+@startuml
+' Diagrama de base de datos inferido desde los mappers XML de MyBatis
+' No se accedió a la base de datos, solo se usaron los archivos XML de mapper.
+
+entity "cliente" as cliente {
+  * id : bigint
+  --
+  persona_id : bigint
+  usuario_id : bigint
+}
+
+entity "persona" as persona {
+  * id : bigint
+  --
+  direccion_id : bigint
+}
+
+entity "usuario" as usuario {
+  * id : bigint
+  --
+  persona_id : bigint
+}
+
+entity "direccion" as direccion {
+  * id : bigint
+  --
+  ciudad_id : bigint
+  estado_id : bigint
+}
+
+entity "ciudad" as ciudad {
+  * id : bigint
+}
+
+entity "estado" as estado {
+  * id : bigint
+}
+
+entity "mascota" as mascota {
+  * id : bigint
+  --
+  cliente_id : bigint
+  especie_id : bigint
+  raza_id : bigint
+}
+
+entity "raza" as raza {
+  * id : bigint
+  --
+  especie_id : bigint
+}
+
+entity "especie" as especie {
+  * id : bigint
+}
+
+entity "reserva" as reserva {
+  * id : bigint
+  --
+  cliente_id : bigint
+  proveedor_id : bigint
+  servicio_id : bigint
+  mascota_id : bigint
+  estado_reserva_id : bigint
+}
+
+entity "estado_reserva" as estado_reserva {
+  * id : bigint
+}
+
+entity "proveedor" as proveedor {
+  * id : bigint
+  --
+  persona_id : bigint
+}
+
+entity "proveedor_especialidad" as proveedor_especialidad {
+  * id : bigint
+  --
+  proveedor_id : bigint
+  servicio_id : bigint
+}
+
+entity "servicio" as servicio {
+  * id : bigint
+}
+
+entity "rol" as rol {
+  * id : bigint
+}
+
+entity "usuario_rol" as usuario_rol {
+  * id : bigint
+  --
+  usuario_id : bigint
+  rol_id : bigint
+}
+
+entity "permiso" as permiso {
+  * id : bigint
+  --
+  rol_id : bigint
+  menu_id : bigint
+  submenu_id : bigint
+}
+
+entity "menu" as menu {
+  * id : bigint
+}
+
+entity "submenu" as submenu {
+  * id : bigint
+}
+
+entity "promocion_local" as promocion_local {
+  * id : bigint
+}
+
+entity "registro_vacunacion" as registro_vacunacion {
+  * id : bigint
+}
+
+entity "pago" as pago {
+  * id : bigint
+}
+
+entity "sucursal" as sucursal {
+  * id : bigint
+}
+
+entity "vacuna" as vacuna {
+  * id : bigint
+}
+
+cliente }o--|| persona : persona_id
+cliente }o--|| usuario : usuario_id
+usuario }o--|| persona : persona_id
+persona }o--|| direccion : direccion_id
+direccion }o--|| ciudad : ciudad_id
+direccion }o--|| estado : estado_id
+mascota }o--|| cliente : cliente_id
+mascota }o--|| especie : especie_id
+mascota }o--|| raza : raza_id
+raza }o--|| especie : especie_id
+reserva }o--|| cliente : cliente_id
+reserva }o--|| proveedor : proveedor_id
+reserva }o--|| servicio : servicio_id
+reserva }o--|| mascota : mascota_id
+reserva }o--|| estado_reserva : estado_reserva_id
+proveedor }o--|| persona : persona_id
+proveedor_especialidad }o--|| proveedor : proveedor_id
+proveedor_especialidad }o--|| servicio : servicio_id
+usuario_rol }o--|| usuario : usuario_id
+usuario_rol }o--|| rol : rol_id
+permiso }o--|| rol : rol_id
+permiso }o--|| menu : menu_id
+permiso }o--|| submenu : submenu_id
+menu }o--|| permiso : permiso_id? : uses
+submenu }o--|| permiso : permiso_id? : uses
+
+@enduml

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.proveedor.mapper.DisponibilidadMapper">
+<mapper namespace="bo.capital.tec.pet.repository.DisponibilidadMapper">
     <sql id="baseColumns">
         id, proveedor_id, servicio_id, dia_semana, hora_inicio, hora_fin, activo,
         created_at, updated_at, deleted, version
     </sql>
     <sql id="table">disponibilidad</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.domain.Disponibilidad">
         INSERT INTO <include refid="table"/> (proveedor_id, servicio_id, dia_semana, hora_inicio, hora_fin, activo)
         VALUES (#{proveedorId}, #{servicioId}, #{diaSemana}, #{horaInicio}, #{horaFin}, #{activo})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">
+    <select id="selectById" resultType="bo.capital.tec.pet.domain.Disponibilidad">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE id = #{id} AND deleted = FALSE
     </select>
 
-    <select id="selectByProveedorYServicio" resultType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">
+    <select id="selectByProveedorYServicio" resultType="bo.capital.tec.pet.domain.Disponibilidad">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         <where>
             proveedor_id = #{proveedorId} AND deleted = FALSE
@@ -26,7 +26,7 @@
         ORDER BY dia_semana ASC, hora_inicio ASC
     </select>
 
-    <select id="selectAll" resultType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">
+    <select id="selectAll" resultType="bo.capital.tec.pet.domain.Disponibilidad">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         <where>
             deleted = FALSE
@@ -46,7 +46,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.proveedor.entity.Disponibilidad">
+    <update id="update" parameterType="bo.capital.tec.pet.domain.Disponibilidad">
         UPDATE <include refid="table"/>
         SET proveedor_id = #{proveedorId}, servicio_id = #{servicioId},
             dia_semana = #{diaSemana}, hora_inicio = #{horaInicio}, hora_fin = #{horaFin}, activo = #{activo},

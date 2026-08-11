@@ -68,7 +68,7 @@ export class AuthService {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('userInfo');
     this.currentUserSignal.set(null);
-    this.router.navigate(['/']);
+    this.router.navigate(['/login']);
   }
 
   getToken(): string | null {

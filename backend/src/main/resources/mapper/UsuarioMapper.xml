@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="bo.capital.tec.pet.usuario.mapper.UsuarioMapper">
+<mapper namespace="bo.capital.tec.pet.repository.UsuarioMapper">
     <sql id="baseColumns">
         u.id, u.username, u.password, u.token_refresh, u.intentos_fallidos,
         u.bloqueado, u.activo, u.ultimo_acceso, u.persona_id, u.created_at, u.updated_at, u.deleted, u.version
@@ -11,19 +11,19 @@
     </sql>
     <sql id="table">usuario u</sql>
 
-    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.usuario.entity.Usuario">
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="bo.capital.tec.pet.domain.Usuario">
         INSERT INTO usuario (username, password, persona_id)
         VALUES (#{username}, #{password}, #{personaId})
     </insert>
 
-    <select id="selectById" resultType="bo.capital.tec.pet.usuario.entity.Usuario">
+    <select id="selectById" resultType="bo.capital.tec.pet.domain.Usuario">
         SELECT u.id, u.username, u.password, u.token_refresh, u.intentos_fallidos,
                u.bloqueado, u.activo, u.ultimo_acceso, u.persona_id, u.created_at, u.updated_at, u.deleted, u.version
         FROM usuario u
         WHERE u.id = #{id} AND u.deleted = FALSE
     </select>
 
-    <resultMap id="usuarioWithPersonaResultMap" type="bo.capital.tec.pet.usuario.entity.Usuario">
+    <resultMap id="usuarioWithPersonaResultMap" type="bo.capital.tec.pet.domain.Usuario">
         <id property="id" column="id"/>
         <result property="username" column="username"/>
         <result property="password" column="password"/>
@@ -37,7 +37,7 @@
         <result property="updatedAt" column="updated_at"/>
         <result property="deleted" column="deleted"/>
         <result property="version" column="version"/>
-        <association property="persona" javaType="bo.capital.tec.pet.persona.entity.Persona">
+        <association property="persona" javaType="bo.capital.tec.pet.domain.Persona">
             <result property="id" column="persona_id"/>
             <result property="nombre" column="p_nombre"/>
             <result property="primerApellido" column="p_primer_apellido"/>
@@ -77,7 +77,7 @@
         WHERE ur.usuario_id = #{usuarioId} AND pe.deleted = FALSE
     </select>
 
-    <resultMap id="usuarioPersonaResultMap" type="bo.capital.tec.pet.usuario.entity.Usuario">
+    <resultMap id="usuarioPersonaResultMap" type="bo.capital.tec.pet.domain.Usuario">
         <id property="id" column="id"/>
         <result property="username" column="username"/>
         <result property="personaId" column="persona_id"/>
@@ -87,7 +87,7 @@
         <result property="updatedAt" column="updated_at"/>
         <result property="deleted" column="deleted"/>
         <result property="version" column="version"/>
-        <association property="persona" javaType="bo.capital.tec.pet.persona.entity.Persona">
+        <association property="persona" javaType="bo.capital.tec.pet.domain.Persona">
             <result property="nombre" column="p_nombre"/>
             <result property="primerApellido" column="p_primer_apellido"/>
             <result property="segundoApellido" column="p_segundo_apellido"/>
@@ -120,7 +120,7 @@
         </where>
     </select>
 
-    <update id="update" parameterType="bo.capital.tec.pet.usuario.entity.Usuario">
+    <update id="update" parameterType="bo.capital.tec.pet.domain.Usuario">
         UPDATE usuario
         SET username = #{username}, password = #{password}, persona_id = #{personaId},
             updated_at = NOW(), version = version + 1
