@@ -15,7 +15,7 @@
     <name>Saga Orchestrator</name>
     <description>PETCare Saga Orchestrator - patrón saga orquestada</description>
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <mybatis.version>3.0.3</mybatis.version>
         <lombok.version>1.18.42</lombok.version>
     </properties>
