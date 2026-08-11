@@ -5,7 +5,7 @@
 ' PETCare - Diagrama de contexto (C4 Nivel 1)
 ' ============================================================================
 
-title Diagrama de contexto del sistema PetCare (Nivel 1)
+title Diagrama de contexto de PetCare (arquitectura actual)
 
 ' ---------------------------------------------------------------------------
 ' Estilos
@@ -17,33 +17,60 @@ UpdateElementStyle(external_system, $fontColor="#5D2C00", $borderColor="#963B00"
 ' ---------------------------------------------------------------------------
 ' Personas
 ' ---------------------------------------------------------------------------
-Person(cliente, "Cliente", "Agenda servicios veterinarios, paga y da seguimiento a sus reservas")
-Person(proveedor, "Proveedor", "Publica servicios y responde las solicitudes de reserva")
-Person(admin, "Administrador", "Administra usuarios, roles, menús y la operación del sistema")
+Person(cliente, "Cliente", "Reserva servicios veterinarios, consulta estados y realiza pagos")
+Person(proveedor, "Proveedor", "Publica servicios y responde solicitudes de reserva")
+Person(admin, "Administrador", "Administra usuarios, catálogos y la operación del sistema")
 
 ' ---------------------------------------------------------------------------
-' Sistema
+' Sistema principal
 ' ---------------------------------------------------------------------------
-System(petcare, "PetCare", "Plataforma de reserva de servicios veterinarios: frontend Angular, backend Spring Boot y cuatro microservicios (reservas, proveedores, pagos y orquestador de la saga)")
+System_Boundary(petcareBoundary, "PetCare", "Plataforma de reservas veterinarias") {
+    System(web, "Frontend Angular", "SPA que expone la experiencia web para clientes, proveedores y administradores")
+    System(backend, "Backend principal", "API REST Spring Boot modular para autenticación, catálogos y coordinación")
+    System(reservationSvc, "Reservation Service", "Microservicio para reservas, disponibilidad y confirmación")
+    System(providerSvc, "Provider Service", "Microservicio para proveedores, servicios y solicitudes")
+    System(paymentSvc, "Payment Service", "Microservicio para pagos, reembolsos y estados de pago")
+    System(sagaSvc, "Saga Orchestrator", "Orquesta la saga de reserva-pago con eventos y coordinación")
+}
 
 ' ---------------------------------------------------------------------------
 ' Sistemas externos
 ' ---------------------------------------------------------------------------
-System_Ext(pasarela, "Pasarela de pago", "Procesa, reembolsa y rechaza los pagos (simulada en desarrollo)")
-System_Ext(smtp, "SMTP Gmail", "Envía los correos transaccionales")
+System_Ext(db, "PostgreSQL", "Base de datos transaccional principal de PetCare")
+System_Ext(kafka, "Kafka", "Broker de eventos asíncronos para la comunicación entre servicios")
+System_Ext(pasarela, "Pasarela de pago", "Procesa pagos y reembolsos; en desarrollo está simulada")
+System_Ext(smtp, "SMTP Gmail", "Envía correos transaccionales")
 System_Ext(maps, "Google Maps API", "Provee mapas y geolocalización")
-
 
 ' ---------------------------------------------------------------------------
 ' Relaciones
 ' ---------------------------------------------------------------------------
-Rel(cliente, petcare, "Crea reservas, paga y consulta el estado", "HTTPS")
-Rel(proveedor, petcare, "Publica servicios y responde solicitudes de reserva", "HTTPS")
-Rel(admin, petcare, "Administra usuarios, roles y reportes", "HTTPS")
+Rel(cliente, web, "Usa la aplicación para reservar, pagar y seguir su solicitud", "HTTPS")
+Rel(proveedor, web, "Publica servicios y responde reservas", "HTTPS")
+Rel(admin, web, "Administra usuarios, perfiles y operaciones", "HTTPS")
 
-Rel(petcare, pasarela, "Procesa el pago de las reservas", "REST/HTTPS")
-Rel(petcare, smtp, "Envía correos transaccionales", "SMTP")
-Rel(petcare, maps, "Geolocalización y mapas", "HTTPS")
+Rel(web, backend, "Consume APIs REST", "HTTPS")
+Rel(web, reservationSvc, "Consulta y gestiona reservas", "HTTPS")
+Rel(web, providerSvc, "Gestiona servicios y proveedores", "HTTPS")
+Rel(web, paymentSvc, "Solicita el procesamiento de pagos", "HTTPS")
+
+Rel(backend, reservationSvc, "Coordina operaciones de reserva", "REST/HTTP")
+Rel(backend, providerSvc, "Coordina operaciones de proveedor", "REST/HTTP")
+Rel(backend, paymentSvc, "Coordina operaciones de pago", "REST/HTTP")
+Rel(backend, sagaSvc, "Invoca la lógica de la saga", "REST/HTTP")
+
+Rel(reservationSvc, db, "Persiste reservas, disponibilidad y estados", "JDBC")
+Rel(providerSvc, db, "Persiste proveedores, servicios y catálogo", "JDBC")
+Rel(paymentSvc, db, "Persiste pagos y estados de transacción", "JDBC")
+Rel(sagaSvc, db, "Persiste estados y seguimiento de la saga", "JDBC")
+
+Rel(reservationSvc, kafka, "Publica eventos de reserva", "Kafka")
+Rel(paymentSvc, kafka, "Publica eventos de pago", "Kafka")
+Rel(sagaSvc, kafka, "Consume y publica eventos de coordinación", "Kafka")
+
+Rel(paymentSvc, pasarela, "Procesa pagos y reembolsos", "REST/HTTPS")
+Rel(backend, smtp, "Envía correos transaccionales", "SMTP")
+Rel(web, maps, "Obtiene mapas y geolocalización", "HTTPS")
 
 LAYOUT_WITH_LEGEND()
 

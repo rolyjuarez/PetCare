@@ -1,0 +1,76 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - Saga Orchestrator (C4 Nivel 2)
+' ============================================================================
+
+title Saga Orchestrator - PETCare
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $fontColor="#2F4F4F", $borderColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Actores
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Solicita una reserva y espera confirmación")
+Person(proveedor, "Proveedor", "Acepta o rechaza la reserva")
+
+' ---------------------------------------------------------------------------
+' Sistema principal
+' ---------------------------------------------------------------------------
+System_Boundary(petcare, "PetCare", "Arquitectura distribuida con saga de negocio") {
+    Container(api, "API Gateway / Backend", "Spring Boot", "Expone endpoints para reservas, pagos y coordinación")
+
+    Container(orchestrator, "Saga Orchestrator", "Spring Boot", "Coordina la saga reserva-pago, maneja estados, compensaciones y reintentos")
+    Container(reservationSvc, "Reservation Service", "Spring Boot", "Crea reservas, confirma y publica eventos")
+    Container(providerSvc, "Provider Service", "Spring Boot", "Recibe respuestas del proveedor")
+    Container(paymentSvc, "Payment Service", "Spring Boot", "Procesa pagos y publica resultados")
+
+    ContainerDb(db, "PostgreSQL", "PostgreSQL", "Persistencia de estados de saga, eventos y transacciones")
+    ContainerQueue(kafka, "Kafka", "Apache Kafka", "Broker de eventos para la coordinación distribuida")
+}
+
+' ---------------------------------------------------------------------------
+' Sistemas externos
+' ---------------------------------------------------------------------------
+System_Ext(pasarela, "Pasarela de pago", "Procesa pagos y reembolsos; simulada en desarrollo")
+System_Ext(smtp, "SMTP", "Envía correos transaccionales")
+
+' ---------------------------------------------------------------------------
+' Relaciones principales
+' ---------------------------------------------------------------------------
+Rel(cliente, api, "Envía solicitud de reserva", "HTTPS")
+Rel(proveedor, reservationSvc, "Acepta o rechaza la reserva", "HTTPS")
+
+Rel(api, orchestrator, "Inicia la saga y consulta estado", "REST/HTTP")
+Rel(orchestrator, reservationSvc, "Envía comandos de creación/confirmación", "REST/HTTP")
+Rel(orchestrator, paymentSvc, "Solicita procesamiento de pago", "REST/HTTP")
+Rel(orchestrator, providerSvc, "Coordina respuesta del proveedor", "REST/HTTP")
+
+Rel(orchestrator, db, "Guarda estado de la saga", "JDBC")
+Rel(orchestrator, kafka, "Consume y publica eventos de saga", "Kafka")
+Rel(reservationSvc, kafka, "Publica eventos de reserva", "Kafka")
+Rel(paymentSvc, kafka, "Publica eventos de pago", "Kafka")
+Rel(providerSvc, kafka, "Publica decisiones del proveedor", "Kafka")
+
+Rel(paymentSvc, pasarela, "Procesa pagos y reembolsos", "REST/HTTPS")
+Rel(orchestrator, smtp, "Notifica al cliente sobre el resultado", "SMTP")
+
+' ---------------------------------------------------------------------------
+' Nota explicativa
+' ---------------------------------------------------------------------------
+note right of orchestrator
+    El Saga Orchestrator es el componente central de la coordinación.
+    Su rol es: iniciar la saga, escuchar eventos, ejecutar pasos
+    compensatorios cuando falla un paso, y mantener el estado global.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml
