@@ -2,12 +2,17 @@ package bo.capital.tec.pet.modules.pago.service;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
 import bo.capital.tec.pet.modules.pago.command.CrearPagoCommand;
+import bo.capital.tec.pet.modules.pago.dto.PagoReporteDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
 
 public interface PagoService {
 
+    PagedResponse<PagoReporteDTO> listarReporte(int page, int size);
+
     PagoResponseDTO crearPago(CrearPagoCommand comando);
+
+    PagoResponseDTO crearPagoParaReserva(Long reservaId);
 
     PagoResponseDTO getById(Long id);
 

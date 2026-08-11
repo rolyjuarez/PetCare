@@ -6,6 +6,8 @@ import bo.capital.tec.pet.common.exception.BusinessException;
 import bo.capital.tec.pet.common.exception.EntityNotFoundException;
 import bo.capital.tec.pet.common.util.PaginationUtil;
 import bo.capital.tec.pet.modules.proveedor.command.NotificarProveedorCommand;
+import bo.capital.tec.pet.modules.proveedor.dto.ProveedorCatalogoDTO;
+import bo.capital.tec.pet.modules.proveedor.dto.ProveedorEspecialidadInfoDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.ResponderSolicitudRequestDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.SolicitudReservaResponseDTO;
 import bo.capital.tec.pet.modules.proveedor.entity.SolicitudReserva;
@@ -21,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -36,6 +39,48 @@ public class ProveedorServiceImpl implements ProveedorService {
     private final ProveedorCatalogMapper proveedorCatalogMapper;
     private final VacunaCatalogMapper vacunaCatalogMapper;
     private final DomainEventPublisher eventPublisher;
+
+    @Override
+    @Transactional(readOnly = true)
+    public PagedResponse<ProveedorCatalogoDTO> listarCatalogo(int page, int size) {
+        page = PaginationUtil.safePage(page);
+        size = PaginationUtil.safeSize(size);
+        List<ProveedorCatalogoDTO> proveedores = proveedorCatalogMapper.selectCatalogo(page * size, size);
+        long total = proveedorCatalogMapper.countCatalogo();
+        List<ProveedorCatalogoDTO> content = proveedores.stream().map(this::enriquecerCatalogo).toList();
+        return PagedResponse.<ProveedorCatalogoDTO>builder()
+                .content(content)
+                .page(page)
+                .size(size)
+                .totalElements(total)
+                .totalPages((int) Math.ceil((double) total / size))
+                .first(page == 0)
+                .last((long) (page + 1) * size >= total)
+                .build();
+    }
+
+    private ProveedorCatalogoDTO enriquecerCatalogo(ProveedorCatalogoDTO dto) {
+        List<ProveedorEspecialidadInfoDTO> especialidades =
+                proveedorCatalogMapper.selectEspecialidades(dto.getId());
+        List<String> nombres = new ArrayList<>();
+        List<Long> servicioIds = new ArrayList<>();
+        List<Long> servicioIdsRequeridos = new ArrayList<>();
+        for (ProveedorEspecialidadInfoDTO pe : especialidades) {
+            if (pe.getServicioNombre() != null) {
+                nombres.add(pe.getServicioNombre());
+            }
+            if (pe.getServicioId() != null) {
+                servicioIds.add(pe.getServicioId());
+                if (Boolean.TRUE.equals(pe.getRequiereCertificado())) {
+                    servicioIdsRequeridos.add(pe.getServicioId());
+                }
+            }
+        }
+        dto.setEspecialidades(nombres);
+        dto.setServicioIds(servicioIds);
+        dto.setServicioIdsRequeridos(servicioIdsRequeridos);
+        return dto;
+    }
 
     @Override
     @Transactional(readOnly = true)

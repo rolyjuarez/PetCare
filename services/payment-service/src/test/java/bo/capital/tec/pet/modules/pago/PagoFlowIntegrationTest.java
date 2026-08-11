@@ -299,6 +299,63 @@ class PagoFlowIntegrationTest {
         assertThat(usosPromocion(1L)).isEqualTo(usosAntes);
     }
 
+    @Test
+    void crearPagoParaReservaExistenteCreaPago() {
+        PagoResponseDTO pago = pagoService.crearPagoParaReserva(2L);
+
+        assertThat(pago.getId()).isNotNull();
+        assertThat(pago.getReservaId()).isEqualTo(2L);
+        assertThat(pago.getEstadoSync()).isEqualTo("PENDIENTE");
+        assertThat(pago.getModalidadPago()).isEqualTo("EN_ESTABLECIMIENTO");
+    }
+
+    @Test
+    void crearPagoParaReservaEsIdempotente() {
+        PagoResponseDTO primero = pagoService.crearPagoParaReserva(2L);
+        PagoResponseDTO segundo = pagoService.crearPagoParaReserva(2L);
+
+        assertThat(primero.getId()).isEqualTo(segundo.getId());
+    }
+
+    @Test
+    void procesarPagoSeleccionandoEnEstablecimientoDesdeEnLinea() {
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(1L, "DOMICILIO"));
+        assertThat(creado.getModalidadPago()).isEqualTo("EN_LINEA");
+
+        PagoResponseDTO procesado = pagoService.procesar(creado.getId(),
+                ProcesarPagoRequestDTO.builder()
+                        .metodoPago("EFECTIVO")
+                        .modalidadPago("EN_ESTABLECIMIENTO")
+                        .build());
+
+        assertThat(procesado.getEstadoSync()).isEqualTo("COMPLETADO");
+        assertThat(procesado.getModalidadPago()).isEqualTo("EN_ESTABLECIMIENTO");
+        assertThat(procesado.getMetodoPago()).isEqualTo("EFECTIVO");
+        assertThat(procesado.getReferenciaTransaccion()).isEqualTo("EFECTIVO-EN-ESTABLECIMIENTO");
+    }
+
+    @Test
+    void procesarPagoEnLineaElegidoSobrePagoDeEstablecimiento() {
+        PagoResponseDTO creado = pagoService.crearPago(buildComando(2L, "EN_ESTABLECIMIENTO"));
+        assertThat(creado.getModalidadPago()).isEqualTo("EN_ESTABLECIMIENTO");
+
+        PagoResponseDTO procesado = pagoService.procesar(creado.getId(),
+                ProcesarPagoRequestDTO.builder()
+                        .metodoPago("TARJETA_CREDITO")
+                        .modalidadPago("EN_LINEA")
+                        .tarjeta(DatosTarjetaDTO.builder()
+                                .numero("4242424242424242")
+                                .titular("Ana Gomez")
+                                .expira("12/28")
+                                .cvv("123")
+                                .build())
+                        .build());
+
+        assertThat(procesado.getEstadoSync()).isEqualTo("COMPLETADO");
+        assertThat(procesado.getModalidadPago()).isEqualTo("EN_LINEA");
+        assertThat(procesado.getMetodoPago()).isEqualTo("TARJETA_CREDITO");
+    }
+
     private Pago awaitPago(Long reservaId) throws InterruptedException {
         Pago pago = null;
         for (int i = 0; i < 50; i++) {

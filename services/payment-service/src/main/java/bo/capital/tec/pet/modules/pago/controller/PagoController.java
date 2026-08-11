@@ -2,6 +2,7 @@ package bo.capital.tec.pet.modules.pago.controller;
 
 import bo.capital.tec.pet.common.api.ApiResponse;
 import bo.capital.tec.pet.common.api.PagedResponse;
+import bo.capital.tec.pet.modules.pago.dto.PagoReporteDTO;
 import bo.capital.tec.pet.modules.pago.dto.PagoResponseDTO;
 import bo.capital.tec.pet.modules.pago.dto.ProcesarPagoRequestDTO;
 import bo.capital.tec.pet.modules.pago.service.PagoService;
@@ -24,9 +25,22 @@ public class PagoController {
 
     private final PagoService pagoService;
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<PagedResponse<PagoReporteDTO>>> listar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(ApiResponse.success(pagoService.listarReporte(page, size), "Reporte de pagos"));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PagoResponseDTO>> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success(pagoService.getById(id), "Pago obtenido"));
+    }
+
+    @PostMapping("/reserva/{reservaId}")
+    public ResponseEntity<ApiResponse<PagoResponseDTO>> crearPagoDeReserva(@PathVariable Long reservaId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(pagoService.crearPagoParaReserva(reservaId), "Pago creado"));
     }
 
     @GetMapping("/reserva/{reservaId}")

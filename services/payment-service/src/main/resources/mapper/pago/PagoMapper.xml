@@ -33,6 +33,34 @@
         WHERE p.id = #{id} AND p.deleted = FALSE
     </select>
 
+    <select id="selectReporte" resultType="bo.capital.tec.pet.modules.pago.dto.PagoReporteDTO">
+        SELECT p.id,
+               'PAG-' || LPAD(p.id::text, 6, '0') AS codigo,
+               p.reserva_id AS reservaId,
+               r.codigo AS reservaCodigo,
+               COALESCE(NULLIF(TRIM(pe.nombre || ' ' || COALESCE(pe.primer_apellido, '')), ''), 'Cliente') AS clienteNombre,
+               COALESCE(NULLIF(p.monto_original, 0), p.monto) AS monto,
+               COALESCE(p.descuento_total, 0) AS montoDescuento,
+               p.monto AS montoTotal,
+               p.metodo_pago AS metodoPago,
+               p.estado_pago AS estadoPago,
+               p.fecha_pago AS fechaPago,
+               p.referencia_transaccion AS referencia,
+               p.created_at AS createdAt
+        FROM pago p
+        LEFT JOIN reserva r ON r.id = p.reserva_id AND r.deleted = FALSE
+        LEFT JOIN cliente c ON c.id = r.cliente_id AND c.deleted = FALSE
+        LEFT JOIN persona pe ON pe.id = c.persona_id AND pe.deleted = FALSE
+        WHERE p.deleted = FALSE
+        ORDER BY p.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM pago p
+        WHERE p.deleted = FALSE
+    </select>
+
     <select id="selectByReservaId" resultType="bo.capital.tec.pet.modules.pago.entity.Pago">
         SELECT <include refid="baseColumns"/> FROM <include refid="table"/>
         WHERE p.reserva_id = #{reservaId} AND p.deleted = FALSE
@@ -73,6 +101,13 @@
             descuento_nombre = #{descuentoNombre},
             descuento_tipo = #{descuentoTipo},
             descuento_servicio_id = #{descuentoServicioId},
+            updated_at = NOW(),
+            version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+    <update id="updateModalidad">
+        UPDATE pago
+        SET modalidad_pago = #{modalidadPago},
             updated_at = NOW(),
             version = version + 1
         WHERE id = #{id} AND deleted = FALSE

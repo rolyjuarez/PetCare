@@ -56,5 +56,6 @@ export interface DatosTarjeta {
 
 export interface ProcesarPagoRequest {
   metodoPago: string;
+  modalidadPago?: string;
   tarjeta?: DatosTarjeta;
 }

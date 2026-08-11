@@ -15,5 +15,7 @@ public class ProcesarPagoRequestDTO {
     @NotBlank(message = "El método de pago es obligatorio")
     private String metodoPago;
 
+    private String modalidadPago;
+
     private DatosTarjetaDTO tarjeta;
 }

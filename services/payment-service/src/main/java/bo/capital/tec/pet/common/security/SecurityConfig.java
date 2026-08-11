@@ -33,7 +33,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/actuator/health").permitAll()
-                        .requestMatchers("/pagos/**").hasAnyRole("CLIENTE", "ADMINISTRADOR", "PROVEEDOR")
+                        .requestMatchers("/pagos/**").hasAnyRole("CLIENTE", "ADMIN", "PROVEEDOR")
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

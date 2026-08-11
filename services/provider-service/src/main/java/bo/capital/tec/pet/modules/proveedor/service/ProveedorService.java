@@ -2,10 +2,13 @@ package bo.capital.tec.pet.modules.proveedor.service;
 
 import bo.capital.tec.pet.common.api.PagedResponse;
 import bo.capital.tec.pet.modules.proveedor.command.NotificarProveedorCommand;
+import bo.capital.tec.pet.modules.proveedor.dto.ProveedorCatalogoDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.ResponderSolicitudRequestDTO;
 import bo.capital.tec.pet.modules.proveedor.dto.SolicitudReservaResponseDTO;
 
 public interface ProveedorService {
+
+    PagedResponse<ProveedorCatalogoDTO> listarCatalogo(int page, int size);
 
     PagedResponse<SolicitudReservaResponseDTO> listarSolicitudes(Long proveedorId, String estado, int page, int size);
 

@@ -78,13 +78,7 @@ public class MicroserviceRoutingFilter extends OncePerRequestFilter {
     }
 
     private boolean isPaymentPath(String uri) {
-        if (!uri.startsWith(CONTEXT_PATH + "/pagos")) {
-            return false;
-        }
-        if (uri.startsWith(CONTEXT_PATH + "/pagos/reserva")) {
-            return true;
-        }
-        return uri.endsWith("/procesar") || uri.endsWith("/reembolsar");
+        return uri.startsWith(CONTEXT_PATH + "/pagos");
     }
 
     private void proxy(HttpServletRequest request, HttpServletResponse response, String target) throws IOException {

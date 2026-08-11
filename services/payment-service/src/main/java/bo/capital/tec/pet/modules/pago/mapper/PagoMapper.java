@@ -1,5 +1,6 @@
 package bo.capital.tec.pet.modules.pago.mapper;
 
+import bo.capital.tec.pet.modules.pago.dto.PagoReporteDTO;
 import bo.capital.tec.pet.modules.pago.entity.Pago;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -10,6 +11,10 @@ import java.util.List;
 public interface PagoMapper {
 
     void insert(Pago pago);
+
+    List<PagoReporteDTO> selectReporte(@Param("offset") int offset, @Param("limit") int limit);
+
+    long countAll();
 
     Pago selectById(@Param("id") Long id);
 
@@ -35,4 +40,6 @@ public interface PagoMapper {
                           @Param("descuentoNombre") String descuentoNombre,
                           @Param("descuentoTipo") String descuentoTipo,
                           @Param("descuentoServicioId") Long descuentoServicioId);
+
+    void updateModalidad(@Param("id") Long id, @Param("modalidadPago") String modalidadPago);
 }
