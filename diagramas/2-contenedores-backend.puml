@@ -1,0 +1,71 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - Contexto del Backend monolito (C4)
+' ============================================================================
+
+title Contexto del Backend monolito - PETCare
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $fontColor="#2F4F4F", $borderColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Usa la aplicación para reservar y pagar")
+Person(proveedor, "Proveedor", "Publica servicios y gestiona solicitudes")
+Person(admin, "Administrador", "Gestiona catálogos y usuarios")
+
+' ---------------------------------------------------------------------------
+' Backend monolito
+' ---------------------------------------------------------------------------
+System_Boundary(be, "Backend monolito", "Spring Boot 3.4.1 - /api/v1") {
+    Container(auth, "Auth / Seguridad", "Spring Security + JWT", "Autenticación, autorización y control de acceso")
+    Container(api, "API REST", "Spring Web", "CRUD, rutas de catálogo y proxy a microservicios")
+    Container(outbox, "Outbox + Eventos", "Kafka + Scheduler", "Publica eventos de dominio a Kafka")
+    Container(mail, "Email Service", "JavaMailSender", "Envía notificaciones y correos transaccionales")
+}
+
+' ---------------------------------------------------------------------------
+' Dependencias externas
+' ---------------------------------------------------------------------------
+System_Ext(frontend, "Frontend Angular", "SPA Angular", "Interfaz web del usuario")
+System_Ext(rs, "reservation-service", "Spring Boot", "Gestión de reservas y disponibilidad")
+System_Ext(ps, "provider-service", "Spring Boot", "Gestión de solicitudes de proveedor")
+System_Ext(ms, "payment-service", "Spring Boot", "Gestión de pagos y reembolsos")
+ContainerQueue(kafka, "Kafka", "Apache Kafka", "Broker de eventos asíncronos")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL", "Base de datos principal")
+System_Ext(smtp, "SMTP", "Servidor SMTP", "Envía correos de notificación")
+
+' ---------------------------------------------------------------------------
+' Relaciones
+' ---------------------------------------------------------------------------
+Rel(cliente, frontend, "Usa la aplicación", "HTTPS")
+Rel(proveedor, frontend, "Usa la aplicación", "HTTPS")
+Rel(admin, frontend, "Usa la aplicación", "HTTPS")
+Rel(frontend, api, "Consume API REST", "HTTPS /api/v1")
+Rel(api, rs, "Reenvía reservas", "HTTP /api/v1/reservas/*")
+Rel(api, ps, "Reenvía proveedor", "HTTP /api/v1/proveedor/*")
+Rel(api, ms, "Reenvía pagos", "HTTP /api/v1/pagos/*")
+Rel(api, db, "Lee/escribe catálogos y usuarios", "JDBC")
+Rel(outbox, kafka, "Publica eventos de dominio", "Kafka")
+Rel(mail, smtp, "Envía correos", "SMTP")
+
+' ---------------------------------------------------------------------------
+' Notas
+' ---------------------------------------------------------------------------
+note bottom of be
+    El backend monolito expone la API /api/v1, gestiona seguridad, catálogos,
+    usuarios y reenvía parte del tráfico a los microservicios de reserva,
+    proveedor y pagos. También publica eventos a Kafka y envía correos.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

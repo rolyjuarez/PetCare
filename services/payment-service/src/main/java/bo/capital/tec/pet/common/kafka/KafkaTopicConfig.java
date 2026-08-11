@@ -1,6 +1,5 @@
 package bo.capital.tec.pet.common.kafka;
 
-import bo.capital.tec.pet.common.event.DomainEvent;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;

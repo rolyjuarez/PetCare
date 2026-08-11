@@ -1,0 +1,82 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - Contexto del payment-service (puerto 8083)
+' ============================================================================
+
+title Contexto de payment-service - Spring Boot 8083
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(cliente, "Cliente", "Procesa y consulta sus pagos")
+Person(admin, "Administrador", "Supervisa pagos y reembolsos")
+
+' ---------------------------------------------------------------------------
+' payment-service
+' ---------------------------------------------------------------------------
+System_Boundary(ms, "payment-service", "Spring Boot 3.4.1 - contexto /api/v1") {
+
+    Container(api, "PagoController", "Spring Web", "GET /pagos/{id}, /pagos/reserva/{id}/historial, POST /{id}/procesar, /{id}/reembolsar")
+    Container(pipe, "DescuentoPipeline", "Chain of Responsibility", "Aplica descuentos por promoción y recargo por modalidad")
+    Container(consumer, "ReservaConfirmadaConsumer", "Kafka Listener", "Consume ReservaConfirmadaEvent y crea el pago")
+    Container(pasarela, "SimulatedPaymentGateway", "Interfaz", "Simula la pasarela de pago externa en entorno de desarrollo")
+    Container(events, "DomainEventPublisher", "Kafka", "Publica PagoProcesadoEvent")
+}
+
+' ---------------------------------------------------------------------------
+' Dependencias
+' ---------------------------------------------------------------------------
+Container(frontend, "Frontend Angular", "Angular 21", "Interfaz de pagos")
+System_Ext(be, "Backend monolito", "Spring Boot 8080", "Proxy REST de /api/v1/pagos/*")
+System_Ext(rs, "reservation-service", "Spring Boot 8081", "Publica la reserva confirmada")
+System_Ext(pasarelaExt, "Pasarela de pago externa", "Proveedor real de pagos", "En producción se sustituye la simulación")
+ContainerQueue(kafka, "Kafka + Zookeeper", "Apache Kafka 3.8", "Tópicos de eventos de pagos")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Tablas pago y catálogos de descuentos")
+
+' ---------------------------------------------------------------------------
+' Relaciones
+' ---------------------------------------------------------------------------
+Rel(cliente, frontend, "Consulta y procesa pagos", "HTTPS")
+Rel(admin, frontend, "Supervisa pagos", "HTTPS")
+Rel(frontend, be, "Consume API", "REST")
+Rel(be, api, "Reenvía rutas de pagos", "HTTP /api/v1/pagos/*")
+
+' --- Kafka: consumo ---
+Rel(kafka, consumer, "Lee eventos", "reserva.confirmada")
+Rel(consumer, api, "Crea el pago de la reserva", "crearDesdeReservaConfirmada")
+Rel(api, pipe, "Calcula total con descuentos", "PagoContext")
+
+' --- Pasarela ---
+Rel(api, pasarela, "Procesa y reembolsa", "procesar / reembolsar")
+Rel(pasarela, pasarelaExt, "Simula al proveedor real", "En producción: API HTTPS")
+
+' --- Kafka: publicación ---
+Rel(api, events, "Publica al procesar", "PagoProcesadoEvent")
+Rel(events, kafka, "Escribe eventos", "pago.completado")
+
+' --- Persistencia ---
+Rel(api, db, "Persiste pagos y reembolsos", "JDBC")
+
+' ---------------------------------------------------------------------------
+' Notas
+' ---------------------------------------------------------------------------
+note bottom of ms
+    El payment-service reacciona a la reserva confirmada (reserva.confirmada),
+    crea el pago, aplica la cadena de descuentos (promociones y modalidad de
+    entrega) y procesa o reembolsa contra una pasarela simulada. Al finalizar
+    publica PagoProcesadoEvent en pago.completado.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml

@@ -1,0 +1,78 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - Contexto del provider-service (puerto 8082)
+' ============================================================================
+
+title Contexto de provider-service - Spring Boot 8082
+
+' ---------------------------------------------------------------------------
+' Estilos
+' ---------------------------------------------------------------------------
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+' ---------------------------------------------------------------------------
+' Personas
+' ---------------------------------------------------------------------------
+Person(proveedor, "Proveedor", "Acepta o rechaza las solicitudes de reserva")
+
+' ---------------------------------------------------------------------------
+' provider-service
+' ---------------------------------------------------------------------------
+System_Boundary(ps, "provider-service", "Spring Boot 3.4.1 - contexto /api/v1") {
+
+    Container(api, "ProveedorSolicitudesController", "Spring Web", "GET /proveedor/solicitudes, PUT /{id}/aceptar, /{id}/rechazar")
+    Container(cat, "ProveedorCatalogMapper", "MyBatis", "Proveedores, servicios, especialidades y vacunas")
+    Container(consumer, "ProveedorReservaConsumer", "Kafka Listener", "Consume ReservaCreadaEvent y crea solicitudes")
+    Container(events, "DomainEventPublisher", "Kafka", "Publica ReservaAceptadaEvent y ReservaRechazadaEvent")
+}
+
+' ---------------------------------------------------------------------------
+' Dependencias
+' ---------------------------------------------------------------------------
+Container(frontend, "Frontend Angular", "Angular 21", "Interfaz del proveedor")
+System_Ext(be, "Backend monolito", "Spring Boot 8080", "Proxy REST de /api/v1/proveedor/*")
+System_Ext(rs, "reservation-service", "Spring Boot 8081", "Dueño de la reserva; recibe la aceptación/rechazo")
+ContainerQueue(kafka, "Kafka + Zookeeper", "Apache Kafka 3.8", "Tópicos de eventos de reserva")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "Tablas solicitud_reserva, proveedor, vacunas")
+
+' ---------------------------------------------------------------------------
+' Relaciones
+' ---------------------------------------------------------------------------
+Rel(proveedor, frontend, "Revisa y responde solicitudes", "HTTPS")
+Rel(frontend, be, "Consume API", "REST")
+Rel(be, api, "Reenvía rutas del proveedor", "HTTP /api/v1/proveedor/*")
+
+' --- Kafka: consumo ---
+Rel(kafka, consumer, "Lee eventos", "reserva.creada")
+Rel(consumer, api, "Crea solicitud PENDIENTE", "procesarReservaCreada")
+Rel(consumer, cat, "Resuelve proveedores por servicio", "selectProveedoresByServicioId")
+
+' --- Kafka: publicación ---
+Rel(api, events, "Publica al aceptar/rechazar", "ReservaAceptadaEvent / ReservaRechazadaEvent")
+Rel(events, kafka, "Escribe eventos", "reserva.aceptada / reserva.rechazada")
+
+' --- Relación con el dueño de la reserva ---
+Rel(rs, kafka, "Recibe la respuesta del proveedor", "aceptada/rechazada")
+
+' --- Persistencia ---
+Rel(cat, db, "Lee/escribe", "JDBC")
+
+' ---------------------------------------------------------------------------
+' Notas
+' ---------------------------------------------------------------------------
+note bottom of ps
+    El provider-service NO es dueño de la reserva: al recibir
+    ReservaCreadaEvent crea una solicitud (estado PENDIENTE) para los
+    proveedores del servicio. Cuando el proveedor responde, publica
+    ReservaAceptadaEvent / ReservaRechazadaEvent y reservation-service
+    actualiza el estado de la reserva.
+end note
+
+LAYOUT_WITH_LEGEND()
+
+@enduml
