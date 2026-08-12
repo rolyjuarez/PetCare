@@ -63,6 +63,14 @@
         WHERE id = #{id} AND deleted = FALSE
     </update>
 
+    <update id="updateModalidad">
+        UPDATE pago
+        SET modalidad_pago = #{modalidadPago},
+            updated_at = NOW(),
+            version = version + 1
+        WHERE id = #{id} AND deleted = FALSE
+    </update>
+
     <update id="updateDescuentos">
         UPDATE pago
         SET monto = #{monto},

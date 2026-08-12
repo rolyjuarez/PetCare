@@ -29,6 +29,12 @@ public class PagoController {
         return ResponseEntity.ok(ApiResponse.success(pagoService.getById(id), "Pago obtenido"));
     }
 
+    @PostMapping("/reserva/{reservaId}")
+    public ResponseEntity<ApiResponse<PagoResponseDTO>> crearPagoDeReserva(@PathVariable Long reservaId) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(pagoService.crearPagoParaReserva(reservaId), "Pago creado"));
+    }
+
     @GetMapping("/reserva/{reservaId}")
     public ResponseEntity<ApiResponse<PagoResponseDTO>> getByReservaId(@PathVariable Long reservaId) {
         return ResponseEntity.ok(ApiResponse.success(pagoService.getByReservaId(reservaId), "Pago obtenido"));

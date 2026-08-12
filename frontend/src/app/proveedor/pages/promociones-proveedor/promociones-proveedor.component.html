@@ -4,7 +4,7 @@
       <h1 class="text-2xl font-bold dark:text-white">Mis Descuentos</h1>
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Cree descuentos para sus servicios y atraiga más clientes.</p>
     </div>
-    <button (click)="openForm()"
+    <button (click)="openCreate()"
             class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm flex items-center gap-1">
       <span class="material-icons text-base">add</span> Nuevo descuento
     </button>
@@ -35,7 +35,7 @@
             <tr>
               <td class="px-4 py-3 font-mono text-gray-700 dark:text-gray-200">{{ p.codigo }}</td>
               <td class="px-4 py-3 text-gray-700 dark:text-gray-200">{{ p.nombre }}</td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ p.servicioNombre || 'Todos los servicios' }}</td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ servicioNombre(p.servicioId) }}</td>
               <td class="px-4 py-3 text-gray-700 dark:text-gray-200">{{ descuentoTexto(p) }}</td>
               <td class="px-4 py-3 text-gray-500 dark:text-gray-400">{{ formatFecha(p.fechaFin) }}</td>
               <td class="px-4 py-3">
@@ -47,6 +47,14 @@
               </td>
               <td class="px-4 py-3">
                 <div class="flex items-center justify-end gap-1">
+                  <button (click)="notificar(p)" title="Notificar a clientes"
+                          class="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30">
+                    <span class="material-icons text-lg">notifications_active</span>
+                  </button>
+                  <button (click)="openEdit(p)" title="Editar"
+                          class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span class="material-icons text-lg">edit</span>
+                  </button>
                   <button (click)="eliminar(p)" title="Eliminar"
                           class="p-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30">
                     <span class="material-icons text-lg">delete_outline</span>
@@ -64,7 +72,7 @@
     <div class="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" (click.self)="closeForm()">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
         <div class="p-6 border-b dark:border-gray-700 flex items-center justify-between">
-          <h2 class="text-xl font-bold dark:text-white">Nuevo descuento</h2>
+          <h2 class="text-xl font-bold dark:text-white">{{ editId() ? 'Editar descuento' : 'Nuevo descuento' }}</h2>
           <button (click)="closeForm()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
             <span class="material-icons">close</span>
           </button>
@@ -151,7 +159,7 @@
                   class="px-4 py-2 border rounded-lg text-sm dark:border-gray-600 dark:text-gray-300">Cancelar</button>
           <button (click)="guardar()" [disabled]="submitting()"
                   class="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm disabled:opacity-50">
-            {{ submitting() ? 'Creando...' : 'Crear descuento' }}
+            {{ submitting() ? 'Guardando...' : (editId() ? 'Guardar cambios' : 'Crear descuento') }}
           </button>
         </div>
       </div>

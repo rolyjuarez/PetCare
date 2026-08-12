@@ -56,5 +56,6 @@ export interface DatosTarjeta {
 
 export interface ProcesarPagoRequest {
   metodoPago: string;
+  modalidadPago?: 'EN_LINEA' | 'EN_ESTABLECIMIENTO' | string;
   tarjeta?: DatosTarjeta;
 }

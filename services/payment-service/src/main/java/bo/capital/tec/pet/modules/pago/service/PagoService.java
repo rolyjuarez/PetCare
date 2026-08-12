@@ -9,6 +9,8 @@ public interface PagoService {
 
     PagoResponseDTO crearPago(CrearPagoCommand comando);
 
+    PagoResponseDTO crearPagoParaReserva(Long reservaId);
+
     PagoResponseDTO getById(Long id);
 
     PagoResponseDTO getByReservaId(Long reservaId);
