@@ -1,0 +1,68 @@
+@startuml secuencia_pago
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+
+title PetCare - Flujo de Pago (C4 - Secuencia)
+
+Person(cliente, "Cliente", "")
+
+Container(frontend, "Frontend Angular", "")
+Container(gateway, "API Gateway", "")
+Container(reserva_svc, "Reservation Service", "8081")
+Container(provider_svc, "Provider Service", "8082")
+Container(pago_svc, "Payment Service", "8083")
+Container(saga_svc, "Saga Orchestrator", "8085")
+Container(kafka, "Kafka", "")
+ContainerDb(db1, "petcaredb", "")
+ContainerDb(db2, "petcaredb_provider", "")
+
+note over cliente, db2
+    **HAPPY PATH: Pago Exitoso**
+end note
+
+Rel(cliente, frontend, "1. Hacer pago")
+Rel(frontend, gateway, "2. POST /api/v1/pagos/procesar")
+Rel(gateway, pago_svc, "3. Procesar pago (Reservation ID)")
+Rel(pago_svc, provider_svc, "4. GET /interna/promociones (consulta activas)")
+Rel(provider_svc, db2, "5. SELECT promocion WHERE activo=true")
+Rel(pago_svc, pago_svc, "6. Aplica DescuentoPipeline\n(descuento + recargo)")
+Rel(pago_svc, pago_svc, "7. Procesa pago en pasarela")
+Rel(pago_svc, db1, "8. INSERT pago (COMPLETADO)")
+Rel(pago_svc, kafka, "9. Publica PagoProcesadoEvent")
+
+Rel(kafka, saga_svc, "10. Consume PagoProcesadoEvent")
+Rel(saga_svc, db1, "11. UPDATE saga_estado (COMPLETADA)")
+Rel(saga_svc, frontend, "12. Response 200 OK")
+
+note over cliente, db2
+    **ERROR PATH: Pago Fallido + Compensación**
+end note
+
+note over pago_svc
+    Si pago falla:
+    1. INSERT pago (FALLIDO)
+    2. Publica PagoFallidoEvent
+end note
+
+Rel(pago_svc, kafka, "13. Publica PagoFallidoEvent")
+
+Rel(kafka, saga_svc, "14. Consume PagoFallidoEvent")
+Rel(saga_svc, db1, "15. UPDATE saga_estado (PAGO_FALLIDO)")
+
+note over saga_svc
+    Inicia compensación:
+    - CancelarReservaCommand
+    - LiberarDescuentoCommand
+end note
+
+Rel(saga_svc, kafka, "16. Publica CancelarReservaCommand")
+Rel(kafka, reserva_svc, "17. Consume CancelarReservaCommand")
+Rel(reserva_svc, db1, "18. UPDATE reserva (CANCELADA)")
+Rel(reserva_svc, kafka, "19. Publica ReservaCanceladaEvent")
+
+Rel(saga_svc, kafka, "20. Publica LiberarDescuentoCommand")
+Rel(kafka, pago_svc, "21. Consume LiberarDescuentoCommand")
+Rel(pago_svc, db2, "22. UPDATE promocion (decrementa usos_actuales)")
+
+Rel(saga_svc, frontend, "23. Response 200 con motivo PAGO_FALLIDO")
+
+@enduml

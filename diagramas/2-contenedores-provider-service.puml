@@ -1,0 +1,47 @@
+@startuml contenedores_provider
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title PetCare - Provider Service (C2 - Contenedores)
+
+Container(saga, "Saga Orchestrator", "Spring Boot (8085)", "Orquestador central")
+Container(payment, "Payment Service", "Spring Boot (8083)", "Dominio de pagos")
+
+Container(provider_app, "Provider Service", "Spring Boot 3.4.1 (8082)", "Dominio de proveedores con BD separada")
+
+Container(write_side, "WRITE SIDE", "NotificarProveedorCommandConsumer", "Consume NotificarProveedorCommand, crea SolicitudReserva")
+Container(read_side, "READ SIDE", "Eventos", "Publica: ReservaAceptadaEvent, ReservaRechazadaEvent")
+
+Container(interno, "Internal API", "CatalogoInternoController /interna/**", "Expone endpoints para payment-service (promociones, costos, disponibilidad)")
+
+Container(kafka, "Kafka", "Message Queue", "Consume comandos, publica eventos")
+
+ContainerDb(db, "PostgreSQL petcaredb_provider", "Database", "BD separada: Proveedor, ProveedorServicio, Disponibilidad, Promocion, SolicitudReserva, EventoProcesado")
+
+Rel(saga, kafka, "Publica: NotificarProveedorCommand")
+Rel(kafka, write_side, "Consume: NotificarProveedorCommand")
+
+Rel(write_side, db, "INSERT SolicitudReserva")
+Rel(write_side, kafka, "Publica eventos")
+Rel(read_side, kafka, "Publica: ReservaAceptadaEvent o ReservaRechazadaEvent")
+
+Rel(payment, interno, "REST /interna/** - consulta promociones y costos")
+Rel(interno, db, "SELECT queries")
+
+Rel(kafka, saga, "Consume eventos para avanzar saga")
+
+note bottom of write_side
+    **WRITE SIDE:**
+    - NotificarProveedorCommand
+    - ProveedorServiceImpl.procesarNotificarProveedor()
+    - Crea SolicitudReserva (PENDIENTE)
+end note
+
+note right of db
+    **BD Separada:**
+    - Aislamiento de datos del proveedor
+    - Escalabilidad independiente
+    - Estrategia de multi-tenancy
+end note
+
+SHOW_LEGEND()
+@enduml

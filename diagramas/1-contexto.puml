@@ -1,50 +1,29 @@
-@startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+@startuml contexto
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
 
-' ============================================================================
-' PETCare - Diagrama de contexto (C4 Nivel 1)
-' ============================================================================
+SHOW_PERSON_OUTLINE()
 
-title Diagrama de contexto del sistema PetCare (Nivel 1)
+title PetCare - Diagrama de Contexto (C1)
 
-' ---------------------------------------------------------------------------
-' Estilos
-' ---------------------------------------------------------------------------
-UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
-UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
-UpdateElementStyle(external_system, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+Person(cliente, "Cliente", "Busca, reserva y paga servicios")
+Person(proveedor, "Proveedor", "Ofrece servicios y responde solicitudes")
+Person(admin, "Administrador", "Gestiona la plataforma")
 
-' ---------------------------------------------------------------------------
-' Personas
-' ---------------------------------------------------------------------------
-Person(cliente, "Cliente", "Agenda servicios veterinarios, paga y da seguimiento a sus reservas")
-Person(proveedor, "Proveedor", "Publica servicios y responde las solicitudes de reserva")
-Person(admin, "Administrador", "Administra usuarios, roles, menús y la operación del sistema")
+System(petcare, "PetCare System", "Plataforma de reserva de servicios para mascotas con Angular frontend, Spring Boot backend, microservicios (reservas, proveedores, pagos) y orquestador de saga")
 
-' ---------------------------------------------------------------------------
-' Sistema
-' ---------------------------------------------------------------------------
-System(petcare, "PetCare", "Plataforma de reserva de servicios veterinarios: frontend Angular, backend Spring Boot (auth, catálogos, clientes, mascotas) y microservicios de reservas (8081), proveedores (8082), pagos (8083) y orquestador de la saga (8085) con Kafka")
+System_Ext(pasarela, "Pasarela de Pagos", "Procesa transacciones")
+System_Ext(smtp, "Servidor SMTP", "Envía notificaciones")
+System_Ext(maps, "Google Maps", "Ubicaciones")
+System_Ext(kafka, "Kafka Broker", "Cola de eventos")
 
-' ---------------------------------------------------------------------------
-' Sistemas externos
-' ---------------------------------------------------------------------------
-System_Ext(pasarela, "Pasarela de pago", "Procesa, reembolsa y rechaza los pagos (simulada en desarrollo)")
-System_Ext(smtp, "SMTP Gmail", "Envía los correos transaccionales")
-System_Ext(maps, "Google Maps API", "Provee mapas y geolocalización")
+Rel(cliente, petcare, "Crea reservas, paga")
+Rel(proveedor, petcare, "Responde solicitudes")
+Rel(admin, petcare, "Administra sistema")
 
+Rel(petcare, pasarela, "Procesa pagos")
+Rel(petcare, smtp, "Envía emails")
+Rel(petcare, maps, "Geolocalización")
+Rel(petcare, kafka, "Publica/consume eventos")
 
-' ---------------------------------------------------------------------------
-' Relaciones
-' ---------------------------------------------------------------------------
-Rel(cliente, petcare, "Crea reservas, paga y consulta el estado", "HTTPS")
-Rel(proveedor, petcare, "Publica servicios y responde solicitudes de reserva", "HTTPS")
-Rel(admin, petcare, "Administra usuarios, roles y reportes", "HTTPS")
-
-Rel(petcare, pasarela, "Procesa el pago de las reservas", "REST/HTTPS")
-Rel(petcare, smtp, "Envía correos transaccionales", "SMTP")
-Rel(petcare, maps, "Geolocalización y mapas", "HTTPS")
-
-LAYOUT_WITH_LEGEND()
-
+SHOW_LEGEND()
 @enduml

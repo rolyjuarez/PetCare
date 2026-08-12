@@ -1,82 +1,77 @@
-@startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+@startuml componentes_reservation
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-' ============================================================================
-' PETCare - Componentes de reservation-service (8081) - C4 Nivel 3
-' ============================================================================
+title PetCare - Reservation Service - Componentes CQRS (C3)
 
-title Componentes de reservation-service (8081) - C4 Nivel 3
-
-' ---------------------------------------------------------------------------
-' Estilos
-' ---------------------------------------------------------------------------
-UpdateElementStyle(component, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#D9E2F3")
-UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
-UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
-UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
-UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
-UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
-UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
-
-' ---------------------------------------------------------------------------
-' Personas
-' ---------------------------------------------------------------------------
-Person(cliente, "Cliente", "Crea reservas, paga y da seguimiento")
-
-' ---------------------------------------------------------------------------
-' Elementos externos
-' ---------------------------------------------------------------------------
-System_Ext(sa, "saga-orchestrator", "8085", "Coordina la saga y ordena comandos")
-System_Ext(backend, "backend", "8080", "API REST principal / catálogos")
-System_Ext(ps, "provider-service", "8082", "Solicitudes y respuesta del proveedor")
-
-ContainerQueue(kafka, "Kafka", "Topics", "Publica: reserva.creada, reserva.confirmada, reserva.cancelada | Consume: saga.comando.confirmar-reserva, saga.comando.rechazar-reserva, saga.comando.cancelar-reserva | DLT: saga.dlt.v1")
-ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "reserva, notificacion, evento_procesado")
-
-' ---------------------------------------------------------------------------
-' Componentes internos
-' ---------------------------------------------------------------------------
-Container_Boundary(rs, "reservation-service (8081)") {
-    Component(rs_api, "ReservaController / ReservaService", "Spring MVC + Service", "Crea la reserva (PENDIENTE), confirma, rechaza y compensa")
-    Component(rs_interna, "ReservaInternaController", "Spring MVC", "Expone /interna/** a provider-service: registro de vacunación, ubicación y count-by-proveedor")
-    Component(rs_provider, "ProviderCatalogClient (REST)", "HTTP client", "Obtiene proveedor, servicio, modalidades y disponibilidad del provider-service (/interna/**)")
-    Component(rs_confirmar, "ConfirmarRechazarCommandConsumer", "Kafka listener", "Ejecuta ConfirmarReservaCommand y RechazarReservaCommand")
-    Component(rs_cancelar, "CancelarReservaCommandConsumer", "Kafka listener", "Ejecuta CancelarReservaCommand (compensación)")
-    Component(rs_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica ReservaCreadaEvent, ReservaConfirmadaEvent, ReservaCanceladaEvent")
-    Component(rs_idem, "IdempotencyService", "MyBatis", "Registra command_id en evento_procesado")
-    Component(rs_email, "EmailService", "SMTP", "Notifica al cliente por correo")
-
-    Rel(rs_api, rs_pub, "Publica eventos de dominio")
-    Rel(rs_api, rs_email, "Envía notificaciones")
-    Rel(rs_api, rs_provider, "Valida servicio, modalidad y disponibilidad")
-    Rel(rs_interna, rs_api, "Sirve datos de reserva/vacuna a provider-service")
-    Rel(rs_confirmar, rs_api, "Aplica confirmación/rechazo")
-    Rel(rs_cancelar, rs_api, "Aplica compensación")
-    Rel(rs_confirmar, rs_idem, "Verifica/registra duplicados")
-    Rel(rs_cancelar, rs_idem, "Verifica/registra duplicados")
+Container(reservation_container, "Reservation Service (8081)") {
+    
+    Container(write_container, "WRITE SIDE - Comandos") {
+        Component(command_interface, "ReservaCommandUseCase", "Interface", "Define casos de uso de escritura")
+        
+        Component(command_service, "ReservaCommandService", "Service", "Implementa: crear, actualizar, cancelar, confirmar, rechazar reserva")
+        
+        Component(command_objects, "Command Objects", "POJO", "CrearReservaCommand, ActualizarReservaCommand, CancelarReservaCommand, ConfirmarReservaCommand, RechazarReservaCommand")
+        
+        Component(validator, "ReservaDatosValidator", "Validator", "Valida datos de entrada (montos, fechas, etc.)")
+        
+        Component(command_repo, "ReservaCommandRepository", "Repository Port", "INSERT/UPDATE en tabla reserva")
+        
+        Component(notifier, "ReservaNotifier", "Event Publisher", "Publica ReservaCreadaEvent, ReservaConfirmadaEvent, ReservaCanceladaEvent")
+    }
+    
+    Container(read_container, "READ SIDE - Queries") {
+        Component(query_interface, "ReservaQueryService", "Interface", "Define casos de uso de lectura")
+        
+        Component(query_impl, "ReservaQueryServiceImpl", "Service", "Implementa queries de lectura")
+        
+        Component(query_repo, "ReservaQueryRepository", "Repository Port", "SELECT ONLY de tabla reserva")
+        
+        Component(mapper, "ReservaQueryMapper", "Mapper", "Mapea ResultSet a DTO de respuesta")
+    }
+    
+    Container(controllers, "Controllers") {
+        Component(cmd_controller, "ReservaCommandController", "Controller", "POST/PUT /api/v1/reservas")
+        Component(query_controller, "ReservaQueryController", "Controller", "GET /api/v1/reservas")
+    }
+    
+    Container(kafka_layer, "Kafka Integration") {
+        Component(cmd_consumer, "ConfirmarRechazarCommandConsumer", "Kafka Consumer", "Consume: ConfirmarReservaCommand, CancelarReservaCommand desde saga")
+        Component(idempotency, "IdempotencyService", "Service", "Verifica evento_procesado para evitar duplicados")
+    }
 }
 
-' ---------------------------------------------------------------------------
-' Relaciones con el exterior
-' ---------------------------------------------------------------------------
-Rel(cliente, rs_api, "1. Crea la reserva (PENDIENTE)", "REST /reservas")
-Rel(backend, rs_api, "Enruta y consulta /reservas**", "HTTP")
-Rel(rs_provider, ps, "Catálogo y disponibilidad del proveedor", "HTTP /interna/**")
-Rel(ps, rs_interna, "Vacuna, ubicación y has-reservas", "HTTP /interna/**")
-Rel(rs_api, kafka, "Publica eventos de reserva", "reserva.*")
-Rel(kafka, rs_confirmar, "Consume comandos del orquestador", "saga.comando.confirmar/rechazar-reserva")
-Rel(kafka, rs_cancelar, "Consume el comando de compensación", "saga.comando.cancelar-reserva")
-Rel(rs_pub, kafka, "ReservaCreadaEvent / ReservaConfirmadaEvent / ReservaCanceladaEvent", "Kafka")
-Rel(sa, kafka, "Publica los comandos", "saga.comando.*")
-Rel(rs_api, db, "Persiste reserva y notificaciones", "JDBC / MyBatis")
-Rel(rs_idem, db, "Persiste evento_procesado", "JDBC / MyBatis")
+Component(database, "PostgreSQL petcaredb", "Database", "Tabla: reserva, evento_procesado")
 
-note bottom of rs_cancelar
-  Compensación centralizada: reservation-service ya NO reacciona
-  a pago.fallido por su cuenta; solo ejecuta el CancelarReservaCommand
-  que ordena saga-orchestrator.
+Rel(cmd_controller, command_service, "invoca")
+Rel(command_service, validator, "valida datos")
+Rel(command_service, command_repo, "persiste")
+Rel(command_service, notifier, "publica eventos")
+
+Rel(query_controller, query_impl, "invoca")
+Rel(query_impl, query_repo, "consulta")
+Rel(query_repo, mapper, "mapea datos")
+
+Rel(command_repo, database, "INSERT/UPDATE")
+Rel(query_repo, database, "SELECT")
+
+Rel(cmd_consumer, idempotency, "verifica")
+Rel(idempotency, database, "consulta evento_procesado")
+Rel(cmd_consumer, command_service, "invoca comando")
+
+note bottom of write_container
+    **WRITE SIDE:**
+    - Comandos específicos para cada operación
+    - Validación de datos
+    - Publicación de eventos
+    - Repository para INSERT/UPDATE
 end note
 
-LAYOUT_WITH_LEGEND()
+note bottom of read_container
+    **READ SIDE:**
+    - Solo consultas SELECT
+    - Mapeo de datos a DTO
+    - Repository especializado en lectura
+end note
 
+SHOW_LEGEND()
 @enduml

@@ -1,0 +1,39 @@
+@startuml contenedores_gateway
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title PetCare - Gateway Service (C2 - Contenedores)
+
+Person(usuario, "Usuario/Cliente", "Usa la plataforma")
+
+Container(gateway, "API Gateway", "Spring Cloud Gateway (8086)", "Punto de entrada único. Valida JWT, aplica rate limiting, registra logs, enruta a microservicios")
+
+Container(backend, "Backend Service", "Spring Boot (8080)", "Gestiona auth, catálogos, clientes, mascotas")
+Container(reserva_svc, "Reservation Service", "Spring Boot (8081)", "Dominio de reservas")
+Container(proveedor_svc, "Provider Service", "Spring Boot (8082)", "Dominio de proveedores")
+Container(pago_svc, "Payment Service", "Spring Boot (8083)", "Dominio de pagos")
+Container(saga_svc, "Saga Orchestrator", "Spring Boot (8085)", "Orquestador de sagas")
+
+ContainerDb(db1, "PostgreSQL", "petcaredb", "BD compartida: backend, reserva, pago, saga")
+ContainerDb(db2, "PostgreSQL", "petcaredb_provider", "BD de proveedores (aislada)")
+
+Container(kafka, "Kafka Broker", "Message Queue", "Cola de eventos y comandos entre servicios")
+
+Rel(usuario, gateway, "HTTP/HTTPS requests")
+Rel(gateway, backend, "Enruta /api/v1/**")
+Rel(gateway, reserva_svc, "Enruta /api/v1/reservas/**")
+Rel(gateway, proveedor_svc, "Enruta /api/v1/proveedor/**")
+Rel(gateway, pago_svc, "Enruta /api/v1/pagos/**")
+
+Rel(backend, db1, "SQL queries")
+Rel(reserva_svc, db1, "SQL queries")
+Rel(pago_svc, db1, "SQL queries")
+Rel(saga_svc, db1, "SQL queries")
+Rel(proveedor_svc, db2, "SQL queries")
+
+Rel(reserva_svc, kafka, "Publica/consume eventos")
+Rel(proveedor_svc, kafka, "Publica/consume eventos")
+Rel(pago_svc, kafka, "Publica/consume eventos")
+Rel(saga_svc, kafka, "Publica/consume eventos")
+
+SHOW_LEGEND()
+@enduml

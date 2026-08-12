@@ -1,0 +1,46 @@
+@startuml contenedores_reservation_cqrs
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title PetCare - Reservation Service con CQRS (C2 - Contenedores)
+
+Person(cliente, "Cliente", "Crea y consulta reservas")
+
+Container(gateway, "API Gateway", "Spring Cloud Gateway", "Valida JWT, enruta requests")
+
+Container(reserva_app, "Reservation Service", "Spring Boot 3.4.1 (8081)", "Dominio de reservas con patrón CQRS separando escritura y lectura")
+
+Container(write_side, "WRITE SIDE", "ReservaCommandService", "Maneja CrearReservaCommand, ActualizarReservaCommand, CancelarReservaCommand, etc.")
+Container(read_side, "READ SIDE", "ReservaQueryService", "Maneja consultas GET de reservas")
+
+Container(kafka, "Kafka", "Message Queue", "Consume comandos y publica eventos de dominio")
+
+ContainerDb(db, "PostgreSQL petcaredb", "Database", "Tabla: reserva, evento_procesado")
+
+Rel(cliente, gateway, "POST/GET /api/v1/reservas")
+Rel(gateway, write_side, "POST/PUT requests")
+Rel(gateway, read_side, "GET requests")
+
+Rel(write_side, kafka, "Publica: ReservaCreadaEvent, ReservaConfirmadaEvent, ReservaCanceladaEvent")
+Rel(read_side, db, "SELECT queries")
+Rel(write_side, db, "INSERT/UPDATE queries")
+
+Rel(kafka, write_side, "Consume: ConfirmarReservaCommand, CancelarReservaCommand desde saga")
+Rel(reserva_app, kafka, "Integración Kafka")
+
+note bottom of write_side
+    **WRITE SIDE (Comandos):**
+    - ReservaCommandUseCase
+    - ReservaCommandService
+    - ReservaCommandRepository (insert/update)
+    - ReservaNotifier (publica eventos)
+end note
+
+note bottom of read_side
+    **READ SIDE (Queries):**
+    - ReservaQueryService
+    - ReservaQueryRepository (select)
+    - ReservaQueryMapper
+end note
+
+SHOW_LEGEND()
+@enduml

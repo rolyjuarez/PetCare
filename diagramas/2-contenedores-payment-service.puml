@@ -1,0 +1,50 @@
+@startuml contenedores_payment
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title PetCare - Payment Service (C2 - Contenedores)
+
+Container(saga, "Saga Orchestrator", "Spring Boot (8085)", "Orquestador central")
+Container(provider, "Provider Service", "Spring Boot (8082)", "Dominio de proveedores")
+
+Container(pago_app, "Payment Service", "Spring Boot 3.4.1 (8083)", "Procesa pagos con descuentos y CQRS-like")
+
+Container(write_side, "WRITE SIDE", "CrearPagoCommandConsumer", "Consume CrearPagoCommand, procesa pago, aplica descuentos")
+Container(read_side, "READ SIDE", "Eventos", "Publica: PagoProcesadoEvent, PagoFallidoEvent, PagoReembolsadoEvent")
+
+Container(pipeline, "Discount Pipeline", "Chain of Filters", "PipePromocionProveedor → PipeRecargoModalidad → PipeTerminal")
+
+Container(kafka, "Kafka", "Message Queue", "Consume comandos, publica eventos")
+
+Container(pasarela, "Pasarela de Pagos", "External Service", "Procesa transacciones")
+
+ContainerDb(db, "PostgreSQL petcaredb", "Database", "Tabla: pago")
+
+Rel(saga, kafka, "Publica: CrearPagoCommand")
+Rel(kafka, write_side, "Consume: CrearPagoCommand")
+
+Rel(write_side, pipeline, "Aplica descuentos")
+Rel(pipeline, provider, "REST /interna/** - consulta promociones")
+Rel(write_side, pasarela, "REST - procesa pago")
+
+Rel(write_side, db, "INSERT/UPDATE pago")
+Rel(write_side, kafka, "Publica eventos")
+Rel(read_side, kafka, "Publica: PagoProcesadoEvent o PagoFallidoEvent")
+
+Rel(kafka, saga, "Consume eventos para avanzar saga")
+
+note bottom of write_side
+    **WRITE SIDE:**
+    - CrearPagoCommand
+    - PagoServiceImpl.crearPago()
+    - Aplica pipeline de descuentos
+end note
+
+note bottom of pipeline
+    **Pipeline:**
+    1. Verifica promociones activas
+    2. Aplica recargo de modalidad
+    3. Aplica recargo terminal
+end note
+
+SHOW_LEGEND()
+@enduml

@@ -1,0 +1,54 @@
+@startuml componentes_gateway
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title PetCare - Gateway Service - Componentes (C3)
+
+Container(gateway_container, "API Gateway", "Spring Cloud Gateway (8086)") {
+    Component(jwt_filter, "JwtAuthGlobalFilter", "Spring Cloud Gateway Filter (order: -80)", "Valida JWT Bearer token, extrae username, añade header X-Authenticated-User, permite public paths")
+    
+    Component(ratelimit_filter, "RateLimiterGlobalFilter", "Spring Cloud Gateway Filter (order: -90)", "Token bucket algorithm por IP/cliente, retorna 429 cuando se excede limit")
+    
+    Component(logging_filter, "RequestLoggingGlobalFilter", "Spring Cloud Gateway Filter (order: -100)", "Registra method, path, status code, duration de cada request")
+    
+    Component(error_handler, "GatewayErrorWriter", "Error Handler", "Maneja excepciones y retorna respuestas de error")
+    
+    Component(public_paths, "PublicPaths", "Configuration", "Lista de patrones excluidos de validación JWT (auth, uploads, actuator)")
+    
+    Component(jwt_provider, "JwtTokenProvider", "Utility", "Valida firmas JWT usando JJWT (0.12.6), extrae claims")
+    
+    Component(routes, "Routes Configuration", "application.yml", "4 rutas predicadas: /api/v1/reservas/**, /api/v1/proveedor/**, /api/v1/pagos/**, /api/v1/**")
+}
+
+Component(auth_backend, "Backend Auth", "Auth Controller (8080)", "login, register, forgot-password, reset-password, refresh")
+Component(reserva_api, "Reservation API", "8081", "POST/GET /api/v1/reservas/**")
+Component(provider_api, "Provider API", "8082", "GET /api/v1/proveedor/**")
+Component(pago_api, "Payment API", "8083", "GET /api/v1/pagos/**")
+
+Rel(jwt_filter, public_paths, "Consulta patrones permitidos")
+Rel(jwt_filter, jwt_provider, "Valida token")
+Rel(jwt_filter, ratelimit_filter, "Pasa request válido")
+Rel(ratelimit_filter, logging_filter, "Pasa request con rate limit OK")
+Rel(logging_filter, routes, "Enruta según predicado")
+Rel(routes, auth_backend, "GET /api/v1/auth/**")
+Rel(routes, reserva_api, "POST/GET /api/v1/reservas/**")
+Rel(routes, provider_api, "GET /api/v1/proveedor/**")
+Rel(routes, pago_api, "GET /api/v1/pagos/**")
+Rel(error_handler, jwt_filter, "Maneja excepciones")
+
+note right of jwt_filter
+    **Public paths ejemplos:**
+    - /api/v1/auth/login
+    - /api/v1/auth/register
+    - /api/v1/uploads/**
+    - /actuator/**
+end note
+
+note right of ratelimit_filter
+    **Config:**
+    - Capacity: 100 (tokens)
+    - Refill rate: 10 req/sec
+    - Caffeine cache
+end note
+
+SHOW_LEGEND()
+@enduml

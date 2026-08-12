@@ -1,0 +1,30 @@
+@startuml contenedores_backend
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title PetCare - Backend Service (C2 - Contenedores)
+
+Container(backend_app, "Backend Spring Boot", "Java 21 Spring Boot 3.4.1", "Gestiona autenticación, catálogos, clientes, mascotas, notificaciones")
+
+ContainerDb(db, "PostgreSQL petcaredb", "Database", "BD de usuarios, personas, clientes, mascotas, catálogos")
+
+Container(smtp, "SMTP Gmail", "External Service", "Envía notificaciones por email")
+
+Container(gateway, "API Gateway", "Spring Cloud Gateway", "Valida JWT, enruta requests")
+
+Rel(gateway, backend_app, "Enruta requests HTTP")
+Rel(backend_app, db, "SQL queries")
+Rel(backend_app, smtp, "Envía notificaciones")
+
+note right of backend_app
+    **Módulos internos:**
+    - ClienteController
+    - MascotaController
+    - CatalogController
+    - NotificacionController
+    - AuthController (login, register, refresh)
+    - MicroserviceRoutingFilter
+    - Mappers de MyBatis
+end note
+
+SHOW_LEGEND()
+@enduml

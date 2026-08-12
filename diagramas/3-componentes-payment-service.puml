@@ -1,80 +1,67 @@
-@startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+@startuml componentes_payment
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-' ============================================================================
-' PETCare - Componentes de payment-service (8083) - C4 Nivel 3
-' ============================================================================
+title PetCare - Payment Service - Componentes (C3)
 
-title Componentes de payment-service (8083) - C4 Nivel 3
-
-' ---------------------------------------------------------------------------
-' Estilos
-' ---------------------------------------------------------------------------
-UpdateElementStyle(component, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#D9E2F3")
-UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
-UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
-UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
-UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
-UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
-
-' ---------------------------------------------------------------------------
-' Elementos externos
-' ---------------------------------------------------------------------------
-System_Ext(sa, "saga-orchestrator", "8085", "Coordina la saga, ordena comandos y compensa")
-System_Ext(rs, "reservation-service", "8081", "Dueño de la reserva")
-System_Ext(ps, "provider-service", "8082", "Catálogo interno /interna: promociones, usos y modalidades")
-
-ContainerQueue(kafka, "Kafka", "Topics", "Consume: saga.comando.crear-pago, saga.comando.liberar-descuento | Publica: pago.completado, pago.fallido, pago.reembolsado | DLT: saga.dlt.v1")
-ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL 18", "pago, evento_procesado, promocion (usos_actuales)")
-System_Ext(pasarela, "Pasarela de pago", "Proveedor externo", "Simulada en dev")
-
-' ---------------------------------------------------------------------------
-' Componentes internos
-' ---------------------------------------------------------------------------
-Container_Boundary(ms, "payment-service (8083)") {
-    Component(ms_consumer, "CrearPagoCommandConsumer", "Kafka listener", "Recibe el comando y crea el pago (PENDIENTE)")
-    Component(ms_lib, "LiberarDescuentoCommandConsumer", "Kafka listener", "Recibe la compensación y revierte el cupo de la promoción")
-    Component(ms_api, "PagoController", "Spring MVC", "Procesa pago con tarjeta y reembolsa vía REST")
-    Component(ms_svc, "PagoService / PagoServiceImpl", "Service", "Crea, procesa y reembolsa pagos; aplica descuentos")
-    Component(ms_pipe, "DescuentoPipeline", "Pipeline filter", "PipePromocionProveedor -> PipeRecargoModalidad -> PipeTerminal")
-    Component(ms_provider, "PagoProviderClient (REST)", "HTTP client", "Obtiene promoción activa, incrementa/decrementa usos y costo adicional de modalidad (/interna/**)")
-    Component(ms_pasarela, "PasarelaSimuladaService", "Mock", "Simula la pasarela de pago en desarrollo")
-    Component(ms_pub, "KafkaDomainEventPublisher", "Kafka producer", "Publica PagoProcesadoEvent, PagoFallidoEvent, PagoReembolsadoEvent")
-    Component(ms_idem, "IdempotencyService", "MyBatis", "Registra command_id en evento_procesado")
-
-    Rel(ms_consumer, ms_svc, "Crea el pago")
-    Rel(ms_lib, ms_svc, "Libera el descuento")
-    Rel(ms_api, ms_svc, "Procesa / reembolsa")
-    Rel(ms_svc, ms_pipe, "Calcula descuento y recargo")
-    Rel(ms_pipe, ms_provider, "Consulta promoción y costo adicional")
-    Rel(ms_svc, ms_pasarela, "Procesa el pago")
-    Rel(ms_svc, ms_pub, "Publica el resultado del pago")
-    Rel(ms_consumer, ms_idem, "Verifica/registra duplicados")
-    Rel(ms_lib, ms_idem, "Verifica/registra duplicados")
+Container(payment_container, "Payment Service (8083)") {
+    
+    Container(write_side, "WRITE SIDE - Comando") {
+        Component(cmd_consumer, "CrearPagoCommandConsumer", "Kafka Consumer", "Consume CrearPagoCommand del topic saga.comando.crear-pago")
+        
+        Component(pago_service, "PagoServiceImpl", "Service", "Procesa el pago: valida, aplica pipeline de descuentos, llama pasarela")
+        
+        Component(pipeline, "DescuentoPipeline", "Chain of Filters", "3 etapas: PipePromocionProveedor → PipeRecargoModalidad → PipeTerminal")
+        
+        Component(pago_repo, "PagoRepository", "Repository", "INSERT/UPDATE en tabla pago")
+    }
+    
+    Container(read_side, "READ SIDE / EVENTOS") {
+        Component(event_pub, "KafkaDomainEventPublisher", "Event Publisher", "Publica PagoProcesadoEvent, PagoFallidoEvent, PagoReembolsadoEvent")
+    }
+    
+    Container(external_calls, "Llamadas Externas") {
+        Component(provider_client, "PagoProviderClient", "REST Client", "GET /interna/** para consultar promociones activas y costos adicionales")
+        
+        Component(gateway_client, "PasarelaClient", "REST Client", "Procesa pago en pasarela de pagos (Stripe/PayU)")
+    }
+    
+    Container(controllers, "Público") {
+        Component(pago_controller, "PagoController", "Controller", "GET /api/v1/pagos/** para consultas")
+    }
 }
 
-' ---------------------------------------------------------------------------
-' Relaciones con el exterior
-' ---------------------------------------------------------------------------
-Rel(sa, kafka, "Publica CrearPagoCommand", "saga.comando.crear-pago")
-Rel(sa, kafka, "Publica LiberarDescuentoCommand", "saga.comando.liberar-descuento")
-Rel(kafka, ms_consumer, "Consume el comando", "saga.comando.crear-pago")
-Rel(kafka, ms_lib, "Consume la compensación", "saga.comando.liberar-descuento")
-Rel(backend, ms_api, "Enruta /pagos** (procesar/reembolsar/reserva)", "HTTP")
-Rel(rs, ms_api, "Consulta pagos de la reserva", "HTTP")
-Rel(ms_provider, ps, "Promoción activa, usos y costo adicional de modalidad", "HTTP /interna/**")
-Rel(ms_svc, pasarela, "procesar() vía pasarela", "REST/HTTPS")
-Rel(ms_pub, kafka, "PagoProcesadoEvent / PagoFallidoEvent / PagoReembolsadoEvent", "Kafka")
-Rel(ms_svc, db, "Persiste pago y consume promoción", "JDBC / MyBatis")
-Rel(ms_idem, db, "Persiste evento_procesado", "JDBC / MyBatis")
+Component(database, "PostgreSQL petcaredb", "Database", "Tabla: pago")
+Component(provider_svc, "Provider Service", "8082", "Endpoints /interna/**")
+Component(pasarela, "Pasarela de Pagos", "External", "Procesa transacciones")
+Component(kafka, "Kafka", "Message Queue", "Topics: saga.comando.crear-pago, pago.completado, pago.fallido, pago.reembolsado")
 
-note bottom of ms_lib
-  Compensación de descuento: si el pago falla (pago.fallido) o se reembolsa
-  (pago.reembolsado), el orquestador publica LiberarDescuentoCommand y este
-  service revierte usos_actuales de la promoción
-  (GREATEST(usos_actuales - 1, 0)) usando el descuento_id persistido.
+Rel(kafka, cmd_consumer, "Consume CrearPagoCommand")
+Rel(cmd_consumer, pago_service, "ejecuta pago")
+Rel(pago_service, pipeline, "aplica descuentos")
+Rel(pipeline, provider_client, "consulta promociones")
+Rel(provider_client, provider_svc, "HTTP GET /interna/**")
+Rel(pago_service, gateway_client, "procesa transacción")
+Rel(gateway_client, pasarela, "HTTP POST")
+Rel(pago_service, pago_repo, "persiste pago")
+Rel(pago_repo, database, "INSERT/UPDATE")
+Rel(pago_service, event_pub, "publica evento")
+Rel(event_pub, kafka, "Publish PagoProcesadoEvent o PagoFallidoEvent")
+Rel(pago_controller, database, "SELECT pagos")
+
+note bottom of pipeline
+    **Pipeline de descuentos:**
+    1. PipePromocionProveedor: promociones activas
+    2. PipeRecargoModalidad: recargo por modalidad
+    3. PipeTerminal: recargo o descuento final
 end note
 
-LAYOUT_WITH_LEGEND()
+note right of write_side
+    **WRITE SIDE:**
+    - Consume comando específico
+    - Procesa con pipeline de negocio
+    - Persiste resultado
+    - Publica evento de resultado
+end note
 
+SHOW_LEGEND()
 @enduml

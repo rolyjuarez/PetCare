@@ -1,0 +1,51 @@
+@startuml contenedores_saga
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title PetCare - Saga Orchestrator Service (C2 - Contenedores)
+
+Container(reserva_svc, "Reservation Service", "Spring Boot (8081)", "Dominio de reservas")
+Container(provider_svc, "Provider Service", "Spring Boot (8082)", "Dominio de proveedores")
+Container(pago_svc, "Payment Service", "Spring Boot (8083)", "Dominio de pagos")
+
+Container(saga_app, "Saga Orchestrator", "Spring Boot 3.4.1 (8085)", "Clean Architecture: orquestador central con máquina de estados")
+
+Container(domain, "DOMAIN LAYER", "SagaOrquestadorService", "Máquina de estados: INICIADA → PROVEEDOR_NOTIFICADO → RESERVA_ACEPTADA → PAGO_SOLICITADO → COMPLETADA")
+
+Container(application, "APPLICATION LAYER", "Command Publishers", "Publica 6 comandos:\n- NotificarProveedorCommand\n- ConfirmarReservaCommand\n- RechazarReservaCommand\n- CrearPagoCommand\n- CancelarReservaCommand (compensación)\n- LiberarDescuentoCommand (compensación)")
+
+Container(infrastructure, "INFRASTRUCTURE", "Kafka Listeners & MyBatis", "ReservaEventosListener, PagoEventosListener\nConsume 5 eventos de dominio, actualiza SagaEstado")
+
+Container(kafka, "Kafka", "Message Queue", "Topics: saga.comando.*, reserva.*, pago.*, saga.dlt.v1")
+
+ContainerDb(db, "PostgreSQL petcaredb", "Database", "Tabla: saga_estado, evento_procesado")
+
+Rel(reserva_svc, kafka, "Publica: reserva.creada, reserva.aceptada, reserva.confirmada, reserva.cancelada, reserva.rechazada")
+Rel(provider_svc, kafka, "Publica: reserva.aceptada, reserva.rechazada")
+Rel(pago_svc, kafka, "Publica: pago.completado, pago.fallido, pago.reembolsado")
+
+Rel(kafka, infrastructure, "Consume eventos")
+Rel(infrastructure, domain, "Actualiza máquina de estados")
+Rel(domain, application, "Dispara comandos")
+Rel(application, kafka, "Publica comandos en 6 topics")
+
+Rel(infrastructure, db, "SELECT/UPDATE saga_estado, evento_procesado")
+
+note bottom of domain
+    **STATE MACHINE:**
+    - INICIADA
+    - PROVEEDOR_NOTIFICADO
+    - RESERVA_ACEPTADA / RESERVA_RECHAZADA
+    - PAGO_SOLICITADO
+    - COMPLETADA / PAGO_FALLIDO
+    - CANCELADA
+end note
+
+note right of application
+    **COMPENSATIONS:**
+    Cuando pago falla:
+    - CancelarReservaCommand
+    - LiberarDescuentoCommand
+end note
+
+SHOW_LEGEND()
+@enduml

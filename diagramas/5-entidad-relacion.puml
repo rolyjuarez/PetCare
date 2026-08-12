@@ -1,0 +1,237 @@
+@startuml entidad_relacion
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Entity.puml
+
+title PetCare - Modelo de Datos (Entidad-Relación)
+
+' ========== PETCAREDB (BD Compartida) ==========
+
+note as db1_note
+    **PostgreSQL - petcaredb**
+    BD compartida: backend, reservation-service, payment-service, saga-orchestrator
+end note
+
+Entity(persona, "PERSONA", "") {
+    * id [PK]
+    --
+    * tipo_documento
+    * numero_documento [UNIQUE]
+    * nombres
+    * apellidos
+    email
+    telefono
+    fecha_nacimiento
+}
+
+Entity(usuario, "USUARIO", "") {
+    * id [PK]
+    * persona_id [FK]
+    --
+    * username [UNIQUE]
+    * password_hash
+    * estado
+}
+
+Entity(cliente, "CLIENTE", "") {
+    * id [PK]
+    * usuario_id [FK]
+    --
+    * direccion
+    * ciudad
+}
+
+Entity(mascota, "MASCOTA", "") {
+    * id [PK]
+    * cliente_id [FK]
+    --
+    * nombre
+    * raza
+    * especie
+    * edad
+    * peso
+    * descripcion
+}
+
+Entity(servicio, "SERVICIO", "") {
+    * id [PK]
+    --
+    * nombre
+    * descripcion
+    * estado
+}
+
+Entity(reserva, "RESERVA", "") {
+    * id [PK]
+    * cliente_id [FK]
+    * mascota_id [FK]
+    * servicio_id [FK]
+    --
+    * estado (PENDIENTE, CONFIRMADA, CANCELADA)
+    * fecha_servicio
+    * hora_inicio
+    * hora_fin
+    * monto_total
+    created_at
+    updated_at
+}
+
+Entity(pago, "PAGO", "") {
+    * id [PK]
+    * reserva_id [FK]
+    * cliente_id [FK]
+    --
+    * estado (PENDIENTE, COMPLETADO, FALLIDO)
+    * monto_original
+    * monto_descuento
+    * monto_recargo
+    * monto_final
+    * metodo_pago
+    created_at
+    updated_at
+}
+
+Entity(promocion, "PROMOCION", "") {
+    * id [PK]
+    * proveedor_id [FK, nullable]
+    * servicio_id [FK]
+    --
+    * nombre
+    * descripcion
+    * descuento_porcentaje
+    * valor_minimo
+    * usos_totales
+    * usos_actuales
+    * fecha_inicio
+    * fecha_fin
+    * activo
+}
+
+Entity(saga_estado, "SAGA_ESTADO", "") {
+    * id [PK]
+    * reserva_id [FK, UNIQUE]
+    --
+    * estado (INICIADA, PROVEEDOR_NOTIFICADO, RESERVA_ACEPTADA, PAGO_SOLICITADO, COMPLETADA)
+    * paso_actual
+    * motivo_fallo
+    created_at
+    updated_at
+}
+
+Entity(evento_procesado, "EVENTO_PROCESADO", "") {
+    * event_id [PK, UNIQUE]
+    * service_name
+    --
+    * timestamp
+}
+
+Rel(usuario, persona, "usuario_id → persona_id")
+Rel(cliente, usuario, "cliente_id → usuario_id")
+Rel(mascota, cliente, "mascota_id → cliente_id")
+Rel(reserva, cliente, "reserva_id → cliente_id")
+Rel(reserva, mascota, "reserva_id → mascota_id")
+Rel(reserva, servicio, "reserva_id → servicio_id")
+Rel(pago, reserva, "pago_id → reserva_id")
+Rel(pago, cliente, "pago_id → cliente_id")
+Rel(promocion, servicio, "promocion_id → servicio_id")
+Rel(saga_estado, reserva, "saga_estado.reserva_id → reserva.id")
+
+' ========== PETCAREDB_PROVIDER (BD Separada para Provider) ==========
+
+note as db2_note
+    **PostgreSQL - petcaredb_provider**
+    BD separada: provider-service con aislamiento de datos
+end note
+
+Entity(proveedor, "PROVEEDOR", "") {
+    * id [PK]
+    * usuario_id [FK]
+    --
+    * empresa_nombre
+    * empresa_ruc
+    * experiencia_anios
+    * rating_promedio
+    * estado
+}
+
+Entity(proveedor_servicio, "PROVEEDOR_SERVICIO", "") {
+    * id [PK]
+    * proveedor_id [FK]
+    * servicio_id [FK]
+    --
+    * precio_base
+    * activo
+}
+
+Entity(proveedor_servicio_modalidad, "PROVEEDOR_SERVICIO_MODALIDAD", "") {
+    * id [PK]
+    * proveedor_servicio_id [FK]
+    * modalidad_id [FK]
+    --
+    * costo_adicional
+    * activo
+}
+
+Entity(disponibilidad, "DISPONIBILIDAD", "") {
+    * id [PK]
+    * proveedor_id [FK]
+    * servicio_id [FK]
+    --
+    * dia_semana (1-7)
+    * hora_inicio
+    * hora_fin
+    * activo
+}
+
+Entity(solicitud_reserva, "SOLICITUD_RESERVA", "") {
+    * id [PK]
+    * proveedor_id [FK]
+    * reserva_id [FK]
+    --
+    * estado (PENDIENTE, ACEPTADA, RECHAZADA)
+    * respuesta_mensaje
+    * fecha_respuesta
+    created_at
+}
+
+Entity(promocion_provider, "PROMOCION", "") {
+    * id [PK]
+    * proveedor_id [FK, nullable]
+    * servicio_id [FK]
+    --
+    * nombre
+    * descuento_porcentaje
+    * usos_totales
+    * usos_actuales
+    * activo
+}
+
+Entity(evento_procesado_provider, "EVENTO_PROCESADO", "") {
+    * event_id [PK, UNIQUE]
+    * service_name
+    --
+    * timestamp
+}
+
+Rel(proveedor_servicio, proveedor, "proveedor_id → proveedor.id")
+Rel(proveedor_servicio, servicio, "servicio_id → servicio.id")
+Rel(proveedor_servicio_modalidad, proveedor_servicio, "proveedor_servicio_id")
+Rel(disponibilidad, proveedor, "proveedor_id → proveedor.id")
+Rel(disponibilidad, servicio, "servicio_id → servicio.id")
+Rel(solicitud_reserva, proveedor, "proveedor_id → proveedor.id")
+Rel(promocion_provider, proveedor, "proveedor_id → proveedor.id (nullable)")
+Rel(promocion_provider, servicio, "servicio_id → servicio.id")
+
+note bottom of saga_estado, evento_procesado
+    **Control de Saga:**
+    - saga_estado: máquina de estados centralizada
+    - evento_procesado: idempotencia (command_id único)
+end note
+
+note bottom of proveedor, disponibilidad
+    **Aislamiento de Datos:**
+    - BD separada petcaredb_provider
+    - Escalabilidad independiente
+    - Cumple separación CQRS
+end note
+
+SHOW_LEGEND()
+@enduml

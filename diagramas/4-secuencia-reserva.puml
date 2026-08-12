@@ -1,0 +1,69 @@
+@startuml secuencia_reserva
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Sequence.puml
+
+title PetCare - Flujo de Reserva (C4 - Secuencia)
+
+Person(cliente, "Cliente", "")
+
+Container(frontend, "Frontend Angular", "")
+Container(gateway, "API Gateway", "")
+Container(reserva_svc, "Reservation Service", "8081")
+Container(provider_svc, "Provider Service", "8082")
+Container(saga_svc, "Saga Orchestrator", "8085")
+Container(kafka, "Kafka", "")
+ContainerDb(db1, "petcaredb", "")
+ContainerDb(db2, "petcaredb_provider", "")
+
+note over cliente, db2
+    **FLUJO COMPLETO: Crear Reserva**
+end note
+
+Rel(cliente, frontend, "1. Crear reserva (servicio, modalidad, fecha)")
+Rel(frontend, gateway, "2. POST /api/v1/reservas")
+Rel(gateway, reserva_svc, "3. CrearReservaCommand")
+Rel(reserva_svc, reserva_svc, "4. ReservaCommandService\nValida datos")
+Rel(reserva_svc, db1, "5. INSERT reserva (PENDIENTE)")
+Rel(reserva_svc, kafka, "6. Publica ReservaCreadaEvent")
+
+Rel(kafka, saga_svc, "7. Consume ReservaCreadaEvent")
+Rel(saga_svc, db1, "8. INSERT saga_estado (INICIADA)")
+
+Rel(saga_svc, kafka, "9. Publica NotificarProveedorCommand")
+Rel(kafka, provider_svc, "10. Consume NotificarProveedorCommand")
+Rel(provider_svc, db2, "11. INSERT solicitud_reserva (PENDIENTE)")
+Rel(provider_svc, kafka, "12. Publica ReservaAceptadaEvent")
+
+Rel(kafka, saga_svc, "13. Consume ReservaAceptadaEvent")
+Rel(saga_svc, db1, "14. UPDATE saga_estado (RESERVA_ACEPTADA)")
+
+Rel(saga_svc, kafka, "15. Publica ConfirmarReservaCommand")
+Rel(kafka, reserva_svc, "16. Consume ConfirmarReservaCommand")
+Rel(reserva_svc, db1, "17. UPDATE reserva (CONFIRMADA)")
+Rel(reserva_svc, kafka, "18. Publica ReservaConfirmadaEvent")
+
+Rel(kafka, saga_svc, "19. Consume ReservaConfirmadaEvent")
+Rel(saga_svc, db1, "20. UPDATE saga_estado (PAGO_SOLICITADO)")
+
+Rel(saga_svc, kafka, "21. Publica CrearPagoCommand")
+Rel(reserva_svc, frontend, "22. Response: Reserva pendiente de pago")
+
+note over saga_svc, provider_svc
+    **Payment Service:**
+    - Consume CrearPagoCommand
+    - Procesa pago
+    - Publica PagoProcesadoEvent o PagoFallidoEvent
+    - (Ver diagrama de Pago)
+end note
+
+Rel(saga_svc, db1, "23. UPDATE saga_estado\n(COMPLETADA o PAGO_FALLIDO)")
+Rel(frontend, cliente, "24. Notificación de resultado")
+
+note over saga_svc
+    **RECHAZO PATH:**
+    Si proveedor rechaza:
+    - saga_estado → RESERVA_RECHAZADA
+    - Publica ConfirmacionRechazadaEvent
+    - Compensa automáticamente
+end note
+
+@enduml
