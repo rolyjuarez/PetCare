@@ -678,33 +678,58 @@
 
                 @if (p.estadoPago === 'PENDIENTE') {
                   <div class="space-y-3 border-t dark:border-gray-700 pt-4">
-                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Datos de la tarjeta</p>
-                    <div>
-                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Número de tarjeta *</label>
-                      <input type="text" [(ngModel)]="tarjetaForm.numero" placeholder="4111 1111 1111 1111"
-                             class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                      <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Simulación: las tarjetas terminadas en 0000 son rechazadas.</p>
-                    </div>
-                    <div>
-                      <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Titular *</label>
-                      <input type="text" [(ngModel)]="tarjetaForm.titular"
-                             class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                    </div>
+                    <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Forma de pago</p>
                     <div class="grid grid-cols-2 gap-3">
-                      <div>
-                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Expiración (MM/AA) *</label>
-                        <input type="text" [(ngModel)]="tarjetaForm.expira" placeholder="12/28"
-                               class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                      </div>
-                      <div>
-                        <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">CVV *</label>
-                        <input type="password" [(ngModel)]="tarjetaForm.cvv" maxlength="4"
-                               class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
-                      </div>
+                      <button type="button" (click)="seleccionarModalidadPago('EN_ESTABLECIMIENTO')"
+                              [class]="modalidadPago() === 'EN_ESTABLECIMIENTO'
+                                ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20 border-primary-500'
+                                : 'border-gray-200 dark:border-gray-600 hover:border-primary-300'"
+                              class="border rounded-lg p-3 text-left transition">
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Pagar en establecimiento</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">Abonas en efectivo al recibir el servicio</span>
+                      </button>
+                      <button type="button" (click)="seleccionarModalidadPago('EN_LINEA')"
+                              [class]="modalidadPago() === 'EN_LINEA'
+                                ? 'ring-2 ring-primary-500 bg-primary-50 dark:bg-primary-900/20 border-primary-500'
+                                : 'border-gray-200 dark:border-gray-600 hover:border-primary-300'"
+                              class="border rounded-lg p-3 text-left transition">
+                        <span class="block text-sm font-medium text-gray-900 dark:text-white">Pagar en línea</span>
+                        <span class="block text-xs text-gray-500 dark:text-gray-400 mt-1">Paga ahora con tarjeta de crédito</span>
+                      </button>
                     </div>
+
+                    @if (modalidadPago() === 'EN_LINEA') {
+                      <div class="space-y-3">
+                        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300">Datos de la tarjeta</p>
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Número de tarjeta *</label>
+                          <input type="text" [(ngModel)]="tarjetaForm.numero" placeholder="4111 1111 1111 1111"
+                                 class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Simulación: las tarjetas terminadas en 0000 son rechazadas.</p>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Titular *</label>
+                          <input type="text" [(ngModel)]="tarjetaForm.titular"
+                                 class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Expiración (MM/AA) *</label>
+                            <input type="text" [(ngModel)]="tarjetaForm.expira" placeholder="12/28"
+                                   class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                          </div>
+                          <div>
+                            <label class="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">CVV *</label>
+                            <input type="password" [(ngModel)]="tarjetaForm.cvv" maxlength="4"
+                                   class="w-full p-2 border rounded-lg text-sm dark:bg-gray-700 dark:text-white dark:border-gray-600">
+                          </div>
+                        </div>
+                      </div>
+                    }
+
                     <button (click)="procesarPago()" [disabled]="pagoLoading()"
                             class="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium">
-                      {{ pagoLoading() ? 'Procesando...' : 'Pagar ahora' }}
+                      {{ pagoLoading() ? 'Procesando...' : modalidadPago() === 'EN_ESTABLECIMIENTO' ? 'Confirmar pago en establecimiento' : 'Pagar ahora' }}
                     </button>
                   </div>
                 }

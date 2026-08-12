@@ -50,7 +50,7 @@ export class MisServiciosComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.proveedorService.myServicios().subscribe({
+    this.proveedorService.myServiciosDesdeProviderService().subscribe({
       next: (res) => {
         if (res.success) this.servicios.set(res.data);
         this.loading.set(false);
@@ -148,8 +148,8 @@ export class MisServiciosComponent implements OnInit {
     this.submitting.set(true);
     const editId = this.editId();
     const obs = editId
-      ? this.proveedorService.updateServicio(editId, data)
-      : this.proveedorService.createServicio(data);
+      ? this.proveedorService.updateServicioDesdeProviderService(editId, data)
+      : this.proveedorService.createServicioDesdeProviderService(data);
     obs.subscribe({
       next: () => {
         this.submitting.set(false);
@@ -165,7 +165,7 @@ export class MisServiciosComponent implements OnInit {
   }
 
   toggleActivo(svc: ProveedorServicio): void {
-    this.proveedorService.setServicioActivo(svc.id, !svc.activo).subscribe({
+    this.proveedorService.setServicioActivoDesdeProviderService(svc.id, !svc.activo).subscribe({
       next: (res) => {
         if (res.success) {
           this.toast.success(svc.activo ? 'Servicio desactivado' : 'Servicio activado');
@@ -178,7 +178,7 @@ export class MisServiciosComponent implements OnInit {
 
   eliminar(svc: ProveedorServicio): void {
     if (!window.confirm(`¿Eliminar el servicio "${svc.nombre}"?`)) return;
-    this.proveedorService.deleteServicio(svc.id).subscribe({
+    this.proveedorService.deleteServicioDesdeProviderService(svc.id).subscribe({
       next: () => {
         this.toast.success('Servicio eliminado');
         this.load();

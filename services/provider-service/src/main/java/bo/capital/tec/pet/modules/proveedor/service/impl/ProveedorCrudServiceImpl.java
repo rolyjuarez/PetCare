@@ -520,7 +520,9 @@ public class ProveedorCrudServiceImpl implements ProveedorCrudService {
         }
         List<ProveedorEspecialidad> especialidades = proveedorEspecialidadMapper.selectByProveedorId(proveedor.getId());
         List<String> especialidadNombres = new ArrayList<>();
+        List<Long> servicioIds = new ArrayList<>();
         for (ProveedorEspecialidad pe : especialidades) {
+            servicioIds.add(pe.getServicioId());
             Servicio servicio = servicioMapper.selectById(pe.getServicioId());
             if (servicio != null) {
                 especialidadNombres.add(servicio.getNombre());
@@ -529,6 +531,7 @@ public class ProveedorCrudServiceImpl implements ProveedorCrudService {
         return ProveedorSummaryDTO.builder()
                 .id(proveedor.getId())
                 .nombre(nombre.trim())
+                .personaNombre(nombre.trim())
                 .empresa(proveedor.getEmpresa())
                 .personaTelefono(telefono)
                 .personaEmail(email)
@@ -537,6 +540,7 @@ public class ProveedorCrudServiceImpl implements ProveedorCrudService {
                 .calificacion(proveedor.getCalificacion())
                 .verificado(proveedor.getVerificado())
                 .especialidades(especialidadNombres)
+                .servicioIds(servicioIds)
                 .build();
     }
 }

@@ -15,6 +15,7 @@ import java.util.List;
 public class ProveedorSummaryDTO {
     private Long id;
     private String nombre;
+    private String personaNombre;
     private String empresa;
     private String personaTelefono;
     private String personaEmail;
@@ -23,4 +24,5 @@ public class ProveedorSummaryDTO {
     private BigDecimal calificacion;
     private Boolean verificado;
     private List<String> especialidades;
+    private List<Long> servicioIds;
 }

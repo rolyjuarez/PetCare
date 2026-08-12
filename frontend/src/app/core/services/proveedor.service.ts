@@ -12,12 +12,20 @@ export class ProveedorService {
     return this.api.getPaged('/proveedores', params?.page, params?.size, params);
   }
 
+  getAllDesdeProviderService(params?: any): Observable<ApiResponse<PagedResponse<Proveedor>>> {
+    return this.api.getPaged('/provider/proveedores', params?.page, params?.size, params);
+  }
+
   getById(id: number): Observable<ApiResponse<Proveedor>> {
     return this.api.get(`/proveedores/${id}`);
   }
 
   getMe(): Observable<ApiResponse<Proveedor>> {
     return this.api.get('/proveedores/my');
+  }
+
+  getMeDesdeProviderService(): Observable<ApiResponse<Proveedor>> {
+    return this.api.get('/provider/proveedores/my');
   }
 
   setRequiereCertificado(proveedorId: number, servicioId: number, requiereCertificado: boolean): Observable<ApiResponse<Proveedor>> {
@@ -58,5 +66,25 @@ export class ProveedorService {
 
   deleteServicio(id: number): Observable<ApiResponse<void>> {
     return this.api.delete(`/proveedores/my/servicios/${id}`);
+  }
+
+  myServiciosDesdeProviderService(): Observable<ApiResponse<ProveedorServicio[]>> {
+    return this.api.get('/provider/proveedores/my/servicios');
+  }
+
+  createServicioDesdeProviderService(data: ProveedorServicioRequest): Observable<ApiResponse<ProveedorServicio>> {
+    return this.api.post('/provider/proveedores/my/servicios', data);
+  }
+
+  updateServicioDesdeProviderService(id: number, data: ProveedorServicioRequest): Observable<ApiResponse<ProveedorServicio>> {
+    return this.api.put(`/provider/proveedores/my/servicios/${id}`, data);
+  }
+
+  setServicioActivoDesdeProviderService(id: number, activo: boolean): Observable<ApiResponse<ProveedorServicio>> {
+    return this.api.put(`/provider/proveedores/my/servicios/${id}/activo`, { activo });
+  }
+
+  deleteServicioDesdeProviderService(id: number): Observable<ApiResponse<void>> {
+    return this.api.delete(`/provider/proveedores/my/servicios/${id}`);
   }
 }

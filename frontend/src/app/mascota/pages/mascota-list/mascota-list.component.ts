@@ -114,6 +114,7 @@ export class MascotaListComponent implements OnInit, OnDestroy {
   pagoReserva = signal<Reserva | null>(null);
   pago = signal<PagoResponse | null>(null);
   pagoLoading = signal(false);
+  modalidadPago = signal<'EN_ESTABLECIMIENTO' | 'EN_LINEA'>('EN_LINEA');
   tarjetaForm = {
     numero: '',
     titular: '',
@@ -167,7 +168,7 @@ export class MascotaListComponent implements OnInit, OnDestroy {
     this.servicioService.getActive().subscribe({
       next: (res) => { if (res.success) this.servicios.set(res.data); }
     });
-    this.proveedorService.getAll({ size: 100 }).subscribe({
+    this.proveedorService.getAllDesdeProviderService({ size: 100 }).subscribe({
       next: (res) => { if (res.success) this.proveedores.set(res.data.content); }
     });
     this.auth.getCiudades().subscribe({
@@ -1084,10 +1085,46 @@ export class MascotaListComponent implements OnInit, OnDestroy {
     this.pagoService.getByReserva(reserva.id).subscribe({
       next: (res) => {
         this.pagoLoading.set(false);
-        if (res.success) this.pago.set(res.data);
+        if (res.success) {
+          this.setPago(res.data);
+        } else {
+          this.crearPagoDeReserva(reserva.id);
+        }
       },
-      error: () => this.pagoLoading.set(false)
+      error: (err) => {
+        if (err?.status === 404) {
+          this.crearPagoDeReserva(reserva.id);
+        } else {
+          this.pagoLoading.set(false);
+        }
+      }
     });
+  }
+
+  private setPago(p: PagoResponse): void {
+    this.pago.set(p);
+    if (p.modalidadPago === 'EN_ESTABLECIMIENTO' || p.modalidadPago === 'EN_LINEA') {
+      this.modalidadPago.set(p.modalidadPago);
+    }
+  }
+
+  private crearPagoDeReserva(reservaId: number): void {
+    this.pagoService.crearPagoDeReserva(reservaId).subscribe({
+      next: (res) => {
+        this.pagoLoading.set(false);
+        if (res.success) {
+          this.setPago(res.data);
+        }
+      },
+      error: (err) => {
+        this.pagoLoading.set(false);
+        this.toast.error(err.error?.message || 'No se pudo iniciar el pago de la reserva');
+      }
+    });
+  }
+
+  seleccionarModalidadPago(modalidad: 'EN_ESTABLECIMIENTO' | 'EN_LINEA'): void {
+    this.modalidadPago.set(modalidad);
   }
 
   closePagoModal(): void {
@@ -1099,14 +1136,19 @@ export class MascotaListComponent implements OnInit, OnDestroy {
   procesarPago(): void {
     const pago = this.pago();
     if (!pago) return;
+    const modalidad = this.modalidadPago();
+    if (modalidad === 'EN_ESTABLECIMIENTO') {
+      this.procesarEnEstablecimiento(pago);
+      return;
+    }
     if (!this.tarjetaForm.numero.trim() || !this.tarjetaForm.titular.trim()
         || !this.tarjetaForm.expira.trim() || !this.tarjetaForm.cvv.trim()) {
       this.toast.error('Complete los datos de la tarjeta');
       return;
     }
-    this.pagoLoading.set(true);
     const data: ProcesarPagoRequest = {
-      metodoPago: 'TARJETA',
+      metodoPago: 'TARJETA_CREDITO',
+      modalidadPago: 'EN_LINEA',
       tarjeta: {
         numero: this.tarjetaForm.numero.trim(),
         titular: this.tarjetaForm.titular.trim(),
@@ -1114,6 +1156,32 @@ export class MascotaListComponent implements OnInit, OnDestroy {
         cvv: this.tarjetaForm.cvv.trim()
       }
     };
+    this.enviarProcesarPago(pago, data);
+  }
+
+  private procesarEnEstablecimiento(pago: PagoResponse): void {
+    Swal.fire({
+      title: 'Pago en establecimiento',
+      text: 'Se registrará el pago en EFECTIVO al momento de la entrega del servicio. ¿Confirmas?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, confirmar',
+      cancelButtonText: 'No'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const data: ProcesarPagoRequest = {
+          metodoPago: 'EFECTIVO',
+          modalidadPago: 'EN_ESTABLECIMIENTO'
+        };
+        this.enviarProcesarPago(pago, data);
+      }
+    });
+  }
+
+  private enviarProcesarPago(pago: PagoResponse, data: ProcesarPagoRequest): void {
+    this.pagoLoading.set(true);
     this.pagoService.procesar(pago.id, data).subscribe({
       next: (res) => {
         this.pagoLoading.set(false);

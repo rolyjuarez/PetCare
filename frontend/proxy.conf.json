@@ -1,4 +1,10 @@
 {
+  "/api/v1/provider": {
+    "target": "http://localhost:8082",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": { "^/api/v1/provider": "/api/v1" }
+  },
   "/api/v1": {
     "target": "http://localhost:8080",
     "secure": false,

@@ -275,7 +275,7 @@ export class RegisterComponent implements OnInit, OnDestroy {
       next: () => {
         this.loading.set(false);
         this.toast.success('Registro exitoso. Revise su correo para mas informacion.');
-        setTimeout(() => this.router.navigate(['/']), 3000);
+        setTimeout(() => this.router.navigate(['/login']), 3000);
       },
       error: (err) => {
         this.loading.set(false);
@@ -285,6 +285,6 @@ export class RegisterComponent implements OnInit, OnDestroy {
   }
 
   goToLogin() {
-    this.router.navigate(['/']);
+    this.router.navigate(['/login']);
   }
 }

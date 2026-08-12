@@ -83,6 +83,20 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
+    @Transactional
+    public PagoResponseDTO crearPagoParaReserva(Long reservaId) {
+        ReservaInfoDTO info = catalogMapper.selectReservaInfo(reservaId);
+        if (info == null) {
+            throw new EntityNotFoundException("Reserva", reservaId);
+        }
+        CrearPagoCommand comando = new CrearPagoCommand(
+                info.getReservaId(), info.getCodigo(), info.getClienteId(), info.getProveedorId(),
+                info.getServicioId(), null, info.getFechaInicio(), info.getHoraInicio(),
+                info.getPrecioTotal(), info.getModalidadEntrega(), null);
+        return crearPago(comando);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public PagoResponseDTO getById(Long id) {
         return toResponseDTO(requirePago(id));
@@ -135,9 +149,16 @@ public class PagoServiceImpl implements PagoService {
                 descuento != null ? descuento.getTipo() : null,
                 descuento != null ? descuento.getServicioId() : null);
 
-        if (MODALIDAD_EN_ESTABLECIMIENTO.equals(pago.getModalidadPago())) {
+        String modalidad = resolverModalidad(request.getModalidadPago(), pago.getModalidadPago());
+        if (!modalidad.equals(pago.getModalidadPago())) {
+            pagoMapper.updateModalidad(pago.getId(), modalidad);
+            pago.setModalidadPago(modalidad);
+        }
+
+        if (MODALIDAD_EN_ESTABLECIMIENTO.equals(modalidad)) {
             pagoMapper.updateEstado(pago.getId(), ESTADO_COMPLETADO, ESTADO_COMPLETADO,
                     "EFECTIVO-EN-ESTABLECIMIENTO", null, LocalDateTime.now(), "EFECTIVO");
+            log.info("Pago {} completado en establecimiento (sin pasarela)", pago.getId());
             publishProcesado(pago, request);
             return getById(id);
         }
@@ -145,13 +166,14 @@ public class PagoServiceImpl implements PagoService {
         if (request.getTarjeta() == null) {
             throw new BusinessException("Para pagos en línea debe indicar los datos de la tarjeta");
         }
+        String metodoPago = normalizarMetodoPago(request.getMetodoPago());
         pagoMapper.updateEstado(pago.getId(), ESTADO_EN_PROCESO, ESTADO_EN_PROCESO,
-                null, null, null, request.getMetodoPago());
+                null, null, null, metodoPago);
         ResultadoPasarela resultado = pasarela.procesar(IntencionPago.builder()
                 .pagoId(pago.getId())
                 .reservaId(pago.getReservaId())
                 .monto(context.getMontoActual())
-                .metodoPago(request.getMetodoPago())
+                .metodoPago(metodoPago)
                 .numeroTarjeta(request.getTarjeta().getNumero())
                 .titularTarjeta(request.getTarjeta().getTitular())
                 .expiraTarjeta(request.getTarjeta().getExpira())
@@ -160,12 +182,12 @@ public class PagoServiceImpl implements PagoService {
         if (resultado.isAprobado()) {
             pagoMapper.updateEstado(pago.getId(), ESTADO_COMPLETADO, ESTADO_COMPLETADO,
                     resultado.getReferenciaTransaccion(), resultado.getIntencionId(),
-                    LocalDateTime.now(), request.getMetodoPago());
+                    LocalDateTime.now(), metodoPago);
             log.info("Pago {} completado, referencia {}", pago.getId(), resultado.getReferenciaTransaccion());
             publishProcesado(pago, request);
         } else {
             pagoMapper.updateEstado(pago.getId(), ESTADO_FALLIDO, ESTADO_FALLIDO,
-                    null, resultado.getIntencionId(), null, request.getMetodoPago());
+                    null, resultado.getIntencionId(), null, metodoPago);
             log.warn("Pago {} fallido: {}", pago.getId(), resultado.getMensaje());
             publishFallido(pago, resultado);
         }
@@ -198,6 +220,24 @@ public class PagoServiceImpl implements PagoService {
         providerClient.decrementarUsosPromocion(pago.getDescuentoId());
         log.info("Descuento {} liberado por compensación para reserva {}",
                 pago.getDescuentoId(), reservaId);
+    }
+
+    private String resolverModalidad(String solicitada, String actual) {
+        if (MODALIDAD_EN_ESTABLECIMIENTO.equals(solicitada) || MODALIDAD_EN_LINEA.equals(solicitada)) {
+            return solicitada;
+        }
+        return actual != null && !actual.isBlank() ? actual : MODALIDAD_EN_LINEA;
+    }
+
+    private String normalizarMetodoPago(String metodoPago) {
+        if (metodoPago == null || metodoPago.isBlank()) {
+            return "TARJETA_CREDITO";
+        }
+        return switch (metodoPago.toUpperCase()) {
+            case "TARJETA" -> "TARJETA_CREDITO";
+            case "EFECTIVO", "TARJETA_CREDITO", "TARJETA_DEBITO", "TRANSFERENCIA", "QR", "OTRO" -> metodoPago.toUpperCase();
+            default -> "TARJETA_CREDITO";
+        };
     }
 
     private void publishProcesado(Pago pago, ProcesarPagoRequestDTO request) {

@@ -69,11 +69,11 @@ public class AuthServiceImpl implements AuthService {
         usuarioApi.resetFailedAttempts(usuario.getId());
         usuarioApi.updateLastAccess(usuario.getId());
 
-        String accessToken = jwtTokenProvider.generateAccessToken(usuario.getUsername());
+        List<String> roles = usuarioApi.findRolesByUsuarioId(usuario.getId());
+        String accessToken = jwtTokenProvider.generateAccessToken(usuario.getUsername(), usuario.getId(), roles);
         String refreshToken = jwtTokenProvider.generateRefreshToken(usuario.getUsername());
         usuarioApi.updateTokenRefresh(usuario.getId(), refreshToken);
 
-        List<String> roles = usuarioApi.findRolesByUsuarioId(usuario.getId());
         List<String> permissions = usuarioApi.findPermissionsByUsuarioId(usuario.getId());
 
         String nombre = "";
@@ -114,7 +114,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("Usuario no valido");
         }
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(username);
+        String newAccessToken = jwtTokenProvider.generateAccessToken(username, usuario.getId(), usuarioApi.findRolesByUsuarioId(usuario.getId()));
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(username);
         usuarioApi.updateTokenRefresh(usuario.getId(), newRefreshToken);
 

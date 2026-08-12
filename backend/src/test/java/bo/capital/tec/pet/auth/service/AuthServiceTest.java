@@ -56,7 +56,7 @@ class AuthServiceTest {
                 .username("admin").password("123456").build();
         when(usuarioMapper.findByUsername("admin")).thenReturn(usuario);
         when(passwordEncoder.matches("123456", "$2a$encoded")).thenReturn(true);
-        when(jwtTokenProvider.generateAccessToken("admin")).thenReturn("access-token");
+        when(jwtTokenProvider.generateAccessToken("admin", 1L, List.of("ADMIN"))).thenReturn("access-token");
         when(jwtTokenProvider.generateRefreshToken("admin")).thenReturn("refresh-token");
         when(jwtTokenProvider.getExpirationMs()).thenReturn(3600000L);
         when(usuarioMapper.findRolesByUsuarioId(1L)).thenReturn(List.of("ADMIN"));
@@ -134,7 +134,7 @@ class AuthServiceTest {
         when(jwtTokenProvider.validateToken("valid-refresh-token")).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken("valid-refresh-token")).thenReturn("admin");
         when(usuarioMapper.findByUsername("admin")).thenReturn(usuario);
-        when(jwtTokenProvider.generateAccessToken("admin")).thenReturn("new-access-token");
+        when(jwtTokenProvider.generateAccessToken("admin", 1L, List.of("ADMIN"))).thenReturn("new-access-token");
         when(jwtTokenProvider.generateRefreshToken("admin")).thenReturn("new-refresh-token");
         when(jwtTokenProvider.getExpirationMs()).thenReturn(3600000L);
         when(usuarioMapper.findRolesByUsuarioId(1L)).thenReturn(List.of("ADMIN"));

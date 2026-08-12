@@ -3,6 +3,8 @@ package bo.capital.tec.pet.security;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtTokenProviderTest {
@@ -18,21 +20,21 @@ class JwtTokenProviderTest {
 
     @Test
     void generateAccessToken_ShouldReturnToken() {
-        String token = jwtTokenProvider.generateAccessToken("admin");
+        String token = jwtTokenProvider.generateAccessToken("admin", 1L, List.of("ADMIN"));
         assertNotNull(token);
         assertFalse(token.isEmpty());
     }
 
     @Test
     void getUsernameFromToken_ShouldReturnUsername() {
-        String token = jwtTokenProvider.generateAccessToken("admin");
+        String token = jwtTokenProvider.generateAccessToken("admin", 1L, List.of("ADMIN"));
         String username = jwtTokenProvider.getUsernameFromToken(token);
         assertEquals("admin", username);
     }
 
     @Test
     void validateToken_ShouldReturnTrue_ForValidToken() {
-        String token = jwtTokenProvider.generateAccessToken("admin");
+        String token = jwtTokenProvider.generateAccessToken("admin", 1L, List.of("ADMIN"));
         assertTrue(jwtTokenProvider.validateToken(token));
     }
 
