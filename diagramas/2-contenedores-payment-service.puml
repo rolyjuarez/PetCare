@@ -1,0 +1,39 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - payment-service C2
+' ============================================================================
+
+title payment-service - Vista de contenedores
+
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+Person(cliente, "Cliente")
+System_Boundary(petcare, "PetCare") {
+    Container(gateway, "gateway-service", "Spring Cloud Gateway 8086", "Punto de entrada")
+    Container(ms, "payment-service", "Spring Boot 8083", "Procesa pagos, descuentos y reembolsos")
+    Container(ps, "provider-service", "Spring Boot 8082", "Promociones y costo de modalidad")
+    Container(sa, "saga-orchestrator", "Spring Boot 8085", "Coordina compensaciones")
+    ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL", "Pagos, promociones y eventos")
+    ContainerQueue(kafka, "Kafka", "Broker", "Eventos y comandos de pagos")
+    System_Ext(pasarela, "Pasarela de pago", "Proveedor externo", "Simulada en desarrollo")
+}
+
+Rel(cliente, gateway, "Solicita pagar una reserva", "HTTPS")
+Rel(gateway, ms, "Enruta /api/v1/pagos/**", "HTTP")
+Rel(ms, ps, "Consulta promoción activa y costo adicional", "HTTP /interna/**")
+Rel(ms, pasarela, "Procesa pago y reembolso", "REST/HTTPS")
+Rel(sa, kafka, "Publica CrearPagoCommand y LiberarDescuentoCommand", "Kafka")
+Rel(kafka, ms, "Consume saga.comando.crear-pago", "Kafka")
+Rel(kafka, ms, "Consume saga.comando.liberar-descuento", "Kafka")
+Rel(ms, kafka, "Publica pago.completado, pago.fallido, pago.reembolsado", "Kafka")
+Rel(ms, db, "Persiste pagos y descuentos", "JDBC")
+
+LAYOUT_WITH_LEGEND()
+@enduml

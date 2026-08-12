@@ -1,0 +1,38 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - provider-service C2
+' ============================================================================
+
+title provider-service - Vista de contenedores
+
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+Person(proveedor, "Proveedor")
+System_Boundary(petcare, "PetCare") {
+    Container(gateway, "gateway-service", "Spring Cloud Gateway 8086", "Punto de entrada")
+    Container(ps, "provider-service", "Spring Boot 8082", "Proveedores, servicios, disponibilidad y promociones")
+    Container(rs, "reservation-service", "Spring Boot 8081", "Reserva y vacunación")
+    Container(ms, "payment-service", "Spring Boot 8083", "Pagos y promociones")
+    Container(sa, "saga-orchestrator", "Spring Boot 8085", "Coordina la saga")
+    ContainerDb(db, "PostgreSQL petcaredb_provider", "PostgreSQL", "Dominio del proveedor")
+    ContainerQueue(kafka, "Kafka", "Broker", "Eventos y comandos del proveedor")
+}
+
+Rel(proveedor, gateway, "Registra servicios y responde solicitudes", "HTTPS")
+Rel(gateway, ps, "Enruta /api/v1/proveedor/** y /api/v1/proveedores/**", "HTTP")
+Rel(ps, rs, "Consulta vacunas, ubicación y estado de reservas", "HTTP /interna/**")
+Rel(ms, ps, "Consulta promociones activas y costos adicionales", "HTTP /interna/**")
+Rel(sa, kafka, "Publica NotificarProveedorCommand", "Kafka")
+Rel(kafka, ps, "Consume saga.comando.notificar-proveedor", "Kafka")
+Rel(ps, kafka, "Publica reserva.aceptada y reserva.rechazada", "Kafka")
+Rel(ps, db, "Persiste proveedores, servicios, disponibilidad, promociones y solicitudes", "JDBC")
+
+LAYOUT_WITH_LEGEND()
+@enduml

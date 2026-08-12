@@ -1,0 +1,38 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - reservation-service C2
+' ============================================================================
+
+title reservation-service - Vista de contenedores
+
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+Person(cliente, "Cliente")
+System_Boundary(petcare, "PetCare") {
+    Container(gateway, "gateway-service", "Spring Cloud Gateway 8086", "Punto de entrada")
+    Container(rs, "reservation-service", "Spring Boot 8081", "Dueño de la reserva y estado del flujo")
+    Container(ps, "provider-service", "Spring Boot 8082", "Catálogo y solicitudes de proveedores")
+    Container(sa, "saga-orchestrator", "Spring Boot 8085", "Coordina la saga")
+    ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL", "reserva, notificacion, evento_procesado")
+    ContainerQueue(kafka, "Kafka", "Broker", "Eventos y comandos de reserva")
+}
+
+Rel(cliente, gateway, "Solicita reservar", "HTTPS")
+Rel(gateway, rs, "Enruta /api/v1/reservas/**", "HTTP")
+Rel(rs, ps, "Consulta catálogo y disponibilidad", "HTTP /interna/**")
+Rel(ps, rs, "Consulta ubicación y vacunas", "HTTP /interna/**")
+Rel(rs, kafka, "Publica reserva.creada, reserva.confirmada, reserva.cancelada", "Kafka")
+Rel(sa, kafka, "Publica comandos confirmar / rechazar / cancelar reserva", "Kafka")
+Rel(kafka, rs, "Consume saga.comando.confirmar-reserva", "Kafka")
+Rel(kafka, rs, "Consume saga.comando.cancelar-reserva", "Kafka")
+Rel(rs, db, "Persiste reservas y notificaciones", "JDBC")
+
+LAYOUT_WITH_LEGEND()
+@enduml

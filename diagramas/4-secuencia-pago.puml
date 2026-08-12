@@ -1,0 +1,56 @@
+@startuml
+' ============================================================================
+' PETCare - Secuencia de pago con saga y compensación
+' ============================================================================
+
+title Secuencia de pago de reserva
+
+actor Cliente
+participant Frontend
+participant Gateway
+participant Backend
+participant ReservationService
+participant ProviderService
+participant PaymentService
+participant SagaOrchestrator
+participant Kafka
+participant Pasarela
+participant DB
+
+Cliente -> Frontend: Solicita pagar reserva
+Frontend -> Gateway: POST /api/v1/pagos/{id}/procesar
+Gateway -> Backend: Reenvío por ruta /pagos/**
+Backend -> PaymentService: Llama al endpoint de pago
+
+PaymentService -> DB: Crear registro de pago (PENDIENTE)
+PaymentService -> ProviderService: Consulta promoción activa y costo adicional
+ProviderService --> PaymentService: Datos de promoción / modalidad
+PaymentService -> Pasarela: Procesa pago
+alt Pago exitoso
+    Pasarela --> PaymentService: PagoAceptado
+    PaymentService -> DB: Actualiza pago como COMPLETADO
+    PaymentService -> Kafka: Publica pago.completado
+    Kafka -> SagaOrchestrator: Evento pago.completado
+    SagaOrchestrator -> DB: Actualiza estado de saga
+    SagaOrchestrator -> Kafka: Publica siguiente comando de la saga
+    Kafka -> ReservationService: Confirma reserva
+    ReservationService -> DB: Reserva CONFIRMADA
+    ReservationService -> Kafka: Publica reserva.confirmada
+else Pago rechazado
+    Pasarela --> PaymentService: PagoFallido
+    PaymentService -> DB: Actualiza pago como FALLIDO
+    PaymentService -> Kafka: Publica pago.fallido
+    Kafka -> SagaOrchestrator: Evento pago.fallido
+    SagaOrchestrator -> Kafka: Publica CancelarReservaCommand
+    Kafka -> ReservationService: CancelarReservaCommand
+    ReservationService -> DB: Reserva CANCELADA
+    ReservationService -> Kafka: Publica reserva.cancelada
+    SagaOrchestrator -> Kafka: Publica LiberarDescuentoCommand
+    Kafka -> PaymentService: LiberarDescuentoCommand
+    PaymentService -> DB: Revierte usos_actuales de la promoción
+    PaymentService -> Kafka: Publica pago.reembolsado
+end
+
+PaymentService --> Frontend: Respuesta HTTP del proceso
+Frontend --> Cliente: Resultado del pago
+@enduml

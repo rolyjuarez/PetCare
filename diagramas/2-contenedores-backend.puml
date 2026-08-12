@@ -1,0 +1,44 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - backend C2
+' ============================================================================
+
+title backend - Vista de contenedores
+
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+Person(admin, "Administrador")
+Person(cliente, "Cliente")
+System_Boundary(petcare, "PetCare") {
+    Container(gateway, "gateway-service", "Spring Cloud Gateway 8086", "Punto de entrada")
+    Container(backend, "backend", "Spring Boot 8080", "Auth, catálogos, clientes, mascotas, reportes y orquestación")
+    Container(rs, "reservation-service", "Spring Boot 8081", "Reservas")
+    Container(ps, "provider-service", "Spring Boot 8082", "Proveedores")
+    Container(ms, "payment-service", "Spring Boot 8083", "Pagos")
+    ContainerDb(dbCore, "PostgreSQL petcaredb", "PostgreSQL", "Base compartida del backend, reservas, pagos y saga")
+    ContainerDb(dbProvider, "PostgreSQL petcaredb_provider", "PostgreSQL", "Base propia del dominio proveedor")
+    ContainerQueue(kafka, "Kafka", "Broker", "Eventos de integración")
+    Container(smtp, "SMTP Gmail", "Proveedor externo", "Correos transaccionales")
+}
+
+Rel(cliente, gateway, "Usa la plataforma", "HTTPS")
+Rel(admin, gateway, "Administra sistema", "HTTPS")
+Rel(gateway, backend, "Enruta /api/v1/** y uploads", "HTTP")
+Rel(backend, rs, "Llama a /reservas** cuando se requiere lógica de reserva", "HTTP")
+Rel(backend, ps, "Llama a /proveedor** y /proveedores**", "HTTP")
+Rel(backend, ms, "Llama a /pagos**", "HTTP")
+Rel(backend, dbCore, "Persistencia de usuarios, clientes, mascotas y catálogos", "JDBC")
+Rel(ps, dbProvider, "Persistencia del dominio proveedor", "JDBC")
+Rel(backend, smtp, "Envia correos", "SMTP")
+Rel(backend, kafka, "Publica eventos de dominio y notificaciones", "Kafka")
+Rel(ps, kafka, "Consume y publica eventos del proveedor", "Kafka")
+
+LAYOUT_WITH_LEGEND()
+@enduml

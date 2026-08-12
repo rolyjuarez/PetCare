@@ -1,0 +1,50 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' ============================================================================
+' PETCare - Componentes de gateway-service (8086) - C4 Nivel 3
+' ============================================================================
+
+title Componentes de gateway-service (8086) - C4 Nivel 3
+
+UpdateElementStyle(component, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#D9E2F3")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+System_Ext(frontend, "Frontend Angular", "Cliente web")
+Container(backend, "backend", "Spring Boot 8080", "API principal")
+Container(rs, "reservation-service", "Spring Boot 8081", "Reservas")
+Container(ps, "provider-service", "Spring Boot 8082", "Proveedores")
+Container(ms, "payment-service", "Spring Boot 8083", "Pagos")
+
+Container_Boundary(gateway, "gateway-service (8086)") {
+    Component(gw_route, "Route Configuration", "Spring Cloud Gateway", "Define rutas por prefijo /api/v1/**")
+    Component(gw_jwt, "JwtAuthGlobalFilter", "GlobalFilter", "Valida JWT y añade X-Authenticated-User")
+    Component(gw_rate, "RateLimiterGlobalFilter", "GlobalFilter", "Aplica control de tasa por IP / cliente")
+    Component(gw_log, "RequestLoggingGlobalFilter", "GlobalFilter", "Registra método, path y duración")
+    Component(gw_error, "GatewayErrorWriter", "Error handler", "Devuelve JSON con 401, 404, 429, 502")
+    Component(gw_public, "PublicPaths", "Security config", "Lista endpoints públicos sin JWT")
+    Component(gw_token, "JwtTokenProvider", "JWT provider", "Valida firma, expira y extrae subject")
+}
+
+Rel(frontend, gw_route, "Llama a la API", "HTTP")
+Rel(gw_route, backend, "Enruta /api/v1/**, /uploads/**", "HTTP")
+Rel(gw_route, rs, "Enruta /api/v1/reservas/**", "HTTP")
+Rel(gw_route, ps, "Enruta /api/v1/proveedor/**, /api/v1/proveedores/**", "HTTP")
+Rel(gw_route, ms, "Enruta /api/v1/pagos/**", "HTTP")
+Rel(gw_jwt, gw_public, "Consulta rutas públicas")
+Rel(gw_jwt, gw_token, "Valida token JWT")
+Rel(gw_jwt, gw_error, "Emite 401 si falla la autenticación")
+Rel(gw_rate, gw_error, "Emite 429 si se excede el límite")
+Rel(gw_log, gw_error, "Registra errores y respuestas")
+
+note bottom of gw_route
+  La ruta principal no se hace en código Java manual: se define en application.yml
+  con spring.cloud.gateway.routes y predicates por Path.
+end note
+
+LAYOUT_WITH_LEGEND()
+@enduml

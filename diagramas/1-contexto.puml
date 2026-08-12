@@ -3,47 +3,39 @@
 
 ' ============================================================================
 ' PETCare - Diagrama de contexto (C4 Nivel 1)
+' Ajustado para reflejar la base de datos propia de provider-service
 ' ============================================================================
 
 title Diagrama de contexto del sistema PetCare (Nivel 1)
 
-' ---------------------------------------------------------------------------
-' Estilos
-' ---------------------------------------------------------------------------
 UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
 UpdateElementStyle(system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
 UpdateElementStyle(external_system, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
 
-' ---------------------------------------------------------------------------
-' Personas
-' ---------------------------------------------------------------------------
-Person(cliente, "Cliente", "Agenda servicios veterinarios, paga y da seguimiento a sus reservas")
-Person(proveedor, "Proveedor", "Publica servicios y responde las solicitudes de reserva")
-Person(admin, "Administrador", "Administra usuarios, roles, menús y la operación del sistema")
+Person(cliente, "Cliente", "Busca servicios veterinarios, reserva citas y realiza pagos")
+Person(proveedor, "Proveedor", "Publica servicios, gestiona disponibilidad y responde solicitudes")
+Person(admin, "Administrador", "Administra usuarios, roles, menús, reportes y operación del sistema")
 
-' ---------------------------------------------------------------------------
-' Sistema
-' ---------------------------------------------------------------------------
-System(petcare, "PetCare", "Plataforma de reserva de servicios veterinarios: frontend Angular, backend Spring Boot (auth, catálogos, clientes, mascotas) y microservicios de reservas (8081), proveedores (8082), pagos (8083) y orquestador de la saga (8085) con Kafka")
+System(petcare, "PetCare", "Plataforma con frontend Angular, API Gateway, backend, microservicios de reservas, proveedores, pagos y orquestador de saga, conectados con Kafka")
+System_Ext(gateway, "Gateway Service", "Spring Cloud Gateway 8086; valida JWT, aplica CORS, rate limit y enruta solicitudes")
+System_Ext(providerDb, "PostgreSQL petcaredb_provider", "Base de datos propia del dominio de proveedores")
+System_Ext(coreDb, "PostgreSQL petcaredb", "Base compartida de backend, reservas, pagos y saga")
+System_Ext(kafka, "Kafka", "Broker de eventos, comandos de coordinación y compensación")
 
-' ---------------------------------------------------------------------------
-' Sistemas externos
-' ---------------------------------------------------------------------------
-System_Ext(pasarela, "Pasarela de pago", "Procesa, reembolsa y rechaza los pagos (simulada en desarrollo)")
-System_Ext(smtp, "SMTP Gmail", "Envía los correos transaccionales")
+System_Ext(smtp, "SMTP Gmail", "Envía correos transaccionales")
 System_Ext(maps, "Google Maps API", "Provee mapas y geolocalización")
 
+Rel(cliente, petcare, "Usa la app web y realiza reservas", "HTTPS")
+Rel(proveedor, petcare, "Gestiona servicios y solicita/acepta reservas", "HTTPS")
+Rel(admin, petcare, "Administra usuarios, permisos y reportes", "HTTPS")
 
-' ---------------------------------------------------------------------------
-' Relaciones
-' ---------------------------------------------------------------------------
-Rel(cliente, petcare, "Crea reservas, paga y consulta el estado", "HTTPS")
-Rel(proveedor, petcare, "Publica servicios y responde solicitudes de reserva", "HTTPS")
-Rel(admin, petcare, "Administra usuarios, roles y reportes", "HTTPS")
+Rel(petcare, gateway, "Consume APIs a través del gateway", "HTTP/HTTPS")
+Rel(gateway, coreDb, "Accede a datos del backend y de la operación del sistema", "JDBC")
+Rel(gateway, providerDb, "Enruta peticiones del dominio del proveedor y consulta datos del servicio", "HTTP / JPA-MyBatis")
+Rel(petcare, kafka, "Publica y consume eventos de dominio y comandos de saga", "Kafka")
 
-Rel(petcare, pasarela, "Procesa el pago de las reservas", "REST/HTTPS")
-Rel(petcare, smtp, "Envía correos transaccionales", "SMTP")
-Rel(petcare, maps, "Geolocalización y mapas", "HTTPS")
+Rel(petcare, smtp, "Envía notificaciones y correos", "SMTP")
+Rel(petcare, maps, "Consulta geolocalización", "HTTPS")
 
 LAYOUT_WITH_LEGEND()
 

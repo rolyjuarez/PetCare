@@ -1,0 +1,57 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+' ============================================================================
+' PETCare - Componentes de backend (8080) - C4 Nivel 3
+' ============================================================================
+
+title Componentes de backend (8080) - C4 Nivel 3
+
+UpdateElementStyle(component, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#D9E2F3")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+System_Ext(gateway, "gateway-service", "8086", "Punto de entrada único")
+Container(rs, "reservation-service", "8081", "Reservas")
+Container(ps, "provider-service", "8082", "Proveedores")
+Container(ms, "payment-service", "8083", "Pagos")
+ContainerDb(db, "PostgreSQL petcaredb", "PostgreSQL", "Catálogos y usuarios")
+ContainerQueue(kafka, "Kafka", "Broker", "Eventos de dominio")
+System_Ext(smtp, "SMTP Gmail", "Correos")
+
+Container_Boundary(backend, "backend (8080)") {
+    Component(api_auth, "AuthController", "Spring MVC", "Login, register, refresh, password reset")
+    Component(api_client, "ClienteController", "Spring MVC", "Gestión de clientes")
+    Component(api_pet, "MascotaController", "Spring MVC", "Gestión de mascotas")
+    Component(api_catalog, "CatalogController", "Spring MVC", "Catálogos y menús")
+    Component(api_notify, "NotificacionController", "Spring MVC", "Notificaciones del sistema")
+    Component(svc_auth, "AuthService", "Service", "JWT, users, roles y permisos")
+    Component(svc_domain, "Domain Services", "Services", "Clientes, mascotas, promociones, notificaciones")
+    Component(repo, "MyBatis Mappers", "DAO", "Acceso a PostgreSQL")
+    Component(filter, "MicroserviceRoutingFilter", "Filter", "Reenvía /reservas, /proveedor y /pagos a microservicios")
+    Component(mail, "MailService", "SMTP client", "Correos transaccionales")
+    Component(kafka_pub, "KafkaDomainPublisher", "Producer", "Publica eventos de dominio y notificaciones")
+}
+
+Rel(gateway, api_auth, "Llama a auth y endpoints generales", "HTTP")
+Rel(gateway, filter, "Reenvía rutas de otros dominios", "HTTP")
+Rel(filter, rs, "/reservas**", "HTTP")
+Rel(filter, ps, " /proveedor** /proveedores** ", "HTTP")
+Rel(filter, ms, " /pagos** ", "HTTP")
+Rel(api_auth, svc_auth, "Valida credenciales y genera token")
+Rel(api_client, svc_domain, "Gestiona clientes")
+Rel(api_pet, svc_domain, "Gestiona mascotas")
+Rel(api_catalog, svc_domain, "Consulta catálogos")
+Rel(api_notify, svc_domain, "Genera notificaciones")
+Rel(svc_auth, repo, "Consulta usuarios y roles")
+Rel(svc_domain, repo, "Persistencia")
+Rel(svc_domain, mail, "Envía correos")
+Rel(svc_domain, kafka_pub, "Publica eventos")
+Rel(repo, db, "JDBC / MyBatis", "SQL")
+Rel(kafka_pub, kafka, "Eventos de dominio", "Kafka")
+
+LAYOUT_WITH_LEGEND()
+@enduml

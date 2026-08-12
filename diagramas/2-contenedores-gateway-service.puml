@@ -1,0 +1,73 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+' ============================================================================
+' PETCare - Gateway-service C2
+' Se ajusta para reflejar cómo realmente funciona el API Gateway
+' ============================================================================
+
+title Gateway-service (API Gateway) - Vista de contenedores
+
+UpdateElementStyle(person, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#1168BD")
+UpdateElementStyle(container, $fontColor="#5D2C00", $borderColor="#963B00", $bgColor="#FCDE00")
+UpdateElementStyle(database, $fontColor="#08427B", $borderColor="#052F61", $bgColor="#A9D2FF")
+UpdateElementStyle(queue, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#F5F5F5")
+UpdateElementStyle(external_system, $fontColor="#1168BD", $borderColor="#052F61", $bgColor="#E8E8E8")
+UpdateElementStyle(boundary, $borderColor="#2F4F4F", $fontColor="#2F4F4F", $bgColor="#F0F0F0")
+
+Person(cliente, "Cliente / Proveedor / Admin", "Usa la app web")
+System_Boundary(petcare, "PetCare") {
+    Container(frontend, "Frontend", "Angular SPA", "UI web")
+    Container(gateway, "gateway-service", "Spring Cloud Gateway 8086", "Punto de entrada único: valida JWT, CORS, rate limiting y enruta por prefijos")
+    Container(backend, "backend", "Spring Boot 8080", "API principal: auth, catálogos, clientes, mascotas y administración")
+    Container(rs, "reservation-service", "Spring Boot 8081", "Reservas")
+    Container(ps, "provider-service", "Spring Boot 8082", "Proveedores y servicios")
+    Container(ms, "payment-service", "Spring Boot 8083", "Pagos y descuentos")
+    Container(sa, "saga-orchestrator", "Spring Boot 8085", "Orquesta la saga y compensación")
+    ContainerDb(dbCore, "PostgreSQL petcaredb", "PostgreSQL", "Base compartida del backend, reservas, pagos y saga")
+    ContainerDb(dbProvider, "PostgreSQL petcaredb_provider", "PostgreSQL", "Base propia del dominio proveedor")
+    ContainerQueue(kafka, "Kafka", "Broker", "Eventos y comandos de la saga")
+}
+
+Rel(cliente, frontend, "Usa la plataforma", "HTTPS")
+Rel(frontend, gateway, "Llama a la API REST", "HTTP")
+
+' ---------------------------------------------------------------------------
+' Enrutamiento del gateway
+' ---------------------------------------------------------------------------
+Rel(gateway, backend, "Valida JWT y enruta /api/v1/**, /uploads/**", "HTTP")
+Rel(gateway, rs, "Valida JWT y enruta /api/v1/reservas/**", "HTTP")
+Rel(gateway, ps, "Valida JWT y enruta /api/v1/proveedor/**, /api/v1/proveedores/**", "HTTP")
+Rel(gateway, ms, "Valida JWT y enruta /api/v1/pagos/**", "HTTP")
+
+' ---------------------------------------------------------------------------
+' Filtros del gateway
+' ---------------------------------------------------------------------------
+note right of gateway
+  Filtros globales del gateway:
+  - JwtAuthGlobalFilter (valida Bearer token)
+  - RateLimiterGlobalFilter (limit por IP/cliente)
+  - RequestLoggingGlobalFilter (método, ruta, status, tiempo)
+  - GatewayErrorWriter (401, 404, 429, 502 JSON)
+  - PublicPaths (rutas públicas: auth/login, register, refresh, uploads, actuator)
+end note
+
+' ---------------------------------------------------------------------------
+' Persistencia de servicios
+' ---------------------------------------------------------------------------
+Rel(backend, dbCore, "Persistencia de usuarios, clientes, mascotas y catálogos", "JDBC")
+Rel(rs, dbCore, "Persistencia de reservas y notificaciones", "JDBC")
+Rel(ms, dbCore, "Persistencia de pagos y promociones", "JDBC")
+Rel(sa, dbCore, "Persistencia de saga_estado y evento_procesado", "JDBC")
+Rel(ps, dbProvider, "Persistencia del dominio proveedor", "JDBC")
+
+' ---------------------------------------------------------------------------
+' Integración vía Kafka
+' ---------------------------------------------------------------------------
+Rel(rs, kafka, "Publica eventos de reserva y consume comandos del orquestador", "Kafka")
+Rel(ps, kafka, "Consume NotificarProveedorCommand y publica reserva.aceptada / rechazad a", "Kafka")
+Rel(ms, kafka, "Consume crear-pago / liberar-descuento y publica pago.*", "Kafka")
+Rel(sa, kafka, "Consume eventos y publica comandos de la saga", "Kafka")
+
+LAYOUT_WITH_LEGEND()
+@enduml
