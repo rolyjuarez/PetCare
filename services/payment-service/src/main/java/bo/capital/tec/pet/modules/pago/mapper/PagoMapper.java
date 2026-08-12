@@ -27,6 +27,8 @@ public interface PagoMapper {
                       @Param("fechaPago") java.time.LocalDateTime fechaPago,
                       @Param("metodoPago") String metodoPago);
 
+    void updateModalidad(@Param("id") Long id, @Param("modalidadPago") String modalidadPago);
+
     void updateDescuentos(@Param("id") Long id, @Param("monto") java.math.BigDecimal monto,
                           @Param("montoOriginal") java.math.BigDecimal montoOriginal,
                           @Param("descuentoTotal") java.math.BigDecimal descuentoTotal,

@@ -18,8 +18,9 @@ export class PromocionesProveedorComponent implements OnInit {
   servicios = signal<ProveedorServicio[]>([]);
   loading = signal(false);
   submitting = signal(false);
+  notificando = signal(false);
   showForm = signal(false);
-  proveedorId: number | null = null;
+  editId = signal<number | null>(null);
 
   form = {
     servicioId: null as number | null,
@@ -41,26 +42,13 @@ export class PromocionesProveedorComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.loadProveedor();
-  }
-
-  loadProveedor(): void {
-    this.proveedorService.getMe().subscribe({
-      next: (res) => {
-        if (res.success && res.data?.id) {
-          this.proveedorId = res.data.id;
-          this.loadServicios();
-          this.load();
-        }
-      },
-      error: () => this.toast.error('No se pudo obtener el proveedor del usuario')
-    });
+    this.loadServicios();
+    this.load();
   }
 
   load(): void {
-    if (this.proveedorId == null) return;
     this.loading.set(true);
-    this.promocionService.getByProveedor(this.proveedorId).subscribe({
+    this.promocionService.getMyPromociones(0, 100).subscribe({
       next: (res) => {
         if (res.success) this.items.set(res.data.content);
         this.loading.set(false);
@@ -77,6 +65,11 @@ export class PromocionesProveedorComponent implements OnInit {
     });
   }
 
+  servicioNombre(servicioId: number | null | undefined): string {
+    const s = this.servicios().find(x => x.id === servicioId);
+    return s ? s.nombre : (servicioId ? `Servicio #${servicioId}` : 'Todos los servicios');
+  }
+
   descuentoTexto(p: PromocionSummary): string {
     return p.tipoDescuento === 'PERCENTAGE' ? `${p.valorDescuento}%` : `Bs. ${p.valorDescuento}`;
   }
@@ -86,7 +79,8 @@ export class PromocionesProveedorComponent implements OnInit {
     return String(fecha).replace('T', ' ').substring(0, 16);
   }
 
-  openForm(): void {
+  openCreate(): void {
+    this.editId.set(null);
     this.form = {
       servicioId: this.servicios().length > 0 ? this.servicios()[0].id : null,
       codigo: 'PROMO-' + Date.now().toString().slice(-6).toUpperCase(),
@@ -102,8 +96,26 @@ export class PromocionesProveedorComponent implements OnInit {
     this.showForm.set(true);
   }
 
+  openEdit(p: PromocionSummary): void {
+    this.editId.set(p.id);
+    this.form = {
+      servicioId: p.servicioId,
+      codigo: p.codigo,
+      nombre: p.nombre,
+      descripcion: p.descripcion || '',
+      tipoDescuento: p.tipoDescuento,
+      valorDescuento: p.valorDescuento,
+      fechaInicio: this.toDateInput(new Date(p.fechaInicio)),
+      fechaFin: this.toDateInput(new Date(p.fechaFin)),
+      activa: p.activa,
+      limiteUsos: this.form.limiteUsos || 1
+    };
+    this.showForm.set(true);
+  }
+
   closeForm(): void {
     this.showForm.set(false);
+    this.editId.set(null);
   }
 
   guardar(): void {
@@ -113,10 +125,6 @@ export class PromocionesProveedorComponent implements OnInit {
     }
     if (!this.form.codigo.trim() || !this.form.nombre.trim()) {
       this.toast.error('Ingrese el código y el nombre de la promoción');
-      return;
-    }
-    if (this.proveedorId == null) {
-      this.toast.error('Proveedor no identificado');
       return;
     }
     const data: PromocionRequest = {
@@ -132,29 +140,48 @@ export class PromocionesProveedorComponent implements OnInit {
       limiteUsos: Number(this.form.limiteUsos) || 1
     };
     this.submitting.set(true);
-    this.promocionService.createByProveedor(this.proveedorId, data).subscribe({
+    const editId = this.editId();
+    const obs = editId
+      ? this.promocionService.updateMia(editId, data)
+      : this.promocionService.createMia(data);
+    obs.subscribe({
       next: () => {
         this.submitting.set(false);
-        this.toast.success('Descuento creado correctamente');
+        this.toast.success(editId ? 'Descuento actualizado correctamente' : 'Descuento creado correctamente');
         this.closeForm();
         this.load();
       },
       error: (err) => {
         this.submitting.set(false);
-        this.toast.error(err.error?.message || 'Error al crear el descuento');
+        this.toast.error(err.error?.message || 'Error al guardar el descuento');
       }
     });
   }
 
   eliminar(p: PromocionSummary): void {
-    if (this.proveedorId == null) return;
     if (!window.confirm(`¿Eliminar el descuento "${p.nombre}"?`)) return;
-    this.promocionService.deleteByProveedor(this.proveedorId, p.id).subscribe({
+    this.promocionService.deleteMia(p.id).subscribe({
       next: () => {
         this.toast.success('Descuento eliminado');
         this.load();
       },
       error: (err) => this.toast.error(err.error?.message || 'Error al eliminar el descuento')
+    });
+  }
+
+  notificar(p: PromocionSummary): void {
+    this.notificando.set(true);
+    this.promocionService.notificar(p.id).subscribe({
+      next: (res) => {
+        this.notificando.set(false);
+        if (res.success) {
+          this.toast.success(`Promoción notificada a ${res.data?.enviados ?? 0} cliente(s)`);
+        }
+      },
+      error: (err) => {
+        this.notificando.set(false);
+        this.toast.error(err.error?.message || 'Error al notificar la promoción');
+      }
     });
   }
 
