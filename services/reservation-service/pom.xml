@@ -15,7 +15,7 @@
     <name>Reservation Service</name>
     <description>PETCare Reservation Microservice</description>
     <properties>
-        <java.version>25</java.version>
+        <java.version>21</java.version>
         <mybatis.version>3.0.3</mybatis.version>
         <jjwt.version>0.12.6</jjwt.version>
         <mockito.version>5.16.1</mockito.version>
